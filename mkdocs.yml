@@ -1,0 +1,8 @@
+site_name: A systematic development workspace integrating Domain-Driven Design, TDD, and an engineered Human-AI collaboration framework.
+nav:
+    - Home: README.md
+    - Contributing: contributing.md
+
+repo_url: https://github.com/Wanini0209/wBiSaProj
+remote_branch: gh-pages
+remote_name: origin

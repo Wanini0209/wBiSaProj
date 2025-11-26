@@ -1,0 +1,38 @@
+[tool.black]
+line-length = 88
+target-version = ['py312']
+
+[tool.ruff]
+# 設定 ruff 的行為，使其與 black 相容
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+# 選擇要啟用的規則集
+# 'E', 'F' - flake8 預設規則
+# 'W' - pycodestyle 警告
+# 'I' - isort (導入排序)
+# 'D' - pydocstyle (文件字串風格)
+# 'B' - bandit (安全性)
+# 'C4' - flake8-comprehensions
+# 'UP' - pyupgrade
+# 'PL' - pylint
+select = ["E", "F", "W", "I", "D", "B", "C4", "UP", "PL"]
+
+# 可以忽略特定的規則
+ignore = ["D100", "D104", "D107", "D401"]
+
+[tool.ruff.lint.pydocstyle]
+# 設定 pydocstyle 規則，使其遵循 NumPy 風格
+convention = "numpy"
+
+[tool.ruff.lint.flake8-bandit]
+# 不需要額外設定，使用預設值即可，或根據需求新增 skips
+
+[tool.mypy]
+files = ["wsatools"]
+ignore_missing_imports = true
+follow_imports = "silent"
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_unused_configs = true
