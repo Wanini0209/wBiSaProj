@@ -96,7 +96,7 @@
 
 專案架構在首層共分為三大類型：Library (函式庫)、資料源系統、以及業務/應用系統。這三種類型共同構成了 `wBiSaProj` 專案的基礎。
 
-### Library (函式庫層)
+#### Library (函式庫層)
 
 此層級包含專案共用的 Python 函式庫：
 
@@ -104,14 +104,14 @@
 - `core`：專案級核心套件，提供共用元件與作為系統間解耦契約的抽象介面。
 - `wsatools`：提供開發流程所需的輔助工具，不被任何系統依賴。
 
-### 資料源系統 (Data Source Systems)
+#### 資料源系統 (Data Source Systems)
 
 此類型系統專責存取並封裝外部資料源，將其轉換為對內提供的標準化唯讀數據服務。其標準兩層架構為：
 
 - `[datasource]/collector` (資料收集層)：負責與外部資料源進行 I/O 操作，獲取最原始的資料。
 - `[datasource]/service` (服務層)：負責解析原始資料、進行格式標準化，並實作 `core` 中的統一介面，對外提供穩定的數據服務。
 
-### 業務/應用系統 (Business/Application Systems)
+#### 業務/應用系統 (Business/Application Systems)
 
 此類型系統負責實現具體業務功能，其內部由五個標準子模組構成：
 
@@ -260,7 +260,7 @@ graph TD
 
 #### 檔案結構組織
 
-```
+```text
 wBiSaProj/
 │
 ├── wutils/                    # 通用工具庫
@@ -305,7 +305,7 @@ wBiSaProj/
 
 | 術語 | 定義 | 範例 |
 |:-----|:-----|:-----|
-| `<system>` | 業務系統或資料源系統的名稱 | `gms`, `tej` |
+| `<s>` | 業務系統或資料源系統的名稱 | `gms`, `tej` |
 | `<library>` | 專案級共用函式庫或系統級內部核心模組 | `core`, `wutils`, `gms/core` |
 | `<domain>` | 系統的業務領域分類，映射真實世界的業務範疇 | `user`, `market`, `stock` |
 | `<toolkit>` | 函式庫的功能分類，代表技術解決方案集合 | `io`, `tseries` |
@@ -325,7 +325,7 @@ wBiSaProj/
 
 開發流程圍繞「功能 (Feature)」和「任務 (Task)」兩層結構展開。一個 Feature 代表完整的業務價值單元，由定義需求的「Use Cases Commit」與 N 個實現技術細節的「Task Commit」構成。
 
-```
+```text
 Feature（業務價值單元）
 ├── Use Cases Commit（定義 What & Why）
 └── Task Commits（實現 How）
@@ -393,7 +393,8 @@ Feature（業務價值單元）
 
 - `master`：生產分支
 - `develop`：開發主線
-- `feature/[path]/[description]`：功能開發分支
+- `feature/<root>/<hierarchy...>/<feature-name>`：功能開發分支
+  - 採用**階層式命名**，路徑需完整對應 Feature 在 `use-cases` 中的目錄結構（例如：`feature/gms/market/stock/stock-profile`）。
 
 #### 提交格式
 
@@ -401,8 +402,8 @@ Feature（業務價值單元）
 
 #### Scope 雙軌制
 
-- **`docs` 提交**：`scope` 應為 `use-cases` 的業務分類路徑 (如：`use-cases/gms/mkt/stock`)。
-- **實作提交**：`scope` 應為受影響的功能單元容器路徑 (`<fu_path>`) (如：`gms/api/mkt/stock/profile`)。
+- **`docs` 提交**：`scope` 應為 `use-cases` 的業務分類路徑 (如：`use-cases/gms/market/stock`)。
+- **實作提交**：`scope` 應為受影響的功能單元容器路徑 (`<fu_path>`) (如：`gms/api/market/stock/profile`)。
 
 ### 3.6 通用品質閘道
 

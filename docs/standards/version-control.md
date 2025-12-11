@@ -46,18 +46,18 @@
 所有開發工作（包含功能實作與規範修訂）都必須在獨立的 `feature` 分支上進行。
 
 **分支命名格式**：
-`feature/<path>/<description>`
+`feature/<root>/<hierarchy...>/<feature-name>`
 
-**`<path>` 命名規則**：
-分支路徑應直接反映 Feature 核心價值所在的架構位置。
+**命名規則**：
+分支路徑必須採用**階層式命名**，且其結構應與該 Feature 在 `docs/use-cases/` 中的相對路徑完全一致（不含 `docs/use-cases/` 前綴）。這確保了 Git 分支、文件目錄與程式碼架構三者的高度對應。
 
-| Feature 類型 | 核心價值位置 | 分支命名範例 |
-|:-------------|:-------------|:-------------|
-| Business Feature | 業務系統 | `feature/gms/user-registration` |
-| Data Pipeline Feature | ETL 層 | `feature/gms/etl/stock-sync` |
-| Data Source Feature | 資料源系統 | `feature/tej/daily-price` |
-| Library Feature | 共用函式庫 | `feature/core/validator-rules` |
-| Project Standards | 專案規範文件 | `feature/project/update-vcs-standards` |
+| Feature 類型 | 命名邏輯 | 分支命名範例 |
+|:-------------|:---------|:-------------|
+| **Business Feature** | `<system>/<domain>/...` | `feature/gms/user/user-registration` |
+| **Data Pipeline Feature** | `<system>/etl/<domain>/...` | `feature/gms/etl/market/stock/daily-sync` |
+| **Data Source Feature** | `<system>/<domain>/...` | `feature/twseprice/price/daily-price` |
+| **Library Feature** | `<library>/<toolkit>/...` | `feature/core/validator/format-rules`<br>`feature/wutils/io/pickle-io` |
+| **Project Standards** | `project` | `feature/project/update-vcs-standards` |
 
 > **說明**：即使是修訂文件，建立分支的主要目的是為了 Pull Request (Code Review)，確保規範的變更已取得團隊共識。
 
@@ -183,64 +183,67 @@ docs(project): update version control standards
 
 遵循標準的 Gitflow 與「1+N 提交結構」：
 
-1. **建立分支**：
+1.  **建立分支**：
+    分支名稱需包含完整的領域階層路徑。
 
-   ```bash
-   git checkout develop
-   git checkout -b feature/gms/user-reg
-   ```
+    ```bash
+    git checkout develop
+    # 範例：在 GMS 系統 User Domain 下的註冊功能
+    git checkout -b feature/gms/user/user-reg
+    ```
 
-2. **提交 1 (Docs)**：定義需求
+2.  **提交 1 (Docs)**：定義需求
+    Scope 需對應 `use-cases` 的完整目錄路徑。
 
-   ```bash
-   git add docs/use-cases/gms/user/user-reg/
-   git commit -m "docs(use-cases/gms/user): define registration requirements"
-   ```
+    ```bash
+    git add docs/use-cases/gms/user/user-reg/
+    git commit -m "docs(use-cases/gms/user/user-reg): define registration requirements"
+    ```
 
-3. **提交 N (Impl)**：實作任務
+3.  **提交 N (Impl)**：實作任務
 
-   ```bash
-   # 這裡僅為 CLI 簡寫，實際建議使用 git commit 開啟編輯器撰寫多行訊息
-   git add gms/db/user/profile/
-   git commit
-   ```
+    ```bash
+    # 這裡僅為 CLI 簡寫，實際建議使用 git commit 開啟編輯器撰寫多行訊息
+    git add gms/db/user/profile/
+    git commit
+    ```
 
-4. **合併 (Merge Strategy)**：
+4.  **合併 (Merge Strategy)**：
 
-   - 推送並發起 PR 合併至 `develop`。
-   - 關鍵規範：必須採用 Merge Commit (`--no-ff`) 進行合併。
-     - 禁止使用 Squash Merge，因為這會導致 Feature 分支內的 Task 提交歷史被壓縮，丟失「文件先行」與「原子化實作」的對應脈絡。
+    - 推送並發起 PR 合併至 `develop`。
+    - 關鍵規範：必須採用 Merge Commit (`--no-ff`) 進行合併。
+        - 禁止使用 Squash Merge，因為這會導致 Feature 分支內的 Task 提交歷史被壓縮，丟失「文件先行」與「原子化實作」的對應脈絡。
 
 ### 場景 B：修訂專案規範 (Project Standards Update)
 
 當需要修改 `docs/` 根目錄或 `docs/standards/` 下的規範文件時，視同一個 Project Feature 處理：
 
-1. **建立分支**：使用 `project` 作為路徑，並使用 `feature/` 作為前綴。
+1.  **建立分支**：使用 `project` 作為路徑，並使用 `feature/` 作為前綴。
 
-   ```bash
-   # 範例：更新版本控制規範
-   git checkout -b feature/project/update-vcs-rules
-   ```
+    ```bash
+    # 範例：更新版本控制規範
+    git checkout -b feature/project/update-vcs-rules
+    ```
 
-2. **提交變更**：
+2.  **提交變更**：
 
-   - Scope 必須為 `project`。
-   - Type 必須為 `docs`。
+    - Scope 必須為 `project`。
+    - Type 必須為 `docs`。
 
-   ```bash
-   git add docs/standards/version-control.md
-   git commit -m "docs(project): enforce feature branch for standards update"
-   ```
+    ```bash
+    git add docs/standards/version-control.md
+    git commit -m "docs(project): enforce feature branch for standards update"
+    ```
 
-3. **發起 Pull Request**：
+3.  **發起 Pull Request**：
 
-   - 團隊成員進行審核 (Review)。
-   - 確認規範變更的合理性與共識。
+    - 團隊成員進行審核 (Review)。
+    - 確認規範變更的合理性與共識。
 
-4. **合併**：
+4.  **合併**：
 
-   - 審核通過後採用 Merge Commit 合併至 `develop`。
-   - 例外：若僅為修正錯字 (Typo) 或格式 (Style)，允許使用 Squash Merge 以保持主線簡潔。
+    - 審核通過後採用 Merge Commit 合併至 `develop`。
+    - 例外：若僅為修正錯字 (Typo) 或格式 (Style)，允許使用 Squash Merge 以保持主線簡潔。
 
 ---
 
@@ -248,12 +251,12 @@ docs(project): update version control standards
 
 在執行 `git commit` 前，應確認：
 
-1. **Scope 正確性**：修改 `docs/` 或 `docs/standards/` 下的文件時，Scope 是否為 `project`？
-2. **流程合規**：是否已建立獨立分支？
-3. **格式檢查**：
-   - Header 是否 < 72 字元？
-   - （若為複雜變更）是否有撰寫 Body 描述？
-   - 是否符合 `<type>(<scope>): <subject>` 格式？
+1.  **Scope 正確性**：修改 `docs/` 或 `docs/standards/` 下的文件時，Scope 是否為 `project`？
+2.  **流程合規**：是否已建立獨立分支？
+3.  **格式檢查**：
+    - Header 是否 < 72 字元？
+    - （若為複雜變更）是否有撰寫 Body 描述？
+    - 是否符合 `<type>(<scope>): <subject>` 格式？
 
 ---
 
@@ -263,5 +266,5 @@ docs(project): update version control standards
 |:-----|:-----------|:-----------|
 | 修改版本控制規範 | `docs: update git doc`（缺少 scope） | `docs(project): update version control standards`（scope 為 project） |
 | 修改架構設計總表 | 直接 Commit 到 develop（違反流程） | 建立 `feature/project/...` 分支並發起 PR（確保共識） |
-| 功能文件提交 | `docs(project): add user use-case`（Scope 混淆） | `docs(use-cases/gms/user): define registration requirements`（Scope 對應路徑） |
+| 功能文件提交 | `docs(project): add user use-case`（Scope 混淆） | `docs(use-cases/gms/user/user-reg): define requirements`（Scope 對應完整路徑） |
 | 功能實作提交 | `feat(api): add login`（Scope 太籠統，無 Body） | `feat(gms/api/auth): add login endpoint`（Scope 精確，建議附 Body） |
