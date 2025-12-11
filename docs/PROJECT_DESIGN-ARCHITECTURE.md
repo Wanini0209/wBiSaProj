@@ -705,13 +705,31 @@ graph LR
 
 -----
 
-## 7. 專案檔案結構
+## 7. 專案級通用標準 (Project-Wide Standards)
+
+本章節定義所有 Feature 與 Functional Unit (FU) 預設必須遵守的隱性契約。除非個別 Feature 需求文件另有說明，否則以下標準自動適用於全專案。
+
+### 7.1 工程標準 (Engineering Standards)
+
+| ID | 類別 | 標準規範 | 適用範圍 |
+|:---|:-----|:---------|:---------|
+| **PNFR-ENV-01** | Environment | **Python 3.12+** | All Systems |
+| **PNFR-CDE-01** | Type Safety | **100% Type Hint Coverage** (Strict Mode) | All Systems |
+| **PNFR-DOC-01** | Documentation | **NumPy Style Docstrings** | Library, Core |
+| **PNFR-TST-01** | Testing | **Pytest** with high coverage requirement | Business Logic |
+| **PNFR-ENC-01** | Encoding | **UTF-8** without BOM | All Files |
+
+> **標準引用原則**：下游的規格文件 (`specs`) 在定義非功能需求時，應優先引用上述 ID (e.g., `Ref: PNFR-ENV-01`)，而非重複撰寫文字描述。
+
+-----
+
+## 8. 專案檔案結構
 
 在了解了所有架構概念與設計原則後，本章節展示它們如何具體映射到專案的實體檔案結構中。
 
 所有套件和系統都位於專案根目錄同一層級，三大類型僅為概念分類，不反映在目錄結構中。
 
-### 7.1 檔案結構組織
+### 8.1 檔案結構組織
 
 ```text
 wBiSaProj/
@@ -780,7 +798,7 @@ wBiSaProj/
                     └── test_profile.py
 ```
 
-### 7.2 命名規範
+### 8.2 命名規範
 
 | 項目 | 規範 | 範例 |
 |:-----|:-----|:-----|
@@ -790,7 +808,7 @@ wBiSaProj/
 
 > 注意：上述 `datasource` 和 `businesssys` 僅為結構示意用的佔位符
 
-### 7.3 介面與實作的檔案位置
+### 8.3 介面與實作的檔案位置
 
 | 位置 | 用途 |
 |:-----|:-----|
