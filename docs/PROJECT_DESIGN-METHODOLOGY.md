@@ -375,11 +375,11 @@ Task 類型判斷：
 
 | 步驟類型 | 新增模式產出 | 修改模式產出 |
 |:---------|:-------------|:-------------|
-| 需求規格 | `docs/specs/<fu_path>/[fu-name]/requirements.md` | 更新原檔 + `requirements_changes.md*` |
-| 設計規格 | `docs/specs/<fu_path>/[fu-name]/design.md` | 更新原檔 + `design_changes.md*` |
-| 測試規格 | `docs/specs/<fu_path>/[fu-name]/tests.md` | 更新原檔 + `tests_changes.md*` |
-| 測試實作 | `tests/<fu_path>/[fu-name]/test_*.py` | 更新原檔 |
-| 功能實作 | `<fu_path>/_[impl-module].py` 或 `<fu_path>/_[impl-module]/...` | 更新原檔 |
+| 需求規格 | `docs/specs/<fu_path>/<fu_name>/requirements.md` | 更新原檔 + `requirements_changes.md*` |
+| 設計規格 | `docs/specs/<fu_path>/<fu_name>/design.md` | 更新原檔 + `design_changes.md*` |
+| 測試規格 | `docs/specs/<fu_path>/<fu_name>/tests.md` | 更新原檔 + `tests_changes.md*` |
+| 測試實作 | `tests/<fu_path>/<fu_name>/test_*.py` | 更新原檔 |
+| 功能實作 | `<fu_path>/<impl_file>` | 更新原檔 |
 
 *開發過程檔案，不提交
 
@@ -388,9 +388,9 @@ Task 類型判斷：
 > 為強化文件與程式碼之間的連結，專案的結構遵循`架構篇`所定義的「結構對應性原則」。表格路徑中的佔位符定義如下：
 >
 > - **`<fu_path>`**：本次 Task 所操作的 **功能單元容器 (FU Container) 相對於專案根目錄的完整路徑**
-> - **`[fu-name]`**：本次 Task 所操作的 **具體功能單元 (FU) 的名稱**，以目錄或檔案命名友善的格式表示 (例如：`create-user-profile` 或 `user_profile`)
+> - **`<fu_name>`**：本次 Task 所操作的 **具體功能單元 (FU) 的名稱**，以目錄或檔案命名友善的格式表示 (例如：`create-user-profile` 或 `user_profile`)
 >
-> 透過此設計，開發者可以藉由 `[fu-name]` 快速定位其對應的規格與測試文件。規格文件中則會進一步指引至功能實作的具體路徑，從而確保專案的可維護性與導航效率。關於此原則的完整設計理念與細節，請參閱《架構篇》中的「結構對應性原則」章節。
+> 透過此設計，開發者可以藉由 `<fu_name>` 快速定位其對應的規格與測試文件。規格文件中則會進一步指引至功能實作的具體路徑，從而確保專案的可維護性與導航效率。關於此原則的完整設計理念與細節，請參閱《架構篇》中的「結構對應性原則」章節。
 
 ---
 
@@ -404,19 +404,19 @@ Task 類型判斷：
 |:---------|:-----|:---------|
 | **master** | 生產分支 | 永久 |
 | **develop** | 開發主線 | 永久 |
-| **feature/[path]/[description]** | 功能開發分支 | 短期 |
+| **feature/<path>/<description>** | 功能開發分支 | 短期 |
 
 #### 分支 Path 決策規則
 
 **規則核心**：分支名稱必須採用**階層式命名**，其路徑結構應與該 Feature 在 `docs/use-cases/` 中的相對路徑完全一致（不含 `docs/use-cases/` 前綴）。這能確保 Git 分支結構、文件目錄結構與程式碼架構三者的高度對應，並有效避免命名衝突。
 
-**格式標準**：`feature/<root>/<hierarchy...>/<feature-name>`
+**格式標準**：`feature/<root>/<hierarchy>/<feature_name>`
 
 | Feature 類型 | 命名邏輯 | Branch Path 範例 |
 |:---|:---|:---|
-| **System-Type Feature**<br>(Business, Data Pipeline, Data Source) | `<s>/<domain>/[<subdomain>]/<feature-name>`<br>*(若無 subdomain 則省略)* | **多層級 (有 sub-domain)**:<br>`feature/gms/market/stock/stock-profile`<br><br>**單層級 (僅 domain)**:<br>`feature/gms/user/registration`<br><br>**ETL Feature**:<br>`feature/gms/etl/market/stock/daily-sync` |
-| **Library-Type Feature**<br>(General) | `<library>/<toolkit>/<feature-name>` | **通用函式庫**:<br>`feature/wutils/io/pickle-io`<br>`feature/core/validator/format-rules` |
-| **Library-Type Feature**<br>(System Internal) | `<s>/core/<toolkit>/<feature-name>` | **系統內核心庫**:<br>`feature/gms/core/config/env-management` |
+| **System-Type Feature**<br>(Business, Data Pipeline, Data Source) | `<system>/<domain>/[<subdomain>]/<feature_name>`<br>*(若無 subdomain 則省略)* | **多層級 (有 sub-domain)**:<br>`feature/gms/market/stock/stock-profile`<br><br>**單層級 (僅 domain)**:<br>`feature/gms/user/registration`<br><br>**ETL Feature**:<br>`feature/gms/etl/market/stock/daily-sync` |
+| **Library-Type Feature**<br>(General) | `<library>/<toolkit>/<feature_name>` | **通用函式庫**:<br>`feature/wutils/io/pickle-io`<br>`feature/core/validator/format-rules` |
+| **Library-Type Feature**<br>(System Internal) | `<system>/core/<toolkit>/<feature_name>` | **系統內核心庫**:<br>`feature/gms/core/config/env-management` |
 
 #### 提交格式規範
 
@@ -439,7 +439,7 @@ Task 類型判斷：
 
 | 提交類型 | Scope 格式說明 | 範例 |
 |:---|:---|:---|
-| **`docs` 提交**<br/>(Use Cases 文件) | Scope 需對應文件的父目錄路徑，根據模組類型分為兩種格式：<br/>1. **系統**: `use-cases/<s>/[<domain>]`<br/>2. **函式庫**: `use-cases/<library>/<toolkit>` | 1. `docs(use-cases/gms/user): ...`<br/>2. `docs(use-cases/core/config): ...` |
+| **`docs` 提交**<br/>(Use Cases 文件) | Scope 需對應文件的父目錄路徑，根據模組類型分為兩種格式：<br/>1. **系統**: `use-cases/<system>/[<domain>]`<br/>2. **函式庫**: `use-cases/<library>/<toolkit>` | 1. `docs(use-cases/gms/user): ...`<br/>2. `docs(use-cases/core/config): ...` |
 | **實作提交**<br/>(feat, fix, etc.) | Scope 為受影響的功能單元容器路徑 (`<fu_path>`) | `feat(gms/api/user/profile): ...` |
 
 ### 6.2 標準範例（團隊共識）
@@ -525,9 +525,9 @@ docs(use-cases/core/validator/rules): define data format validator api and requi
 
 | Feature 類型 | 核心職責 | 路徑結構範本 |
 |:---------------|:---------|:-------------|
-| **Business Feature**<br/>**Data Source Feature** | 實現業務功能或提供資料 | `docs/use-cases/<s>/[<domain>...]/<feature_name>/` |
-| **Data Pipeline Feature** | 批次資料處理 (ETL) | `docs/use-cases/<s>/etl/[<domain>...]/<feature_name>/` |
-| **Library Feature** | 提供共用元件或工具 | `docs/use-cases/<library_path>/<toolkit...>/<feature_name>/` |
+| **Business Feature**<br/>**Data Source Feature** | 實現業務功能或提供資料 | `docs/use-cases/<system>/[<domain>]/[<subdomain>]/<feature_name>/` |
+| **Data Pipeline Feature** | 批次資料處理 (ETL) | `docs/use-cases/<system>/etl/[<domain>]/[<subdomain>]/<feature_name>/` |
+| **Library Feature** | 提供共用元件或工具 | `docs/use-cases/<library>/<toolkit>/<feature_name>/` |
 
 ### 8.2 系統 Feature 路徑歸屬規則 (Business, Data Source, Data Pipeline)
 
@@ -537,7 +537,7 @@ docs(use-cases/core/validator/rules): define data format validator api and requi
 
 此規則適用於**多領域系統**。文件應被放置在對應的 `sub-domain` 目錄下。
 
-- **路徑格式**：`docs/use-cases/<s>/<domain>/<sub-domain>/<feature_name>/`
+- **路徑格式**：`docs/use-cases/<system>/<domain>/<subdomain>/<feature_name>/`
 - **範例**：`gms` 系統中，一個歸屬於 `mkt` Domain 下 `stk` 子領域的 `stock-info-sync` Feature：
   - `docs/use-cases/gms/mkt/stk/stock-info-sync/`
 
@@ -545,7 +545,7 @@ docs(use-cases/core/validator/rules): define data format validator api and requi
 
 此規則適用於**多領域系統**。文件應被放置在父層 `domain` 的根目錄下。
 
-- **路徑格式**：`docs/use-cases/<s>/<domain>/<feature_name>/`
+- **路徑格式**：`docs/use-cases/<system>/<domain>/<feature_name>/`
 - **範例**：`gms` 系統中，整合了多個子領域資訊的 `market-dashboard` Feature：
   - `docs/use-cases/gms/mkt/market-dashboard/`
 
@@ -553,7 +553,7 @@ docs(use-cases/core/validator/rules): define data format validator api and requi
 
 此規則適用於**單領域系統**，根據「系統即領域原則」，應省略 `<domain>` 層級。
 
-- **路徑格式**：`docs/use-cases/<s>/<feature_name>/`
+- **路徑格式**：`docs/use-cases/<system>/<feature_name>/`
 - **範例**：假設有一個只處理客戶關係的 `crm` 系統，`add-new-contact` Feature 的路徑為：
   - `docs/use-cases/crm/add-new-contact/`
 
@@ -561,7 +561,7 @@ docs(use-cases/core/validator/rules): define data format validator api and requi
 
 對於 `Data Pipeline Feature`，需在其系統路徑後插入 `etl` 層，以明確其架構歸屬。
 
-- **路徑格式**：`docs/use-cases/<s>/etl/[<domain>...]/<feature_name>/`
+- **路徑格式**：`docs/use-cases/<system>/etl/[<domain>]/[<subdomain>]/<feature_name>/`
 - **範例**：`gms` 系統中，一個處理市場股票資料的 ETL Feature：
   - `docs/use-cases/gms/etl/mkt/stk/daily-stock-sync/`
 
@@ -579,9 +579,9 @@ docs(use-cases/core/validator/rules): define data format validator api and requi
 
 #### 規則二：系統級核心函式庫
 
-適用於特定系統內部的 `[system]/core` 模組。其路徑結構反映了它既屬於某個系統，又是一個函式庫的雙重特性。
+適用於特定系統內部的 `<system>/core` 模組。其路徑結構反映了它既屬於某個系統，又是一個函式庫的雙重特性。
 
-- **路徑格式**：`docs/use-cases/<s>/core/<toolkit...>/<feature_name>/`
+- **路徑格式**：`docs/use-cases/<system>/core/<toolkit...>/<feature_name>/`
 - **範例**：為 `gms` 系統的內部核心模組 `gms/core` 的日誌工具集新增功能：
   - `docs/use-cases/gms/core/logging/add-trace-id/`
 

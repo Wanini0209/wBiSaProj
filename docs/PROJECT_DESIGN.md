@@ -303,13 +303,16 @@ wBiSaProj/
 
 為確保溝通一致，我們採用以下術語來描述專案的核心元素：
 
-| 術語 | 定義 | 範例 |
+| 變數 | 定義 | 範例 |
 |:-----|:-----|:-----|
-| `<s>` | 業務系統或資料源系統的名稱 | `gms`, `tej` |
-| `<library>` | 專案級共用函式庫或系統級內部核心模組 | `core`, `wutils`, `gms/core` |
-| `<domain>` | 系統的業務領域分類，映射真實世界的業務範疇 | `user`, `market`, `stock` |
-| `<toolkit>` | 函式庫的功能分類，代表技術解決方案集合 | `io`, `tseries` |
-| `<fu_path>` | FU Container 相對於專案根目錄的完整路徑 | `gms/api/mkt/stock/profile`, `core/config` |
+| **`<system>`** | 業務系統或資料源系統的名稱 | `gms`, `tej` |
+| **`<library>`** | 專案級共用函式庫或系統級內部核心模組 | `core`, `wutils`, `gms/core` |
+| **`<toolkit>`** | 函式庫的功能分類，代表技術解決方案集合 | `io`, `ds/tree` |
+| **`<domain>`** | 系統的業務領域分類，映射真實世界的業務範疇 | `user`, `market` |
+| **`<subdomain>`** | 隸屬於 Domain 之下的具體業務範疇 | `stock`, `profile` |
+| **`<feature_name>`** | 業務價值的交付單位名稱 | `pickle-io` |
+| **`<fu_path>`** | FU Container 相對於專案根目錄的完整路徑 | `wutils/io`, `gms/db/user` |
+| **`<fu_name>`** | 具體功能單元 (FU) 的邏輯名稱 | `pickle-io`, `date-parser` |
 
 ---
 
@@ -423,7 +426,7 @@ Feature（業務價值單元）
 
 | 模組類型 | 組織驅動力 | 路徑結構 |
 |:---------|:-----------|:---------|
-| 系統 (System) | 業務領域驅動 | `docs/use-cases/<s>/[<domain>]/...` |
+| 系統 (System) | 業務領域驅動 | `docs/use-cases/<system>/[<domain>]/...` |
 | 函式庫 (Library) | 功能分類驅動 | `docs/use-cases/<library>/<toolkit>/...` |
 
 #### 文件內容規範

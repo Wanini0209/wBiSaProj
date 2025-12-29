@@ -6,7 +6,7 @@
 
 **文件體系**：
 
-```
+```text
 總體設計文件 (PROJECT_DESIGN.md)
     ├── 📘 架構篇 (本文件)
     ├── 📗 方法論篇 (PROJECT_DESIGN-METHODOLOGY.md)
@@ -78,8 +78,8 @@
 
 | 層級 | 名稱 | 職責 | 內部資料源處理 | 外部資料源處理 |
 |:-----|:-----|:-----|:---------------|:---------------|
-| **第一層** | `[datasource]/collector` | 資料收集層 | 執行 SQL 查詢<br>回傳原始結果 | 處理 HTTP 請求<br>回傳原始響應 |
-| **第二層** | `[datasource]/service` | 服務層 | 格式標準化<br>資料驗證 | 資料解析（JSON/HTML）<br>格式標準化<br>快取處理 |
+| **第一層** | `<system>/collector` | 資料收集層 | 執行 SQL 查詢<br>回傳原始結果 | 處理 HTTP 請求<br>回傳原始響應 |
+| **第二層** | `<system>/service` | 服務層 | 格式標準化<br>資料驗證 | 資料解析（JSON/HTML）<br>格式標準化<br>快取處理 |
 
 ### 1.3 業務/應用系統 (Business/Application Systems)
 
@@ -89,13 +89,13 @@
 
 | 模組 | 職責 | 特點 |
 |:-----|:-----|:-----|
-| **`[system]/core`** | 系統內部的共享函式庫 | 封裝系統內各模組都會共用的元件 |
+| **`<system>/core`** | 系統內部的共享函式庫 | 封裝系統內各模組都會共用的元件 |
 
 #### B. 批次資料處理流程
 
 | 模組 | 職責 | 特點 |
 |:-----|:-----|:-----|
-| **`[system]/etl`** | 資料抽取、轉換與載入 | 透過 `core` 定義的抽象介面從資料源獲取資料<br>將處理完成的資料寫入自身的 `db` 層 |
+| **`<system>/etl`** | 資料抽取、轉換與載入 | 透過 `core` 定義的抽象介面從資料源獲取資料<br>將處理完成的資料寫入自身的 `db` 層 |
 
 #### C. 線上應用三層式架構
 
@@ -103,9 +103,9 @@
 
 | 層級 | 模組 | 角色 | 職責 |
 |:-----|:-----|:-----|:-----|
-| **表現層** | `[system]/api` | Presentation Layer | 提供 RESTful API<br>處理 HTTP 請求 |
-| **邏輯層** | `[system]/service` | Business Logic Layer | 實作業務規則<br>編排協調 db 層功能 |
-| **資料層** | `[system]/db` | Persistence Layer | 封裝資料庫操作<br>提供資料存取介面 |
+| **表現層** | `<system>/api` | Presentation Layer | 提供 RESTful API<br>處理 HTTP 請求 |
+| **邏輯層** | `<system>/service` | Business Logic Layer | 實作業務規則<br>編排協調 db 層功能 |
+| **資料層** | `<system>/db` | Persistence Layer | 封裝資料庫操作<br>提供資料存取介面 |
 
 > **實作參考**
 >
@@ -404,19 +404,51 @@ gms/db/user/profile/
 | **Feature** | 功能特性 | 實現特定業務需求的程式碼單元 |
 | **Toolkit** | 工具集 | Library 中的功能分類單位 |
 
-### 5.3 路徑變數術語
+#### 5.3 專案核心變數定義 (Project Core Variable Definitions)
 
 以下術語用於文件中描述路徑與命名規範：
 
 | 變數 | 定義 | 範例 |
-|:-----|:-----|:-----|
-| **`<system>`** | 系統名稱 | 業務系統或資料源系統的名稱（如 `gms`, `twseprice`） |
-| **`<library>`** | 函式庫 | 專案級共用函式庫或系統級內部核心模組（如 `core`, `wutils`） |
-| **`<domain>`** | 領域分類 | 系統的業務領域分類，映射真實世界的業務範疇 |
-| **`<toolkit>`** | 技術分類 | 函式庫的功能分類，代表技術解決方案集合 |
-| **`<fu_path>`** | FU 容器路徑 | FU Container 相對於專案根目錄的完整路徑 |
+| :--- | :--- | :--- |
+| **`<system>`** | 業務系統或資料源系統的名稱 | `gms`, `tej` |
+| **`<business_system>`** | 專案內的業務系統 | `gms` |
+| **`<datasource_system>`** | 專案內的資料源系統 | `tej` |
+| **`<library>`** | 專案級共用函式庫或系統級內部核心模組 | `core`, `wutils`, `<system>/core` (e.g., `gms/core`) |
+| **`<toolkit>`** | 函式庫的功能分類（技術解決方案集合） | `io`, `ds/tree` |
+| **`<domain>`** | 系統的業務領域分類（業務範疇） | `user`, `market` |
+| **`<subdomain>`** | 隸屬於 Domain 之下的具體業務範疇 | `stock`, `profile` |
+| **`<feature_name>`** | 業務價值的交付單位名稱 | `pickle-io` |
+| **`<fu_path>`** | FU Container 相對於專案根目錄的完整路徑 | `wutils/io`, `gms/db/user` |
+| **`<fu_name>`** | 具體功能單元 (FU) 的邏輯名稱（目錄友善格式） | `pickle-io`, `date-parser` |
+| **`<impl_file>`** | 私有實作檔案的相對路徑與檔名（相對於 `<fu_path>`） | `_pickle.py`, `_impl/_parser.py` |
 
-### 5.4 結構對應性原則
+#### 5.4 佔位符符號規範 (Placeholder Syntax)
+
+| 符號格式 | 語義定義 | 範例 |
+| :--- | :--- | :--- |
+| **`<variable_name>`** | **強制變數**：代表此處必須根據實際內容代換。 | `<fu_name>`, `<system>` |
+| **`[ ... ]`** | **選填項目**：代表此層級或內容在某些情境下可省略。 | `[<subdomain>]` |
+
+> **規範要點**（僅針對 §5.3 定義之專案核心變數）：
+> 1. 佔位符內部的變數名統一使用 **`snake_case`**。
+> 2. 嚴禁在尖括號 `<>` 內部包含實體路徑符號（如前導底線 `_` 或副檔名 `.py`）。
+>
+> *註：一般性提示（如 `ExportedClass`, `exported_function`）不受此格式約束，僅用於開發意圖示意。*
+
+#### 5.5 導入轉換規則 (Import Transformation Rules)
+
+> 為了保持技術規格文件 (Specs) 的簡潔，文件統一使用實體路徑變數。在轉換為 Python 程式碼時，遵循以下轉換邏輯：
+> 1. **外部導入 (External Import)**：
+> * **適用變數**：`<fu_path>`
+> * **規則**：將路徑中的 `/` 替換為 `.`。
+> * **範例**：`from <fu_path> import ...` \rightarrow `from wutils.io import ...`
+>
+> 2. **內部導入 (Internal Import)**：
+> * **適用變數**：`<impl_file>`（相對於 `<fu_path>` 的路徑）
+> * **規則**：移除 `.py` 副檔名，將 `/` 替換為 `.`，並加上相對導入前綴 `.`。
+> * **範例**：`from .<impl_file> import ...` \rightarrow `from ._pickle import ...` 或 `from ._pandas._pickle import ...`
+
+### 5.6 結構對應性原則
 
 > **關鍵理解：結構對應性原則 (Structural Correspondence Principle)**
 >
@@ -426,27 +458,27 @@ gms/db/user/profile/
 
 **1. 技術規格 (Specification)**
 
-- **路徑**：`docs/specs/<fu_path>/[fu-name]/...`
+- **路徑**：`docs/specs/<fu_path>/<fu_name>/...`
 - **角色**：規格文件是**真理的唯一來源 (Single Source of Truth)**。它不僅定義了功能，**還必須明確記載其對應的測試與功能實作的實際路徑**，作為開發導航的地圖。
 
 **2. 測試程式 (Tests)**
 
-- **路徑**：`tests/<fu_path>/[fu-name]/...`
+- **路徑**：`tests/<fu_path>/<fu_name>/...`
 - **角色**：測試的目錄結構與規格文件完全對應，確保了從邏輯單元到其驗證程式碼的直接可追溯性。
 
 **3. 功能實作 (Implementation)**
 
 - **路徑**：`<fu_path>/_*/...`
-- **角色**：功能實作被封裝在 `<fu_path>` 下的任意私有模組或套件中（以 `_` 開頭）。其命名和內部結構無需與 `[fu-name]` 強制對應，給予了開發最大的彈性。
+- **角色**：功能實作被封裝在 `<fu_path>` 下的任意私有模組或套件中（以 `_` 開頭）。其命名和內部結構無需與 `<fu_name>` 強制對應，給予了開發最大的彈性。
 
 **4. 功能導入 (Usage)**
 
 - **語法**：`from <fu_path> import ...`
 - **角色**：`<fu_path>` 是功能的**唯一公開入口**。所有外部模組都必須透過此路徑導入所需的功能，嚴格禁止穿透容器直接導入其內部的私有實作 (`_*`)。
 
-> 這種模型讓開發者可以清晰地從 `[fu-name]` 找到其規格與測試，再透過閱讀規格文件精準定位到功能實作，並最終透過 `<fu_path>` 安全地使用該功能。
+> 這種模型讓開發者可以清晰地從 `<fu_name>` 找到其規格與測試，再透過閱讀規格文件精準定位到功能實作，並最終透過 `<fu_path>` 安全地使用該功能。
 
-### 5.5 關鍵技術縮寫
+### 5.7 關鍵技術縮寫
 
 | 縮寫 | 全稱 | 中文說明 |
 |:-----|:-----|:---------|
@@ -470,7 +502,7 @@ gms/db/user/profile/
 | **系統間通訊** | 業務系統之間僅能透過 API 進行通訊，嚴格禁止直接存取其他系統的資料庫 |
 | **資料庫策略** | 每個業務系統擁有獨立資料庫，可混合使用 SQL、NoSQL 與檔案系統儲存 |
 | **資料存取技術選型** | 資料源系統使用直接 SQL；業務系統 DB 層使用 ORM；ETL 層視資料量選擇 |
-| **命名空間區分** | 專案級：`from core import ...`<br>系統級：`from [system_name].core import ...` |
+| **命名空間區分** | 專案級：`from core import ...`<br>系統級：`from <system>.core import ...` |
 
 ### 6.2 依賴反轉原則 (Dependency Inversion Principle)
 
@@ -486,19 +518,19 @@ gms/db/user/profile/
 **跨 Domain 規則**：
 
   - 🚫 禁止 Domain 之間直接依賴彼此的具體實作
-  - ✅ 必須透過系統級 `[system]/core/interfaces` 的抽象介面或各層定義的介面
+  - ✅ 必須透過系統級 `<system>/core/interfaces` 的抽象介面或各層定義的介面
 
 #### ⚠️ 架構紅線：禁止業務邏輯層直接存取資料源
 
 **原則**：
-業務系統的 Service 層 (`[system]/service`) 與 API 層 (`[system]/api`) **嚴禁** 直接依賴或使用資料源介面 (如 `core/interfaces` 中的 `IStockPriceProvider`)。
+業務系統的 Service 層 (`<system>/service`) 與 API 層 (`<system>/api`) **嚴禁** 直接依賴或使用資料源介面 (如 `core/interfaces` 中的 `IStockPriceProvider`)。
 
 **規範**：
 * **資料自主性**：業務系統的所有資料獲取，**必須且只能** 透過其專屬的 Repository (如 `IStockPriceRepository`) 進行，存取已經落地於內部資料庫的資料。
 * **職責分離**：Service 層專注於業務邏輯分析，不應處理外部資料源的不穩定性或延遲。
 
 **例外**：
-* 資料源介面 **僅允許** 由 **ETL 層** (`[system]/etl`) 在執行資料同步作業時使用。ETL 層是資料源在業務系統中唯一的合法消費者。
+* 資料源介面 **僅允許** 由 **ETL 層** (`<system>/etl`) 在執行資料同步作業時使用。ETL 層是資料源在業務系統中唯一的合法消費者。
 
 #### 系統間依賴反轉 (Inter-System DIP)
 
@@ -587,7 +619,7 @@ graph LR
 
 2. **管理外部依賴（絕對導入）**：
 
-   * **問題**：模組（例如 `service` 模組）的多處程式碼都依賴*外部*模組（例如 `[system]/core`）。當 `core` 模組的結構發生變化時，`service` 模組內所有引用到該依賴的地方都需要修改。
+   * **問題**：模組（例如 `service` 模組）的多處程式碼都依賴*外部*模組（例如 `<system>/core`）。當 `core` 模組的結構發生變化時，`service` 模組內所有引用到該依賴的地方都需要修改。
    * **解決**：由 `service` 模組的根 `_imports.py` 統一負責導入 `core` 的依賴，`service` 內部的程式碼再從 `_imports.py` 獲取此依賴。
 
 透過此機制，四大模組各自的 `_imports.py` 成為了該模組的「依賴抽象層」，極大地降低了因結構變動帶來的維護成本。
@@ -598,28 +630,28 @@ graph LR
 
 1. **適用範圍 (In Scope)**：
 
-   * `[system]/api`, `[system]/service`, `[system]/db`, `[system]/etl` 這四大模組。
+   * `<system>/api`, `<system>/service`, `<system>/db`, `<system>/etl` 這四大模組。
    * 用於管理這四大模組的**內部依賴**（相對導入）和**外部依賴**（絕對導入）。
 
 2. **不適用範圍 (Out of Scope)**：
 
-   * **系統核心庫**：`[system]/core` 模組本身性質屬於 library，其結構相對單純，**不導入** `_imports.py` 機制。
+   * **系統核心庫**：`<system>/core` 模組本身性質屬於 library，其結構相對單純，**不導入** `_imports.py` 機制。
    * **專案級函式庫**：`core`, `wutils` 等專案級函式庫**不使用**此機制。
 
 #### 機制起點
 
 `_imports.py` 的繼承與傳播機制**起點**，位於四大模組的根目錄：
 
-* `[system]/api/_imports.py`
-* `[system]/service/_imports.py`
-* `[system]/db/_imports.py`
-* `[system]/etl/_imports.py`
+* `<system>/api/_imports.py`
+* `<system>/service/_imports.py`
+* `<system>/db/_imports.py`
+* `<system>/etl/_imports.py`
 
 這些**根檔案**的核心職責是**統一管理所有「外部依賴」**（例如，`service` 模組對 `core` 或 `db` 模組的依賴）。
 
 它們會透過自動化工具，將這些已導入的「外部依賴」向下傳播至所有子容器 (FU Container)。
 
-而模組內的 **「內部的依賴」**(子模組間的依賴)，則由各**子容器**的 `_imports.py` 檔案（例如 `[system]/service/a/_imports.py`）自行定義和管理。
+而模組內的 **「內部的依賴」**(子模組間的依賴)，則由各**子容器**的 `_imports.py` 檔案（例如 `<system>/service/a/_imports.py`）自行定義和管理。
 
 > **關鍵規範**：`_imports.py` 檔案只允許被建立在 FU Container (公開容器) 之中。
 >
@@ -628,7 +660,7 @@ graph LR
 > 根據專案的設計決策（DDR 2025-11-05），`_common` 目錄被定義為模組層級的私有實作細節，用於存放該模組內部的共用元件。由於 `_common` 不是一個公開容器（FU Container），因此：
 > - `_common` 目錄本身**不應該**包含 `_imports.py` 檔案
 > - `_common` 內的元件被視為其所屬模組的私有實作，由該模組的根 `_imports.py` 統一管理其導入
-> - 例如：`[system]/db/_common/` 中的 ORM 基礎元件，由 `[system]/db/_imports.py` 負責導入和管理
+> - 例如：`<system>/db/_common/` 中的 ORM 基礎元件，由 `<system>/db/_imports.py` 負責導入和管理
 
 #### 核心檔案職責
 
@@ -644,7 +676,7 @@ graph LR
 > `_imports.py` 是作為該容器的統一依賴入口，其管理的範圍是**同一系統內**的所有依賴。
 >
 > 這同時包含了 6.3 節中定義的兩種類型：
-> * **外部依賴** (同一系統內，標準模組間的依賴，如 `[system]/core` 或 `db` 層)。
+> * **外部依賴** (同一系統內，標準模組間的依賴，如 `<system>/core` 或 `db` 層)。
 > * **內部依賴** (同一標準模組內，子模組間的相對導入)。
 >
 > 它**不管理**對「專案層級函式庫」（如 `core`, `wutils`）或「第三方套件」的依賴。
@@ -664,11 +696,11 @@ graph LR
 
 | 層級 (Layer) | 可依賴的層級 (架構規範) | `_imports.py` 導入來源 (機制實踐) |
 |:-----|:-----|:-----|
-| `[system]/api` | `service`, `[system]/core` | `service` 層的公開介面、`[system]/core` 的公開介面 |
-| `[system]/service` | `db`, `[system]/core` | `db` 層的公開介面、`[system]/core` 的公開介面 |
-| `[system]/etl` | `db`, `[system]/core` | `db` 層的公開介面、`[system]/core` 的公開介面 |
-| `[system]/db` | `[system]/core` | `[system]/core` 的公開介面 |
-| `[system]/core` | (無系統內依賴) | (不適用) |
+| `<system>/api` | `service`, `<system>/core` | `service` 層的公開介面、`<system>/core` 的公開介面 |
+| `<system>/service` | `db`, `<system>/core` | `db` 層的公開介面、`<system>/core` 的公開介面 |
+| `<system>/etl` | `db`, `<system>/core` | `db` 層的公開介面、`<system>/core` 的公開介面 |
+| `<system>/db` | `<system>/core` | `<system>/core` 的公開介面 |
+| `<system>/core` | (無系統內依賴) | (不適用) |
 
 #### 自動化工具支援
 
@@ -813,8 +845,8 @@ wBiSaProj/
 | 位置 | 用途 |
 |:-----|:-----|
 | `core/interfaces/` | 存放所有跨系統的介面定義 |
-| `[datasource]/service/` | 資料源系統實作 `core/interfaces` 中定義的介面 |
-| `[business]/etl/` | 業務系統透過依賴注入（DI）使用這些介面 |
+| `<datasource_system>/service/` | 資料源系統實作 `core/interfaces` 中定義的介面 |
+| `<business_system>/etl/` | 業務系統透過依賴注入（DI）使用這些介面 |
 
 -----
 

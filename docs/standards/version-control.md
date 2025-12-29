@@ -46,7 +46,7 @@
 所有開發工作（包含功能實作與規範修訂）都必須在獨立的 `feature` 分支上進行。
 
 **分支命名格式**：
-`feature/<root>/<hierarchy...>/<feature-name>`
+`feature/<root>/<hierarchy>/<feature_name>`
 
 **命名規則**：
 分支路徑必須採用**階層式命名**，且其結構應與該 Feature 在 `docs/use-cases/` 中的相對路徑完全一致（不含 `docs/use-cases/` 前綴）。這確保了 Git 分支、文件目錄與程式碼架構三者的高度對應。
