@@ -22,6 +22,13 @@ select = ["E", "F", "W", "I", "D", "B", "C4", "UP", "PL"]
 # 可以忽略特定的規則
 ignore = ["D100", "D104", "D107", "D401"]
 
+[tool.ruff.lint.per-file-ignores]
+# 針對測試目錄忽略 Magic Value 檢查 (PLR2004)
+"tests/**/*.py" = ["PLR2004"]
+
+# 針對 __init__.py：允許導入但未使用的模組 (Re-export API 用)
+"__init__.py" = ["F401"]
+
 [tool.ruff.lint.pydocstyle]
 # 設定 pydocstyle 規則，使其遵循 NumPy 風格
 convention = "numpy"
