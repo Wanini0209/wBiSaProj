@@ -47,6 +47,31 @@ API_ENDPOINT = (
 )
 ```
 
+### 函數引數數量限制 (Argument Count)
+
+預設單一函數或方法的參數不應超過 **5 個** (Ruff PLR0913)。過多的參數通常代表函數職責過重，應考慮重構（例如使用 Dataclass 封裝參數）。
+
+**例外豁免 (Conditions for Exception)**:
+在以下情境中，若參數過多是為了**架構完整性**或**依賴注入**需求，允許使用 `# noqa: PLR0913` 豁免：
+
+1.  **類別建構子 (`__init__`)**: 特別是 Service 層級的類別，常需注入多個 Repository 或 Utility 組件。
+2.  **方法覆寫 (Override)**: 子類別必須保持與父類別相同的簽章，或為了擴充功能而包含父類的所有參數。
+3.  **API 封裝 (Wrappers)**: 為了維持對底層函式的介面相容性。
+
+```python
+# ✅ 正確：建構子依賴注入可豁免
+def __init__(  # noqa: PLR0913
+    self,
+    user_repo: IUserRepository,
+    auth_service: IAuthService,
+    email_sender: IEmailSender,
+    logger: ILogger,
+    config: AppConfig,
+    cache: ICache,
+) -> None:
+    ...
+```
+
 ### 命名規範
 
 除了標準的 PEP 8 命名外，需遵守本專案的架構命名約定：
@@ -113,7 +138,9 @@ from core.exceptions import BusinessLogicError  # 禁止繞過 _imports
 
 ## 3. 類型提示規範 (Type Hinting)
 
-本專案目標版本為 Python 3.12+，請使用現代語法：
+本專案目標版本為 Python 3.12+，請全面使用現代語法 (PEP 695, PEP 604)。
+
+### 基礎類型與聯集
 
 ```python
 # ✅ 正確 - 使用內建類型與 | 運算子
@@ -124,13 +151,29 @@ def process_data(items: list[dict[str, str | int]]) -> dict[str, any]:
 from typing import Dict, List, Optional, Union
 ```
 
+### 泛型語法 (Generics) [NEW]
+
+定義泛型類別時，**必須**使用 Python 3.12 新增的 Type Parameter Syntax (`class Class[T]`)，禁止繼承 `typing.Generic`。
+
+```python
+# ✅ 正確 (Modern Syntax)
+class FutureThread[T](threading.Thread):
+    def get_result(self) -> T:
+        ...
+
+# ❌ 錯誤 (Legacy Syntax - Ruff UP046)
+from typing import TypeVar, Generic
+T = TypeVar("T")
+class FutureThread(threading.Thread, Generic[T]):
+    pass
+```
+
 **推薦對照表**:
 
 - `typing.List` → `list`
 - `typing.Dict` → `dict`
-- `typing.Tuple` → `tuple`
-- `typing.Union[A, B]` → `A | B`
 - `typing.Optional[T]` → `T | None`
+- `class A(Generic[T])` → `class A[T]`
 
 ---
 
@@ -265,7 +308,8 @@ inv style  # 執行格式化與檢查
 
 - [ ] **檔案命名**：私有實作檔案是否已加上底線前綴 (如 `_service.py`, `_utils.py`)。
 - [ ] **公開介面**：若新增了對外公開的元件，是否已在 `__init__.py` 的 `__all__` 中註冊？
-- [ ] **類型提示**：是否使用了現代語法 (如 `list[str]`, `str | None`) 而非舊式 `typing` 模組？
+- [ ] **類型提示**：是否使用了現代語法 (如 `list[str]`, `str | None`) 以及 **3.12+ 泛型語法**？
+- [ ] **函數引數**：`__init__` 以外的函數是否保持在 5 個參數以內？
 - [ ] **文件語言**：
   - [ ] Docstrings (API 文件) 是否為 **英文**？
   - [ ] Inline Comments (邏輯說明) 若涉及複雜業務或法規，是否已用清晰的語言 (可含繁體中文) 解釋 **Why**？
@@ -280,6 +324,7 @@ inv style  # 執行格式化與檢查
 
 - [ ] **Line Length**: 限制 88 字元。URL 或 Regex 可例外並加上 `# noqa: E501`。
 - [ ] **Imports**: 標準庫 -> 第三方 -> 本地，嚴禁循環依賴。
+- [ ] **Generics**: 使用 `class A[T]` (PEP 695)，禁止 `class A(Generic[T])`。
 
 ### 8.2 文件字串檢查 (Docstrings) [CRITICAL]
 
