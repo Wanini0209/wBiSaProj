@@ -786,6 +786,22 @@ graph LR
 * **最終一致性 (Eventual Consistency)**：
     * 在跨 Aggregate 的資料更新中，應容忍短暫的資料不一致，由應用層處理同步邏輯。
 
+### 6.6 ORM 擴充與依賴原則 (ORM Extensibility & Dependency)
+
+為落實 **開閉原則 (Open/Closed Principle)**，在擴充資料庫關聯時，必須嚴格遵守以下依賴方向，避免修改已穩定的功能單元。
+
+#### 依賴單向性 (Unidirectional Dependency)
+
+* **原則**：新功能 (Child/Extension) 依賴於 基礎功能 (Parent/Base)，基礎功能 **嚴禁** 在程式碼層級依賴或感知新功能的存在。
+* **規範**：
+    * 當需要建立關聯 (Relationship) 時，**必須** 在新功能的 Model 中定義。
+    * 若需雙向存取，請使用 ORM 的 **反向參考注入 (Back Reference Injection)** 機制 (如 SQLAlchemy 的 `backref`)，動態將屬性掛載回母體，而非直接修改母體 Model 的程式碼。
+
+| 角色 | 修改權限 | 範例行為 |
+|:---|:---|:---|
+| **Parent FU** (基礎/穩定) | 🔒 **Closed** | 保持原樣，不應加入對 Child 的 import 或 relationship 定義。 |
+| **Child FU** (擴充/變動) | 🔓 **Open** | 定義 ForeignKey 指向 Parent，並宣告 `backref` 以建立關聯。 |
+
 -----
 
 ## 7. 專案級通用標準 (Project-Wide Standards)
