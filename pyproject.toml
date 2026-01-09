@@ -37,7 +37,7 @@ convention = "numpy"
 # 不需要額外設定，使用預設值即可，或根據需求新增 skips
 
 [tool.mypy]
-files = ["wsatools"]
+files = ["wsatools", "wutils"]
 ignore_missing_imports = true
 follow_imports = "silent"
 warn_redundant_casts = true

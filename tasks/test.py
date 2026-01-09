@@ -11,7 +11,7 @@ run:
 
 from invoke import Context, task
 
-from tasks._common import TEST_TARGET, USE_PTY, VENV_PREFIX
+from tasks._common import SOURCE_PACKAGES, USE_PTY, VENV_PREFIX
 
 PYTEST: str = f"{VENV_PREFIX} pytest"
 
@@ -55,4 +55,5 @@ def cov(ctx: Context) -> None:
         Documentation for pytest-cov plugin.
 
     """
-    ctx.run(f"{PYTEST} --cov={TEST_TARGET} --cov-report=html", pty=USE_PTY)
+    cov_args = " ".join([f"--cov={pkg}" for pkg in SOURCE_PACKAGES])
+    ctx.run(f"{PYTEST} {cov_args} --cov-report=html", pty=USE_PTY)

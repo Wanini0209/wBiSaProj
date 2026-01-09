@@ -2,7 +2,7 @@
 # pylint: disable=missing-module-docstring
 from os import path
 
-from setuptools import setup
+from setuptools import find_packages, setup
 
 # Project Info
 DISTNAME = "wBiSaProj"
@@ -72,7 +72,7 @@ keywords = []
 #
 #   packages = find_packages(where='.', exclude=(), include=('*',))
 #
-packages = ["wsatools"]
+packages = find_packages(where=".", exclude=["tests", "tests.*", "tasks", "tasks.*"])
 
 # Definition Python version supported
 PYTHON_REQUIRES = ">=3.12, <4"
