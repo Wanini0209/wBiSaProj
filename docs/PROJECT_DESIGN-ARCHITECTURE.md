@@ -24,7 +24,7 @@
 3. **核心組織原則**：詳細闡述以業務領域驅動結構的設計哲學與實踐方式
 4. **核心架構概念**：深入說明功能單元 (FU) 與公開容器的設計理念
 5. **核心開發術語**：定義專案共通的術語體系與關鍵縮寫
-6. **關鍵設計原則與實踐**：詳述依賴反轉原則與混合依賴管理機制
+6. **關鍵設計原則與實踐**：詳述依賴反轉原則、混合依賴管理與資料架構原則
 7. **專案檔案結構**：說明實際的目錄組織與命名規範
 
 -----
@@ -734,6 +734,57 @@ graph LR
 >   - 測試策略與 Mock 模式
 >
 > 請參閱 [架構實作指引](GUIDE_ARCHITECTURE.md) 獲得完整的實作範例與最佳實踐建議。
+
+### 6.5 資料架構設計原則 (Data Architecture Principles)
+
+為確保高併發環境下的效能與可維護性，資料庫模型設計須遵循以下核心原則：
+
+#### 資料生命週期分離 (Lifecycle Separation)
+
+**原則**：嚴禁將「生命週期顯著不同」的資料屬性混合在同一實體表 (Entity Table) 中。
+
+* **冷熱分離 (Hot/Cold Separation)**：
+    * **Reference Data (冷)**：低頻更新、讀多寫少 (e.g., 股票名稱、使用者基本資料)。
+    * **Transactional Data (熱)**：高頻更新、寫多讀多、具時序性 (e.g., 最新股價、使用者登入紀錄)。
+    * **規範**：上述兩類資料必須拆分為不同的實體 (e.g., `StockReference` vs. `StockQuote`)，以避免鎖競爭 (Lock Contention) 並優化快取策略。
+
+#### 成長邊界分離 (Growth Bound Separation)
+
+**原則**：將「有界資料」與「無界資料」分離。
+
+* **規範**：當前狀態 (Current State, 只有一筆) 與 歷史紀錄 (History, 無限增長) 必須實體分離。不應為了查詢方便，將大量的歷史 Log 塞入主要實體表中。
+
+#### 6.5.1 儲存技術選型 (Storage Technology Selection)
+
+依據資料特徵與存取模式，選擇最適合的儲存技術：
+
+* **關聯式資料庫 (RDBMS)**：適用於高結構化、需強一致性 (ACID)、複雜關聯查詢的資料。
+    * *範例：使用者帳號、權限配置、訂單交易。*
+* **檔案系統 (FileSystem)**：適用於寫入後極少修改 (Immutable)、需高吞吐量批量讀寫 (Bulk I/O) 的大數據或非結構化資料。
+    * *範例：歷史股價 (Tick/Min)、非結構化財報文件、系統日誌封存。*
+* **NoSQL 資料庫**：適用於結構多變 (Schema-less) 或需極高寫入吞吐量的場景。
+    * *範例：異質來源的爬蟲暫存資料 (Document)、高頻即時報價快取 (Key-Value)。*
+
+#### 6.5.2 SQL 設計原則 (SQL Design Principles)
+
+* **正規化優先**：預設採用第三正規化 (3NF)，確保資料一致性。
+* **效能反正規化**：僅在效能瓶頸經證實後，才允許針對特定讀取路徑進行反正規化 (Denormalization)。
+
+#### 6.5.3 檔案系統設計原則 (FileSystem Design Principles)
+
+* **存取模式導向 (Access-Pattern Oriented)**：
+    * 檔案結構應直接映射應用程式的讀取模式 (Read Path)，而非資料本身的邏輯結構。
+* **空間換取時間 (Space for Time)**：
+    * 為滿足截然不同的存取需求（如：「依股票查詢歷史」vs.「依日期查詢全市場」），允許並鼓勵將同一份資料以不同維度 (Partitioning Key) 重複儲存，以消除讀取時的 Shuffle/Sort 開銷。
+* **寫入不變性 (Immutability)**：
+    * 原則上檔案一旦寫入即視為不可變 (Immutable)。若需更新，應採用 Copy-on-Write 或產生新版本檔案，避免原地修改 (In-place Update)。
+
+#### 6.5.4 NoSQL 設計原則 (NoSQL Design Principles)
+
+* **查詢導向設計 (Query-Driven Design)**：
+    * 設計 Schema 前必須先定義查詢模式。資料應以「單次查詢即可取回所有所需資訊」為目標進行聚合 (Aggregation)。
+* **最終一致性 (Eventual Consistency)**：
+    * 在跨 Aggregate 的資料更新中，應容忍短暫的資料不一致，由應用層處理同步邏輯。
 
 -----
 
