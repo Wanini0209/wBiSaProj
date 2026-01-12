@@ -750,18 +750,18 @@ graph LR
 
 #### 資料生命週期分離 (Lifecycle Separation)
 
-**原則**：嚴禁將「生命週期顯著不同」的資料屬性混合在同一實體表 (Entity Table) 中。
+**原則**：嚴禁將「生命週期顯著不同」的資料屬性混合在同一實體表 (Entity Table) 中。這屬於**物理儲存層面**的分離要求，**不代表**必須拆分為不同的功能單元 (FU)。
 
 * **冷熱分離 (Hot/Cold Separation)**：
-    * **Reference Data (冷)**：低頻更新、讀多寫少 (e.g., 股票名稱、使用者基本資料)。
-    * **Transactional Data (熱)**：高頻更新、寫多讀多、具時序性 (e.g., 最新股價、使用者登入紀錄)。
-    * **規範**：上述兩類資料必須拆分為不同的實體 (e.g., `StockReference` vs. `StockQuote`)，以避免鎖競爭 (Lock Contention) 並優化快取策略。
+    * **Reference Data (冷)**：低頻更新、讀多寫少。
+    * **Transactional Data (熱)**：高頻更新、寫多讀多。
+    * **規範**：上述兩類資料必須拆分為不同的實體 (Entity/Table)，但**應**由同一個 Repository (FU) 進行聚合管理，對外隱藏拆分細節。
 
 #### 成長邊界分離 (Growth Bound Separation)
 
 **原則**：將「有界資料」與「無界資料」分離。
 
-* **規範**：當前狀態 (Current State, 只有一筆) 與 歷史紀錄 (History, 無限增長) 必須實體分離。不應為了查詢方便，將大量的歷史 Log 塞入主要實體表中。
+* **規範**：當前狀態 (Current State, 只有一筆) 與 歷史紀錄 (History, 無限增長) 必須**實體分離**。此混合儲存的實作細節（如 SQL 與 FileSystem 的協作）**必須**被封裝在單一 FU (Repository) 內部，對外僅提供統一的查詢介面。
 
 #### 6.5.1 儲存技術選型 (Storage Technology Selection)
 
