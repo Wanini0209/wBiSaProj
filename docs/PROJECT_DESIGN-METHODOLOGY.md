@@ -77,10 +77,12 @@ Feature（業務價值單元）
 ```
 
 **核心定義**：
-
 - **Feature**：完整的、可獨立交付的業務/技術價值單元
     - 在**業務系統**或**資料源系統**中，它必須歸屬於一個業務 `Domain`
-    - 在**函式庫 (Library)** 中，它必須歸屬於一個技術功能的分類 `Toolkit`
+    - 在**函式庫 (Library)** 中，它必須歸屬於一個**具體的**技術功能分類 `Toolkit`
+    - **原子化原則 (Atomicity Principle)**：
+        - **單一職責**：一個 Feature 只能解決一個特定的技術問題或業務需求。
+        - **領域隔離**：嚴禁將不同技術領域 (如 Crypto 與 Date) 的工具合併在同一個 Feature 中，即使它們都很「通用」。
 - **Task**：對某個特定 Functional Unit 的新增或修改操作
 
 > **關鍵理解：Feature 與 FU 的關係**
@@ -159,9 +161,11 @@ Feature（業務價值單元）
 
 #### Library Feature Tasks
 
-- 根據 Functional Unit 特性彈性處理
-- 可能是單一函數、類別或完整模組
-- 無標準模板，視需求而定
+- **原則**：形式彈性，但必須遵守 **One Feature = One Technical Topic** 原則。
+    - **高內聚性 (High Cohesion)**：一個 Feature 應包含該主題下**邏輯緊密相關**的所有元件（例如：**成對的序列化/反序列化函數**、或一組針對同一資料結構的 Helper），**不可為了追求原子化而將原本應屬一體的邏輯拆散**。
+- **反模式 (Anti-Pattern)**：
+    - 禁止建立名為 `common`, `utils`, `helpers`, `misc` 的 Feature。
+    - 若發現需求包含多個**不同技術領域**的工具 (e.g., String + Crypto)，**必須**拆解為多個獨立的 Features。
 
 ---
 

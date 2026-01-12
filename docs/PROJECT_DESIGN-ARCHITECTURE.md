@@ -414,13 +414,20 @@ gms/db/user/profile/
 | **`<business_system>`** | 專案內的業務系統 | `gms` |
 | **`<datasource_system>`** | 專案內的資料源系統 | `tej` |
 | **`<library>`** | 專案級共用函式庫或系統級內部核心模組 | `core`, `wutils`, `<system>/core` (e.g., `gms/core`) |
-| **`<toolkit>`** | 函式庫的功能分類（技術解決方案集合） | `io`, `ds/tree` |
+| **`<toolkit>`** | 函式庫的功能分類（技術解決方案集合） | `io`, `security/crypto`, `time/ranger` |
 | **`<domain>`** | 系統的業務領域分類（業務範疇） | `user`, `market` |
 | **`<subdomain>`** | 隸屬於 Domain 之下的具體業務範疇 | `stock`, `profile` |
 | **`<feature_name>`** | 業務價值的交付單位名稱 | `pickle-io` |
 | **`<fu_path>`** | FU Container 相對於專案根目錄的完整路徑 | `wutils/io`, `gms/db/user` |
 | **`<fu_name>`** | 具體功能單元 (FU) 的邏輯名稱（目錄友善格式） | `pickle-io`, `date-parser` |
 | **`<impl_file>`** | 私有實作檔案的相對路徑與檔名（相對於 `<fu_path>`） | `_pickle.py`, `_impl/_parser.py` |
+
+> **規範要點**（僅針對 §5.3 定義之專案核心變數）：
+> 1. **命名限制**：`<toolkit>` 必須反映具體技術領域，**禁止**使用 `common`, `general` 等模糊字眼。
+> 2. **格式限制**：佔位符內部的變數名統一使用 **`snake_case`**。
+> 3. **路徑限制**：嚴禁在尖括號 `<>` 內部包含實體路徑符號（如前導底線 `_` 或副檔名 `.py`）。
+>
+> *註：一般性提示（如 `ExportedClass`, `exported_function`）不受此格式約束，僅用於開發意圖示意。*
 
 #### 5.4 佔位符符號規範 (Placeholder Syntax)
 
