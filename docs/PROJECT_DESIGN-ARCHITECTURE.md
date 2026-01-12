@@ -347,16 +347,18 @@ core/config/
 
 (例如: `<fu_path>` = `gms/db/user/profile`)
 
-此 Container 提供一個 User Profile Repository FU，包含了 `UserProfileRepository` 與相關的 ORM 模型（如 `UserProfile`）。
+此 Container **對外提供** Repository 操作介面與 Domain Schemas (Pydantic)；其**內部實作**則封裝了 ORM 模型、DTO 定義與具體的資料存取邏輯。
 
 ```text
 gms/db/user/profile/
-├── __init__.py       # 公開介面：匯出 UserProfileRepository
+├── __init__.py       # 公開介面：匯出 UserProfileRepository 與 UserProfileSchema
 ├── _imports.py       # 此模組的統一依賴入口
 ├── _common/          # 此模組內部共用的私有元件
 │   └── constants.py
-├── _models.py        # User Profile Repository FU 的私有實作（ORM 模型定義）
-├── _repository.py    # User Profile Repository FU 的私有實作（倉儲類別與邏輯）
+├── _schemas.py       # Pydantic Domain Schemas (公開契約，包含 Input/Output 定義)
+├── _models.py        # SQL ORM 模型定義 (Private implementation)
+├── _dtos.py          # FileSystem/NoSQL 資料傳輸物件定義 (Private implementation)
+├── _repository.py    # 負責協調 SQL 與 FS 的倉儲邏輯
 └── ...
 ```
 
@@ -867,16 +869,35 @@ wBiSaProj/
 │   │   │       ├── base.py    # (Base, BaseRepository)
 │   │   │       └── mixins.py  # (TimestampMixin, etc.)
 │   │   │
-│   │   └── user/              # Domain: user (FU Container)
+│   │   ├── user/              # Domain: user (FU Container)
 │   │   │   ├── __init__.py
 │   │   │   ├── _imports.py
 │   │   │   ├── _profile/      # "profile" FU 的私有實作
 │   │   │   └── ...
 │   │   │
 │   │   └── market/            # Domain: market (FU Container)
+│   │       ├── __init__.py
+│   │       ├── stock/         # Sub-domain
+│   │       │   └── price/     # "price" FU (Hybrid Storage Container)
+│   │       │       ├── __init__.py      # 公開介面：匯出 Repository 與 Domain Schemas
+│   │       │       ├── _imports.py
+│   │       │       ├── _schemas.py      # Pydantic Domain Schemas (公開契約，包含 Input/Output 定義)
+│   │       │       ├── _repository.py   # Repository Impl: 協調 SQL/FS/NoSQL 的 Facade
+│   │       │       │
+│   │       │       ├── _sql/            # SQL 儲存實作 (Private)
+│   │       │       │   ├── _models.py   # ORM Models (定義 Table 結構與 Entity)
+│   │       │       │   └── _mappers.py  # Data Mappers (負責 SQL Entity <-> Domain Schema 的轉換)
+│   │       │       │
+│   │       │       ├── _fs/             # FileSystem 儲存實作 (Private)
+│   │       │       │   ├── _dtos.py     # DTOs (定義資料在記憶體中的 Python 物件結構)
+│   │       │       │   └── _schemas.py  # Physical Schemas (定義 Parquet/Arrow 檔案的物理型別結構)
+│   │       │       │
+│   │       │       └── _nosql/          # NoSQL 儲存實作 (Private)
+│   │       │           ├── _documents.py # ODM Documents (定義 Document 結構，如 MongoDB Collection)
+│   │       │           └── _mappers.py   # Data Mappers (負責 NoSQL Document <-> Domain Schema 的轉換)
 │   │       └── ...
 │   │
-│   ├── service/               # 業務 logique 層 (FU Container)
+│   ├── service/               # 業務 logic 層 (FU Container)
 │   └── api/                   # API 介面層 (FU Container)
 │
 ├── docs/
