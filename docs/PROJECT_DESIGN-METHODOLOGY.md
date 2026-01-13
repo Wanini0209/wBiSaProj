@@ -141,26 +141,24 @@ Feature（業務價值單元）
 | **Service Task** | 實作業務邏輯與規則 | 業務服務、領域邏輯 |
 | **API Task** | 定義對外介面端點 | RESTful API、回應格式 |
 
-#### 技術型特例：DB-only 與內部服務
+#### 技術型特例：雙軌交付 (Dual Track Delivery)
 
-雖然標準的 `Business Feature` 涵蓋完整的 DB-Service-API 垂直切片，但本方法論也允許交付高價值的技術元件作為特例。
+雖然標準 Business Feature 鼓勵垂直切片交付 (Merged Delivery)，但當遇到高複雜度的資料模型時，應採用 **「雙軌交付」** 策略，先行交付穩定的資料契約 (DB-only)，再開發業務邏輯。
 
-**交付前提**：
+**交付模式決策表 (Delivery Mode Decision)**：
 
-- 技術價值明確（如顯著提升重用性、隔離外部不穩定性、或避免未來高昂的重構成本）
-- 具備最小可驗證性（如簡短的 use-case 與單元/整合測試）
+| 模式 | 定義 | 適用情境 (Criteria) |
+|:---|:---|:---|
+| **Merged Delivery**<br>(合併交付) | DB + Service + API 在同一個 Feature 內交付 | 1. **模型單純**：僅涉及單一 Table 或簡單關聯<br>2. **標準儲存**：僅使用 SQL，無混合儲存需求<br>3. **私有使用**：該資料結構僅被此 Feature 使用 |
+| **Dual Track**<br>(雙軌交付) | 拆分為 **DB-only Feature** 先行交付，再交付業務 Feature | 1. **模型複雜**：需冷熱分離、涉及多個實體聚合<br>2. **混合儲存**：單一 Repository 封裝了 SQL + NoSQL/File<br>3. **跨模組共用**：該 Repository 需被多個 Feature 或 ETL Job 共用 |
 
-| 特例類型 | 定義 | 主要場景 | 交付規範 |
-|:---|:---|:---|:---|
-| **DB-only** | 交付資料存取層的契約與封裝 | 供多個模組共用的基礎資料結構 | **Public Interface**: 定義 Repository 與 Schemas<br>**Encapsulation**: 隱藏底層儲存實作細節 |
-| **內部服務** | 不對外暴露 API 端點的 Service FU | 僅供同一業務系統內部的 ETL/Job 等模組存取 | 需包含完整的單元測試 |
+**DB-only Feature 規範**：
+* **Public Interface**: 必須明確定義 Repository Interface 與 Domain Schemas (Pydantic)。
+* **Encapsulation**: 必須完整封裝底層儲存實作 (SQL/FS/NoSQL)，下游不得感知。
 
-> **交付判斷原則**
->
-> 符合下列其一者，適合作為技術型特例獨立交付：
-> 1. **高重用性**：該元件將被多個 ETL、Job 或 API 使用
-> 2. **隔離不穩定性**：用於抽象化、封裝易變的外部供應商規則或第三方資料源的差異
-> 3. **強化領域不變量**：統一實作跨模組共享的核心領域規則（例如市場日曆對齊、時區/幣別標準化等）
+**內部服務 (Internal Service) 規範**：
+* **適用情境**：複雜的業務運算（如定價公式），需被 ETL/Job 使用但不需暴露 API。
+* **限制**：不包含 API 層，僅包含 Service FU 與 Unit Tests。
 
 #### Data Source Feature Tasks
 
