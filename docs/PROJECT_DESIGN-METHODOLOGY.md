@@ -91,6 +91,31 @@ Feature（業務價值單元）
 > - `Feature` 是從**業務價值**角度出發的交付單位
 > - 一個 Feature 的實現，通常涉及對一個或多個 FU 的新增或修改
 
+### 2.1 Feature 拆分與原子化原則 (Feature Decomposition)
+
+為了避免產生「巨型 Feature (Monolithic Feature)」，在定義 Feature 範圍時，必須執行以下拆解檢核：
+
+#### A. 複合式需求拆解 (Composite Requirement Breakdown)
+若一條原始需求描述包含了「多個步驟」或「多種資料維度」，**嚴禁**合併為一個 Feature。
+
+* **異質技術熱點 (Heterogeneous Tech Spots)**：
+    * *範例*：需求為「搜尋股票並顯示 K 線圖」。
+    * *拆解*：
+        1.  `stock-search` (專注於全文檢索與模糊比對)
+        2.  `stock-chart` (專注於時間序列資料的查詢與計算)
+    * *理由*：兩者依賴的底層技術 (Search Engine vs. Time-series DB) 與變動頻率完全不同。
+
+* **UI/流程 區塊分離**：
+    * *範例*：需求為「股票總覽看板 (含列表、篩選、當日走勢)」。
+    * *拆解*：
+        1.  `stock-overview-list` (列表與篩選邏輯)
+        2.  `stock-intraday-trend` (當日走勢計算)
+    * *理由*：確保每個 Feature 可獨立測試與交付，避免單一 Feature 牽涉過多 Repository。
+
+#### B. 共用能力提取 (Shared Capability Extraction)
+若某個業務邏輯 (e.g., 選擇權定價公式、複雜的市場狀態判斷) 會被多個 Feature 或 ETL Job 使用：
+* **Action**：必須將其拆分為獨立的 **Internal Service Feature** 或 **Library Feature**，作為其他 Feature 的依賴，而非重複實作。
+
 ---
 
 ## 3. Feature 分類體系
