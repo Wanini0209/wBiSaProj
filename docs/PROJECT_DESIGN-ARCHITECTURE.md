@@ -291,6 +291,25 @@ graph TD
   - **業務/資料源系統中的 Feature**：必須歸類到其核心價值所屬的 `Domain` 或 `Sub-Domain` 之下。這定義了 Feature 的**業務上下文 (Business Context)**。
   - **函式庫中的 Feature**：必須歸類到其功能所屬的 `Toolkit` 之下。這定義了 Feature 的**技術上下文 (Technical Context)**。
 
+### 3.5 資料重力與歸屬原則 (Data Gravity & Ownership Principles)
+
+在決定一個 Feature 或資料實體 (Entity) 的 Domain 歸屬時，除了直觀的業務語意，必須遵循物理層面的 **「資料重力 (Data Gravity)」** 原則。
+
+**核心原則**：
+資料應歸屬於**其描述的核心實體 (Core Entity)**，而非**使用它的發起者 (Initiator)**。
+
+**判斷指引**：
+當一個資料實體 (e.g., `Watchlist`) 屬於某個擁有者 (e.g., `User`)，但其業務價值高度依賴與另一個 Domain (e.g., `Market`) 的核心數據進行高頻關聯 (Join) 或計算時：
+
+- ❌ **直觀歸屬 (基於擁有者)**：放在 `User` Domain。
+    - *後果*：導致跨服務/跨庫的高頻 Join，效能低落且依賴關係混亂。
+- ✅ **重力歸屬 (基於資料親和性)**：放在 `Market` Domain。
+    - *效益*：資料與其依賴的源頭位於同一邊界內，實現高效能與高內聚。
+
+**口訣**：
+* **Entity Identity (你是誰)** -> 歸屬 `User` / `Identity` Domain。
+* **Financial Context (你在看什麼商品)** -> 歸屬 `Market` Domain (即使是你的私有清單)。
+
 -----
 
 ## 4. 核心架構概念：功能單元 (Functional Unit) 與公開容器 (Public Container)
