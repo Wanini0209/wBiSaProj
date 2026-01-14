@@ -82,7 +82,13 @@ Feature（業務價值單元）
     - 在**函式庫 (Library)** 中，它必須歸屬於一個**具體的**技術功能分類 `Toolkit`
     - **原子化原則 (Atomicity Principle)**：
         - **單一職責**：一個 Feature 只能解決一個特定的技術問題或業務需求。
-        - **領域隔離**：嚴禁將不同技術領域 (如 Crypto 與 Date) 的工具合併在同一個 Feature 中，即使它們都很「通用」。
+        - **領域隔離**：嚴禁將不同技術領域 (如 Crypto 與 Date) 的工具合併在同一個 Feature 中。
+    - **命名導向 (Naming Orientation) [CRITICAL]**：
+        - **聚合能力命名**：Feature 名稱必須描述其 **「對外交付的完整能力 (Aggregate Capability)」**，而非僅描述內部單一 FU 的實作。
+        - ❌ **Bad (Too Narrow)**: `excel-reader` (若該 Feature 同時包含 Writer，此命名則定義過窄)。
+        - ❌ **Bad (Too Broad)**: `file-helper` (若該 Feature 僅處理 Excel，此命名則定義過寬)。
+        - ✅ **Good (Precise)**: `excel-processing` (精確涵蓋了 Reader 與 Writer 的完整能力)。
+
 - **Task**：對某個特定 Functional Unit 的新增或修改操作
 
 > **關鍵理解：Feature 與 FU 的關係**
