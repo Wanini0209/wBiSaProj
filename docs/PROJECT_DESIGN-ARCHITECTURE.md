@@ -832,6 +832,39 @@ graph LR
 | **Parent FU** (基礎/穩定) | 🔒 **Closed** | 保持原樣，不應加入對 Child 的 import 或 relationship 定義。 |
 | **Child FU** (擴充/變動) | 🔓 **Open** | 定義 ForeignKey 指向 Parent，並宣告 `backref` 以建立關聯。 |
 
+### 6.7 第三方套件依賴策略 (External Dependency Strategy)
+
+為防止供應商鎖定 (Vendor Lock-in) 並確保資安政策的統一執行，專案針對第三方 Python 套件 (PyPI) 採行 **「基礎建設隔離，運算標準直連」** 的雙軌策略。
+
+#### 規則 A：基礎建設與副作用型 (Infrastructure & Side-Effects) — 必須封裝
+
+* **定義**：涉及 I/O、網路連線、安全性、或具備高度替換風險的套件。
+* **範例**：`boto3`, `requests`, `pyjwt`, `bcrypt`, `sqlalchemy`, `paramiko`.
+* **規範**：
+    * 業務系統 (`businesssys`) 與資料源系統 (`datasource`) **嚴禁** 直接 `import` 此類套件。
+    * **Action**：必須在 `wutils` 建立 Wrapper (封裝層)，統一處理異常 (Error Handling)、重試 (Retry) 與政策配置 (Configuration)。
+
+* **例外與邊界判定 (Exception & Boundary)**：
+    * **ORM 特例 (Repository Pattern)**：若專案採用 Repository Pattern，且 ORM (如 `SQLAlchemy`) 僅在 `db` 層 (Repository 實作層) 內部使用，則視為 **「ORM 已被 Repository 封裝」**，此規則自動滿足。無需在 `wutils` 另建 Wrapper，但嚴禁 Service/API 層直接引用 ORM。
+    * **灰色地帶判斷原則**：若不確定某套件屬於哪類 (e.g., 同時具備計算與 I/O 功能)，請以 **「是否產生副作用 (Side Effects)」** 為最終判斷依據。若該套件操作會改變系統狀態、網路傳輸或磁碟 I/O，則必須封裝。
+
+* **封裝厚度標準 (Anti-Leaky Abstraction)**：
+    * 嚴禁 **穿透式封裝**。Wrapper 的回傳值與異常用必須是 **Python 原生型別** 或 **專案自定義 DTO**，絕不可洩漏底層套件的物件或結構。
+    * ❌ **Bad (Leaky)**: `def get_file(key): return boto3.client('s3').get_object(Key=key)` (回傳了 AWS 特有的 Dict 結構，上層仍需查閱 AWS 文件才能使用)。
+    * ✅ **Good (Opaque)**: `def get_file(path) -> bytes:` (回傳標準 bytes，徹底隱藏來源是 S3 的事實)。
+
+* **架構效益 (Architecture Benefits)**：
+    * **測試接縫 (Test Seam)**：業務邏輯測試只需 Mock 簡單的 Wrapper，無需 Mock 複雜的外部套件，徹底解決 "Mocking Hell"。
+    * **升級防火牆 (Upgrade Firewall)**：當底層套件升級或替換時 (e.g., `requests` -> `httpx`)，封裝層作為變更的防火牆，確保上層業務邏輯完全不受影響，僅需修改 Wrapper 內部實作。
+
+#### 規則 B：運算標準與語言延伸型 (Computation & Standards) — 允許直連
+
+* **定義**：屬於領域內的通用標準、純記憶體運算、無副作用且 API 極度穩定的套件。
+* **範例**：`numpy`, `pandas` (僅限 DataFrame 操作), `pydantic`, `decimal`, `uuid`.
+* **規範**：
+    * 為維持程式碼可讀性與開發效率，**允許** 業務層直接 `import`。
+    * **例外**：若涉及 I/O 操作 (如 `pandas.read_csv` 讀取 S3)，仍須遵循規則 A 進行封裝。
+
 -----
 
 ## 7. 專案級通用標準 (Project-Wide Standards)
