@@ -89,8 +89,8 @@ Header 總長度不得超過 72 字元。
 |:-----|:-----|:------------------------|
 | `feat` | 新增功能 (Feature) | MINOR |
 | `fix` | 修復錯誤 (Bug Fix) | PATCH |
-| `docs` | 文件變更 (Documentation) | PATCH (通常不觸發) |
-| `style` | 格式調整 (不影響程式邏輯，如空白、排版) | PATCH (通常不觸發) |
+| `docs` | 文件變更 (包含內容修訂與文件排版) | PATCH (通常不觸發) |
+| `style` | 程式碼格式調整 (不影響程式邏輯，如空白、縮排) | PATCH (通常不觸發) |
 | `refactor` | 程式碼重構 (既非新增功能也非修復錯誤) | PATCH |
 | `test` | 新增或修正測試 | PATCH (通常不觸發) |
 | `chore` | 建構過程或輔助工具的變動 (如 dependencies) | PATCH (通常不觸發) |
