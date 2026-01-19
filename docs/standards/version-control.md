@@ -186,67 +186,67 @@ docs(project): update version control standards
 
 遵循標準的 Gitflow 與「1+N 提交結構」：
 
-1.  **建立分支**：
-    分支名稱需包含完整的領域階層路徑。
+1. **建立分支**：
+   分支名稱需包含完整的領域階層路徑。
 
-    ```bash
-    git checkout develop
-    # 範例：在 GMS 系統 User Domain 下的註冊功能
-    git checkout -b feature/gms/user/user-reg
-    ```
+   ```bash
+   git checkout develop
+   # 範例：在 GMS 系統 User Domain 下的註冊功能
+   git checkout -b feature/gms/user/user-reg
+   ```
 
-2.  **提交 1 (Docs)**：定義需求
-    Scope 需對應 `use-cases` 的完整目錄路徑。
+2. **提交 1 (Docs)**：定義需求
+   Scope 需對應 `use-cases` 的完整目錄路徑。
 
-    ```bash
-    git add docs/use-cases/gms/user/user-reg/
-    git commit -m "docs(use-cases/gms/user/user-reg): define registration requirements"
-    ```
+   ```bash
+   git add docs/use-cases/gms/user/user-reg/
+   git commit -m "docs(use-cases/gms/user/user-reg): define registration requirements"
+   ```
 
-3.  **提交 N (Impl)**：實作任務
+3. **提交 N (Impl)**：實作任務
 
-    ```bash
-    # 這裡僅為 CLI 簡寫，實際建議使用 git commit 開啟編輯器撰寫多行訊息
-    git add gms/db/user/profile/
-    git commit
-    ```
+   ```bash
+   # 這裡僅為 CLI 簡寫，實際建議使用 git commit 開啟編輯器撰寫多行訊息
+   git add gms/db/user/profile/
+   git commit
+   ```
 
-4.  **合併 (Merge Strategy)**：
+4. **合併 (Merge Strategy)**：
 
-    - 推送並發起 PR 合併至 `develop`。
-    - 關鍵規範：必須採用 Merge Commit (`--no-ff`) 進行合併。
-        - 禁止使用 Squash Merge，因為這會導致 Feature 分支內的 Task 提交歷史被壓縮，丟失「文件先行」與「原子化實作」的對應脈絡。
+   - 推送並發起 PR 合併至 `develop`。
+   - 關鍵規範：必須採用 Merge Commit (`--no-ff`) 進行合併。
+      - 禁止使用 Squash Merge，因為這會導致 Feature 分支內的 Task 提交歷史被壓縮，丟失「文件先行」與「原子化實作」的對應脈絡。
 
 ### 場景 B：修訂專案規範 (Project Standards Update)
 
 當需要修改 `docs/` 根目錄或 `docs/standards/` 下的規範文件時，視同一個 Project Feature 處理：
 
-1.  **建立分支**：使用 `project` 作為路徑，並使用 `feature/` 作為前綴。
+1. **建立分支**：使用 `project` 作為路徑，並使用 `feature/` 作為前綴。
 
-    ```bash
-    # 範例：更新版本控制規範
-    git checkout -b feature/project/update-vcs-rules
-    ```
+   ```bash
+   # 範例：更新版本控制規範
+   git checkout -b feature/project/update-vcs-rules
+   ```
 
-2.  **提交變更**：
+2. **提交變更**：
 
-    - Scope 必須為 `project`。
-    - Type 必須為 `docs`。
+   - Scope 必須為 `project`。
+   - Type 必須為 `docs`。
 
-    ```bash
-    git add docs/standards/version-control.md
-    git commit -m "docs(project): enforce feature branch for standards update"
-    ```
+   ```bash
+   git add docs/standards/version-control.md
+   git commit -m "docs(project): enforce feature branch for standards update"
+   ```
 
-3.  **發起 Pull Request**：
+3. **發起 Pull Request**：
 
-    - 團隊成員進行審核 (Review)。
-    - 確認規範變更的合理性與共識。
+   - 團隊成員進行審核 (Review)。
+   - 確認規範變更的合理性與共識。
 
-4.  **合併**：
+4. **合併**：
 
-    - 審核通過後採用 Merge Commit 合併至 `develop`。
-    - 例外：若僅為修正錯字 (Typo) 或格式 (Style)，允許使用 Squash Merge 以保持主線簡潔。
+   - 審核通過後採用 Merge Commit 合併至 `develop`。
+   - 例外：若僅為修正錯字 (Typo) 或格式 (Style)，允許使用 Squash Merge 以保持主線簡潔。
 
 ---
 
@@ -254,12 +254,12 @@ docs(project): update version control standards
 
 在執行 `git commit` 前，應確認：
 
-1.  **Scope 正確性**：修改 `docs/` 或 `docs/standards/` 下的文件時，Scope 是否為 `project`？
-2.  **流程合規**：是否已建立獨立分支？
-3.  **格式檢查**：
-    - Header 是否 < 72 字元？
-    - （若為複雜變更）是否有撰寫 Body 描述？
-    - 是否符合 `<type>(<scope>): <subject>` 格式？
+1. **Scope 正確性**：修改 `docs/` 或 `docs/standards/` 下的文件時，Scope 是否為 `project`？
+2. **流程合規**：是否已建立獨立分支？
+3. **格式檢查**：
+   - Header 是否 < 72 字元？
+   - （若為複雜變更）是否有撰寫 Body 描述？
+   - 是否符合 `<type>(<scope>): <subject>` 格式？
 
 ---
 

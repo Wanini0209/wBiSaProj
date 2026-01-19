@@ -15,7 +15,7 @@
 
 **配套指引**：
 
-  - [架構實作指引](GUIDE_ARCHITECTURE.md)：具體實作範例與最佳實踐
+- [架構實作指引](GUIDE_ARCHITECTURE.md)：具體實作範例與最佳實踐
 
 **本文件結構**：
 
@@ -53,9 +53,9 @@
 
 > **關鍵理解：`core` 套件的角色**
 >
->   - 提供所有系統橫跨共用的基礎元件（schemas、constants）
->   - 定義統一的抽象介面（Repository Pattern）
->   - 作為業務系統與資料源系統之間解耦的契約
+> - 提供所有系統橫跨共用的基礎元件（schemas、constants）
+> - 定義統一的抽象介面（Repository Pattern）
+> - 作為業務系統與資料源系統之間解耦的契約
 
 ### 1.2 資料源系統 (Data Source Systems)
 
@@ -190,21 +190,21 @@ graph TD
 
 本圖最重要的概念是**業務系統與資料源系統之間的解耦**：
 
-  - **編譯時期**：`etl` 層只依賴定義在 `core/interfaces` 中的**抽象契約**
-  - **執行時期**：具體的 `ds_service` 實例透過**依賴注入 (DI) 容器**動態提供給 `etl` 層
-  - **效果**：新增資料源無需修改任何業務系統程式碼
+- **編譯時期**：`etl` 層只依賴定義在 `core/interfaces` 中的**抽象契約**
+- **執行時期**：具體的 `ds_service` 實例透過**依賴注入 (DI) 容器**動態提供給 `etl` 層
+- **效果**：新增資料源無需修改任何業務系統程式碼
 
 > **關鍵理解：依賴反轉的實踐**
 >
->   - 編譯時：業務系統的 ETL 層只認識 `core/interfaces` 中的抽象介面
->   - 執行時：透過 DI 容器注入具體的資料源實作
->   - 架構紅線：任何違反此原則的直接依賴都將破壞系統的解耦設計
+> - 編譯時：業務系統的 ETL 層只認識 `core/interfaces` 中的抽象介面
+> - 執行時：透過 DI 容器注入具體的資料源實作
+> - 架構紅線：任何違反此原則的直接依賴都將破壞系統的解耦設計
 
 **其他依賴規則**：
 
-  - 所有系統的所有模組都可依賴 `wutils` 和專案級 `core`（為簡化圖面，這些依賴線已省略）
-  - `wsatools` 為開發輔助工具，不被任何其他系統依賴
-  - 業務系統之間僅能透過 API 層互相通訊（圖中未顯示）
+- 所有系統的所有模組都可依賴 `wutils` 和專案級 `core`（為簡化圖面，這些依賴線已省略）
+- `wsatools` 為開發輔助工具，不被任何其他系統依賴
+- 業務系統之間僅能透過 API 層互相通訊（圖中未顯示）
 
 -----
 
@@ -226,11 +226,11 @@ graph TD
 
 ❌ **錯誤歸類**：`identity` (身份認證) Domain
 
-  - **原因**：`identity` 描述的是「如何實現」的技術手段，而非「需要管理什麼」的業務領域
+- **原因**：`identity` 描述的是「如何實現」的技術手段，而非「需要管理什麼」的業務領域
 
 ✅ **正確歸類**：`User` Domain
 
-  - **原因**：`User` (使用者) 是系統需要直接面對和管理的核心業務對象，是一個穩定且公認的業務領域
+- **原因**：`User` (使用者) 是系統需要直接面對和管理的核心業務對象，是一個穩定且公認的業務領域
 
 ### 3.2 指導原則二：由具體到抽象，聚合共通概念
 
@@ -256,9 +256,9 @@ graph TD
 
 > **關鍵理解：Domain 與 Sub-Domain 的演化**
 >
->   - Domain 結構是**演化**而來，而非預先設計
->   - 共通概念的識別驅動了層次結構的形成
->   - 結構的調整應基於業務理解的深化
+> - Domain 結構是**演化**而來，而非預先設計
+> - 共通概念的識別驅動了層次結構的形成
+> - 結構的調整應基於業務理解的深化
 
 ### 3.3 結構定義與規則
 
@@ -273,8 +273,8 @@ graph TD
 
 **關鍵規則**：
 
-  - 一個聚合型的 `Domain` 之下，必須包含**至少兩個** `Sub-Domain`，否則這個組織層級便失去意義
-  - 若一個系統在可預見的未來都只會服務於單一的業務領域，則可省略 `domain` 層級的目錄，系統本身即被視為一個獨立的 Domain
+- 一個聚合型的 `Domain` 之下，必須包含**至少兩個** `Sub-Domain`，否則這個組織層級便失去意義
+- 若一個系統在可預見的未來都只會服務於單一的業務領域，則可省略 `domain` 層級的目錄，系統本身即被視為一個獨立的 Domain
 
 #### 領域概念的適用範圍
 
@@ -288,8 +288,8 @@ graph TD
 
 一個 `Feature` 的歸屬，取決於其所在的系統類型，這定義了該 Feature 的核心上下文：
 
-  - **業務/資料源系統中的 Feature**：必須歸類到其核心價值所屬的 `Domain` 或 `Sub-Domain` 之下。這定義了 Feature 的**業務上下文 (Business Context)**。
-  - **函式庫中的 Feature**：必須歸類到其功能所屬的 `Toolkit` 之下。這定義了 Feature 的**技術上下文 (Technical Context)**。
+- **業務/資料源系統中的 Feature**：必須歸類到其核心價值所屬的 `Domain` 或 `Sub-Domain` 之下。這定義了 Feature 的**業務上下文 (Business Context)**。
+- **函式庫中的 Feature**：必須歸類到其功能所屬的 `Toolkit` 之下。這定義了 Feature 的**技術上下文 (Technical Context)**。
 
 ### 3.5 資料重力與歸屬原則 (Data Gravity & Ownership Principles)
 
@@ -307,8 +307,9 @@ graph TD
     - *效益*：資料與其依賴的源頭位於同一邊界內，實現高效能與高內聚。
 
 **口訣**：
-* **Entity Identity (你是誰)** -> 歸屬 `User` / `Identity` Domain。
-* **Financial Context (你在看什麼商品)** -> 歸屬 `Market` Domain (即使是你的私有清單)。
+
+- **Entity Identity (你是誰)** -> 歸屬 `User` / `Identity` Domain。
+- **Financial Context (你在看什麼商品)** -> 歸屬 `Market` Domain (即使是你的私有清單)。
 
 -----
 
@@ -385,22 +386,22 @@ gms/db/user/profile/
 >
 > 1. **封裝 (Encapsulation)**：
 >
->    * 上述所有 `_` 開頭的檔案或目錄（如 `_environment.py`、`_common/`、`_models.py`）均為**私有實作**。外部模組**嚴禁**直接導入它們。
->    * `__init__.py` 是唯一的公開入口。
+>    - 上述所有 `_` 開頭的檔案或目錄（如 `_environment.py`、`_common/`、`_models.py`）均為**私有實作**。外部模組**嚴禁**直接導入它們。
+>    - `__init__.py` 是唯一的公開入口。
 >
 > 2. **FU 實作 (FU Implementation)**：
 >
->    * 一個 FU 可能分佈在多個私有檔案中；一個私有檔案也可能包含多個 FU 的實作。
+>    - 一個 FU 可能分佈在多個私有檔案中；一個私有檔案也可能包含多個 FU 的實作。
 >
 > 3. **特殊機制 (註)**：
 >
->    * **函式庫 (Library)** 通常結構較為單純。
->    * **業務系統**則會根據其所在的層級，引入 `_imports.py` 或 `_common/` 等特定的組織模式，請參考 [Section 6.3 `_imports.py` 混合依賴管理機制](#63-_importspy-混合依賴管理機制)。
+>    - **函式庫 (Library)** 通常結構較為單純。
+>    - **業務系統**則會根據其所在的層級，引入 `_imports.py` 或 `_common/` 等特定的組織模式，請參考 [Section 6.3 `_imports.py` 混合依賴管理機制](#63-_importspy-混合依賴管理機制)。
 >
 > 4. **對應 (Correspondence)**：
 >
->    * 此範例僅展示**功能實作**的結構。
->    * 相關的規格 (`docs/specs/.../<fu_path>/...`) 和測試 (`tests/.../<fu_path>/...`) 的具體位置，請**嚴格遵循 [Section 5.4 結構對應性原則](#54-結構對應性原則)** 的規範。
+>    - 此範例僅展示**功能實作**的結構。
+>    - 相關的規格 (`docs/specs/.../<fu_path>/...`) 和測試 (`tests/.../<fu_path>/...`) 的具體位置，請**嚴格遵循 [Section 5.4 結構對應性原則](#54-結構對應性原則)** 的規範。
 
 -----
 
@@ -425,7 +426,7 @@ gms/db/user/profile/
 | **Feature** | 功能特性 | 實現特定業務需求的程式碼單元 |
 | **Toolkit** | 工具集 | Library 中的功能分類單位 |
 
-#### 5.3 專案核心變數定義 (Project Core Variable Definitions)
+### 5.3 專案核心變數定義 (Project Core Variable Definitions)
 
 以下術語用於文件中描述路徑與命名規範：
 
@@ -451,7 +452,7 @@ gms/db/user/profile/
 >
 > *註：一般性提示（如 `ExportedClass`, `exported_function`）不受此格式約束，僅用於開發意圖示意。*
 
-#### 5.4 佔位符符號規範 (Placeholder Syntax)
+### 5.4 佔位符符號規範 (Placeholder Syntax)
 
 | 符號格式 | 語義定義 | 範例 |
 | :--- | :--- | :--- |
@@ -464,18 +465,18 @@ gms/db/user/profile/
 >
 > *註：一般性提示（如 `ExportedClass`, `exported_function`）不受此格式約束，僅用於開發意圖示意。*
 
-#### 5.5 導入轉換規則 (Import Transformation Rules)
+### 5.5 導入轉換規則 (Import Transformation Rules)
 
 > 為了保持技術規格文件 (Specs) 的簡潔，文件統一使用實體路徑變數。在轉換為 Python 程式碼時，遵循以下轉換邏輯：
 > 1. **外部導入 (External Import)**：
-> * **適用變數**：`<fu_path>`
-> * **規則**：將路徑中的 `/` 替換為 `.`。
-> * **範例**：`from <fu_path> import ...` \rightarrow `from wutils.io import ...`
+> - **適用變數**：`<fu_path>`
+> - **規則**：將路徑中的 `/` 替換為 `.`。
+> - **範例**：`from <fu_path> import ...` → `from wutils.io import ...`
 >
 > 2. **內部導入 (Internal Import)**：
-> * **適用變數**：`<impl_file>`（相對於 `<fu_path>` 的路徑）
-> * **規則**：移除 `.py` 副檔名，將 `/` 替換為 `.`，並加上相對導入前綴 `.`。
-> * **範例**：`from .<impl_file> import ...` \rightarrow `from ._pickle import ...` 或 `from ._pandas._pickle import ...`
+> - **適用變數**：`<impl_file>`（相對於 `<fu_path>` 的路徑）
+> - **規則**：移除 `.py` 副檔名，將 `/` 替換為 `.`，並加上相對導入前綴 `.`。
+> - **範例**：`from .<impl_file> import ...` → `from ._pickle import ...` 或 `from ._pandas._pickle import ...`
 
 ### 5.6 結構對應性原則
 
@@ -541,13 +542,13 @@ gms/db/user/profile/
 
 **跨系統規則**：
 
-  - 🚫 嚴格禁止直接 `import` 其他系統的具體實作（例如：`from tej.service import ...`）
-  - ✅ 必須透過專案級 `core/interfaces` 的抽象介面
+- 🚫 嚴格禁止直接 `import` 其他系統的具體實作（例如：`from tej.service import ...`）
+- ✅ 必須透過專案級 `core/interfaces` 的抽象介面
 
 **跨 Domain 規則**：
 
-  - 🚫 禁止 Domain 之間直接依賴彼此的具體實作
-  - ✅ 必須透過系統級 `<system>/core/interfaces` 的抽象介面或各層定義的介面
+- 🚫 禁止 Domain 之間直接依賴彼此的具體實作
+- ✅ 必須透過系統級 `<system>/core/interfaces` 的抽象介面或各層定義的介面
 
 #### ⚠️ 架構紅線：禁止業務邏輯層直接存取資料源
 
@@ -555,11 +556,13 @@ gms/db/user/profile/
 業務系統的 Service 層 (`<system>/service`) 與 API 層 (`<system>/api`) **嚴禁** 直接依賴或使用資料源介面 (如 `core/interfaces` 中的 `IStockPriceProvider`)。
 
 **規範**：
-* **資料自主性**：業務系統的所有資料獲取，**必須且只能** 透過其專屬的 Repository (如 `IStockPriceRepository`) 進行，存取已經落地於內部資料庫的資料。
-* **職責分離**：Service 層專注於業務邏輯分析，不應處理外部資料源的不穩定性或延遲。
+
+- **資料自主性**：業務系統的所有資料獲取，**必須且只能** 透過其專屬的 Repository (如 `IStockPriceRepository`) 進行，存取已經落地於內部資料庫的資料。
+- **職責分離**：Service 層專注於業務邏輯分析，不應處理外部資料源的不穩定性或延遲。
 
 **例外**：
-* 資料源介面 **僅允許** 由 **ETL 層** (`<system>/etl`) 在執行資料同步作業時使用。ETL 層是資料源在業務系統中唯一的合法消費者。
+
+- 資料源介面 **僅允許** 由 **ETL 層** (`<system>/etl`) 在執行資料同步作業時使用。ETL 層是資料源在業務系統中唯一的合法消費者。
 
 #### 系統間依賴反轉 (Inter-System DIP)
 
@@ -588,9 +591,9 @@ graph LR
 
 **關鍵點**：
 
-  - 編譯時期：`ETL` 層只認識定義在專案級 `core` 的介面
-  - 執行時期：透過 DI 容器注入具體的 `DataSource` 實作
-  - **優點**：新增資料源系統完全無需修改既有的 `ETL` 程式碼
+- 編譯時期：`ETL` 層只認識定義在專案級 `core` 的介面
+- 執行時期：透過 DI 容器注入具體的 `DataSource` 實作
+- **優點**：新增資料源系統完全無需修改既有的 `ETL` 程式碼
 
 #### 系統內依賴反轉 (Intra-System DIP)
 
@@ -623,9 +626,9 @@ graph LR
 
 **關鍵點**：
 
-  - 編譯時期：`Service` 層只認識 `DB` 層的抽象介面
-  - 執行時期：在應用程式入口（Composition Root）組裝所有具體實作
-  - **優點**：儲存技術變更時，無需修改 `Service` 層或 `API` 層程式碼
+- 編譯時期：`Service` 層只認識 `DB` 層的抽象介面
+- 執行時期：在應用程式入口（Composition Root）組裝所有具體實作
+- **優點**：儲存技術變更時，無需修改 `Service` 層或 `API` 層程式碼
 
 > **實作參考**
 >
@@ -643,13 +646,13 @@ graph LR
 
 1. **管理內部依賴（相對導入）**：
 
-   * **問題**：模組內部（例如 `api` 模組）的子模組間使用相對導入（`from .. import ...`），當 `api` 模組*內部*結構重構時，這些相對路徑需要大量修改。
-   * **解決**：`_imports.py` 統一管理這些內部的相對導入。
+   - **問題**：模組內部（例如 `api` 模組）的子模組間使用相對導入（`from .. import ...`），當 `api` 模組*內部*結構重構時，這些相對路徑需要大量修改。
+   - **解決**：`_imports.py` 統一管理這些內部的相對導入。
 
 2. **管理外部依賴（絕對導入）**：
 
-   * **問題**：模組（例如 `service` 模組）的多處程式碼都依賴*外部*模組（例如 `<system>/core`）。當 `core` 模組的結構發生變化時，`service` 模組內所有引用到該依賴的地方都需要修改。
-   * **解決**：由 `service` 模組的根 `_imports.py` 統一負責導入 `core` 的依賴，`service` 內部的程式碼再從 `_imports.py` 獲取此依賴。
+   - **問題**：模組（例如 `service` 模組）的多處程式碼都依賴*外部*模組（例如 `<system>/core`）。當 `core` 模組的結構發生變化時，`service` 模組內所有引用到該依賴的地方都需要修改。
+   - **解決**：由 `service` 模組的根 `_imports.py` 統一負責導入 `core` 的依賴，`service` 內部的程式碼再從 `_imports.py` 獲取此依賴。
 
 透過此機制，四大模組各自的 `_imports.py` 成為了該模組的「依賴抽象層」，極大地降低了因結構變動帶來的維護成本。
 
@@ -659,22 +662,22 @@ graph LR
 
 1. **適用範圍 (In Scope)**：
 
-   * `<system>/api`, `<system>/service`, `<system>/db`, `<system>/etl` 這四大模組。
-   * 用於管理這四大模組的**內部依賴**（相對導入）和**外部依賴**（絕對導入）。
+   - `<system>/api`, `<system>/service`, `<system>/db`, `<system>/etl` 這四大模組。
+   - 用於管理這四大模組的**內部依賴**（相對導入）和**外部依賴**（絕對導入）。
 
 2. **不適用範圍 (Out of Scope)**：
 
-   * **系統核心庫**：`<system>/core` 模組本身性質屬於 library，其結構相對單純，**不導入** `_imports.py` 機制。
-   * **專案級函式庫**：`core`, `wutils` 等專案級函式庫**不使用**此機制。
+   - **系統核心庫**：`<system>/core` 模組本身性質屬於 library，其結構相對單純，**不導入** `_imports.py` 機制。
+   - **專案級函式庫**：`core`, `wutils` 等專案級函式庫**不使用**此機制。
 
 #### 機制起點
 
 `_imports.py` 的繼承與傳播機制**起點**，位於四大模組的根目錄：
 
-* `<system>/api/_imports.py`
-* `<system>/service/_imports.py`
-* `<system>/db/_imports.py`
-* `<system>/etl/_imports.py`
+- `<system>/api/_imports.py`
+- `<system>/service/_imports.py`
+- `<system>/db/_imports.py`
+- `<system>/etl/_imports.py`
 
 這些**根檔案**的核心職責是**統一管理所有「外部依賴」**（例如，`service` 模組對 `core` 或 `db` 模組的依賴）。
 
@@ -705,8 +708,8 @@ graph LR
 > `_imports.py` 是作為該容器的統一依賴入口，其管理的範圍是**同一系統內**的所有依賴。
 >
 > 這同時包含了 6.3 節中定義的兩種類型：
-> * **外部依賴** (同一系統內，標準模組間的依賴，如 `<system>/core` 或 `db` 層)。
-> * **內部依賴** (同一標準模組內，子模組間的相對導入)。
+> - **外部依賴** (同一系統內，標準模組間的依賴，如 `<system>/core` 或 `db` 層)。
+> - **內部依賴** (同一標準模組內，子模組間的相對導入)。
 >
 > 它**不管理**對「專案層級函式庫」（如 `core`, `wutils`）或「第三方套件」的依賴。
 
@@ -745,8 +748,8 @@ graph LR
 
 > **關鍵理解：兩個概念的層次差異**
 >
->   - **依賴反轉原則 (DIP)**：高層次的架構設計指導原則，決定了**應該依賴什麼**（抽象介面）。
->   - **`_imports.py` 機制**：具體的程式碼組織與路徑管理機制，解決了**如何去依賴**（路徑管理）。
+> - **依賴反轉原則 (DIP)**：高層次的架構設計指導原則，決定了**應該依賴什麼**（抽象介面）。
+> - **`_imports.py` 機制**：具體的程式碼組織與路徑管理機制，解決了**如何去依賴**（路徑管理）。
 >
 > DIP 告訴我們**應該依賴什麼**，而 `_imports.py` 機制則提供了一個**如何去依賴**的健壯方案。
 
@@ -756,11 +759,11 @@ graph LR
 >
 > 上述設計原則與實踐的具體程式碼實現，包括：
 >
->   - 統一資料存取介面的實作模式
->   - ETL Pipeline 的標準架構
->   - 跨系統 API 呼叫的客戶端設計
->   - 依賴注入容器與服務管理
->   - 測試策略與 Mock 模式
+> - 統一資料存取介面的實作模式
+> - ETL Pipeline 的標準架構
+> - 跨系統 API 呼叫的客戶端設計
+> - 依賴注入容器與服務管理
+> - 測試策略與 Mock 模式
 >
 > 請參閱 [架構實作指引](GUIDE_ARCHITECTURE.md) 獲得完整的實作範例與最佳實踐建議。
 
@@ -772,49 +775,49 @@ graph LR
 
 **原則**：嚴禁將「生命週期顯著不同」的資料屬性混合在同一實體表 (Entity Table) 中。這屬於**物理儲存層面**的分離要求，**不代表**必須拆分為不同的功能單元 (FU)。
 
-* **冷熱分離 (Hot/Cold Separation)**：
-    * **Reference Data (冷)**：低頻更新、讀多寫少。
-    * **Transactional Data (熱)**：高頻更新、寫多讀多。
-    * **規範**：上述兩類資料必須拆分為不同的實體 (Entity/Table)，但**應**由同一個 Repository (FU) 進行聚合管理，對外隱藏拆分細節。
+- **冷熱分離 (Hot/Cold Separation)**：
+    - **Reference Data (冷)**：低頻更新、讀多寫少。
+    - **Transactional Data (熱)**：高頻更新、寫多讀多。
+    - **規範**：上述兩類資料必須拆分為不同的實體 (Entity/Table)，但**應**由同一個 Repository (FU) 進行聚合管理，對外隱藏拆分細節。
 
 #### 成長邊界分離 (Growth Bound Separation)
 
 **原則**：將「有界資料」與「無界資料」分離。
 
-* **規範**：當前狀態 (Current State, 只有一筆) 與 歷史紀錄 (History, 無限增長) 必須**實體分離**。此混合儲存的實作細節（如 SQL 與 FileSystem 的協作）**必須**被封裝在單一 FU (Repository) 內部，對外僅提供統一的查詢介面。
+- **規範**：當前狀態 (Current State, 只有一筆) 與 歷史紀錄 (History, 無限增長) 必須**實體分離**。此混合儲存的實作細節（如 SQL 與 FileSystem 的協作）**必須**被封裝在單一 FU (Repository) 內部，對外僅提供統一的查詢介面。
 
 #### 6.5.1 儲存技術選型 (Storage Technology Selection)
 
 依據資料特徵與存取模式，選擇最適合的儲存技術：
 
-* **關聯式資料庫 (RDBMS)**：適用於高結構化、需強一致性 (ACID)、複雜關聯查詢的資料。
-    * *範例：使用者帳號、權限配置、訂單交易。*
-* **檔案系統 (FileSystem)**：適用於寫入後極少修改 (Immutable)、需高吞吐量批量讀寫 (Bulk I/O) 的大數據或非結構化資料。
-    * *範例：歷史股價 (Tick/Min)、非結構化財報文件、系統日誌封存。*
-    * **實作彈性原則**：架構關注的是「檔案介面」與「格式 (如 Parquet)」。在實作上，**正式環境** 可採用物件儲存 (S3/MinIO)，**開發/測試環境**則允許使用本地磁碟 (Local Disk) 或網路硬碟 (NAS)，程式碼應透過抽象層 (如 `fsspec`) 屏蔽底層差異。
-* **NoSQL 資料庫**：適用於結構多變 (Schema-less) 或需極高寫入吞吐量的場景。
-    * *範例：異質來源的爬蟲暫存資料 (Document)、高頻即時報價快取 (Key-Value)。*
+- **關聯式資料庫 (RDBMS)**：適用於高結構化、需強一致性 (ACID)、複雜關聯查詢的資料。
+    - *範例：使用者帳號、權限配置、訂單交易。*
+- **檔案系統 (FileSystem)**：適用於寫入後極少修改 (Immutable)、需高吞吐量批量讀寫 (Bulk I/O) 的大數據或非結構化資料。
+    - *範例：歷史股價 (Tick/Min)、非結構化財報文件、系統日誌封存。*
+    - **實作彈性原則**：架構關注的是「檔案介面」與「格式 (如 Parquet)」。在實作上，**正式環境** 可採用物件儲存 (S3/MinIO)，**開發/測試環境**則允許使用本地磁碟 (Local Disk) 或網路硬碟 (NAS)，程式碼應透過抽象層 (如 `fsspec`) 屏蔽底層差異。
+- **NoSQL 資料庫**：適用於結構多變 (Schema-less) 或需極高寫入吞吐量的場景。
+    - *範例：異質來源的爬蟲暫存資料 (Document)、高頻即時報價快取 (Key-Value)。*
 
 #### 6.5.2 SQL 設計原則 (SQL Design Principles)
 
-* **正規化優先**：預設採用第三正規化 (3NF)，確保資料一致性。
-* **效能反正規化**：僅在效能瓶頸經證實後，才允許針對特定讀取路徑進行反正規化 (Denormalization)。
+- **正規化優先**：預設採用第三正規化 (3NF)，確保資料一致性。
+- **效能反正規化**：僅在效能瓶頸經證實後，才允許針對特定讀取路徑進行反正規化 (Denormalization)。
 
 #### 6.5.3 檔案系統設計原則 (FileSystem Design Principles)
 
-* **存取模式導向 (Access-Pattern Oriented)**：
-    * 檔案結構應直接映射應用程式的讀取模式 (Read Path)，而非資料本身的邏輯結構。
-* **空間換取時間 (Space for Time)**：
-    * 為滿足截然不同的存取需求（如：「依股票查詢歷史」vs.「依日期查詢全市場」），允許並鼓勵將同一份資料以不同維度 (Partitioning Key) 重複儲存，以消除讀取時的 Shuffle/Sort 開銷。
-* **寫入不變性 (Immutability)**：
-    * 原則上檔案一旦寫入即視為不可變 (Immutable)。若需更新，應採用 Copy-on-Write 或產生新版本檔案，避免原地修改 (In-place Update)。
+- **存取模式導向 (Access-Pattern Oriented)**：
+    - 檔案結構應直接映射應用程式的讀取模式 (Read Path)，而非資料本身的邏輯結構。
+- **空間換取時間 (Space for Time)**：
+    - 為滿足截然不同的存取需求（如：「依股票查詢歷史」vs.「依日期查詢全市場」），允許並鼓勵將同一份資料以不同維度 (Partitioning Key) 重複儲存，以消除讀取時的 Shuffle/Sort 開銷。
+- **寫入不變性 (Immutability)**：
+    - 原則上檔案一旦寫入即視為不可變 (Immutable)。若需更新，應採用 Copy-on-Write 或產生新版本檔案，避免原地修改 (In-place Update)。
 
 #### 6.5.4 NoSQL 設計原則 (NoSQL Design Principles)
 
-* **查詢導向設計 (Query-Driven Design)**：
-    * 設計 Schema 前必須先定義查詢模式。資料應以「單次查詢即可取回所有所需資訊」為目標進行聚合 (Aggregation)。
-* **最終一致性 (Eventual Consistency)**：
-    * 在跨 Aggregate 的資料更新中，應容忍短暫的資料不一致，由應用層處理同步邏輯。
+- **查詢導向設計 (Query-Driven Design)**：
+    - 設計 Schema 前必須先定義查詢模式。資料應以「單次查詢即可取回所有所需資訊」為目標進行聚合 (Aggregation)。
+- **最終一致性 (Eventual Consistency)**：
+    - 在跨 Aggregate 的資料更新中，應容忍短暫的資料不一致，由應用層處理同步邏輯。
 
 ### 6.6 ORM 擴充與依賴原則 (ORM Extensibility & Dependency)
 
@@ -822,10 +825,10 @@ graph LR
 
 #### 依賴單向性 (Unidirectional Dependency)
 
-* **原則**：新功能 (Child/Extension) 依賴於 基礎功能 (Parent/Base)，基礎功能 **嚴禁** 在程式碼層級依賴或感知新功能的存在。
-* **規範**：
-    * 當需要建立關聯 (Relationship) 時，**必須** 在新功能的 Model 中定義。
-    * 若需雙向存取，請使用 ORM 的 **反向參考注入 (Back Reference Injection)** 機制 (如 SQLAlchemy 的 `backref`)，動態將屬性掛載回母體，而非直接修改母體 Model 的程式碼。
+- **原則**：新功能 (Child/Extension) 依賴於 基礎功能 (Parent/Base)，基礎功能 **嚴禁** 在程式碼層級依賴或感知新功能的存在。
+- **規範**：
+    - 當需要建立關聯 (Relationship) 時，**必須** 在新功能的 Model 中定義。
+    - 若需雙向存取，請使用 ORM 的 **反向參考注入 (Back Reference Injection)** 機制 (如 SQLAlchemy 的 `backref`)，動態將屬性掛載回母體，而非直接修改母體 Model 的程式碼。
 
 | 角色 | 修改權限 | 範例行為 |
 |:---|:---|:---|
@@ -838,32 +841,32 @@ graph LR
 
 #### 規則 A：基礎建設與副作用型 (Infrastructure & Side-Effects) — 必須封裝
 
-* **定義**：涉及 I/O、網路連線、安全性、或具備高度替換風險的套件。
-* **範例**：`boto3`, `requests`, `pyjwt`, `bcrypt`, `sqlalchemy`, `paramiko`.
-* **規範**：
-    * 業務系統 (`businesssys`) 與資料源系統 (`datasource`) **嚴禁** 直接 `import` 此類套件。
-    * **Action**：必須在 `wutils` 建立 Wrapper (封裝層)，統一處理異常 (Error Handling)、重試 (Retry) 與政策配置 (Configuration)。
+- **定義**：涉及 I/O、網路連線、安全性、或具備高度替換風險的套件。
+- **範例**：`boto3`, `requests`, `pyjwt`, `bcrypt`, `sqlalchemy`, `paramiko`.
+- **規範**：
+    - 業務系統 (`businesssys`) 與資料源系統 (`datasource`) **嚴禁** 直接 `import` 此類套件。
+    - **Action**：必須在 `wutils` 建立 Wrapper (封裝層)，統一處理異常 (Error Handling)、重試 (Retry) 與政策配置 (Configuration)。
 
-* **例外與邊界判定 (Exception & Boundary)**：
-    * **ORM 特例 (Repository Pattern)**：若專案採用 Repository Pattern，且 ORM (如 `SQLAlchemy`) 僅在 `db` 層 (Repository 實作層) 內部使用，則視為 **「ORM 已被 Repository 封裝」**，此規則自動滿足。無需在 `wutils` 另建 Wrapper，但嚴禁 Service/API 層直接引用 ORM。
-    * **灰色地帶判斷原則**：若不確定某套件屬於哪類 (e.g., 同時具備計算與 I/O 功能)，請以 **「是否產生副作用 (Side Effects)」** 為最終判斷依據。若該套件操作會改變系統狀態、網路傳輸或磁碟 I/O，則必須封裝。
+- **例外與邊界判定 (Exception & Boundary)**：
+    - **ORM 特例 (Repository Pattern)**：若專案採用 Repository Pattern，且 ORM (如 `SQLAlchemy`) 僅在 `db` 層 (Repository 實作層) 內部使用，則視為 **「ORM 已被 Repository 封裝」**，此規則自動滿足。無需在 `wutils` 另建 Wrapper，但嚴禁 Service/API 層直接引用 ORM。
+    - **灰色地帶判斷原則**：若不確定某套件屬於哪類 (e.g., 同時具備計算與 I/O 功能)，請以 **「是否產生副作用 (Side Effects)」** 為最終判斷依據。若該套件操作會改變系統狀態、網路傳輸或磁碟 I/O，則必須封裝。
 
-* **封裝厚度標準 (Anti-Leaky Abstraction)**：
-    * 嚴禁 **穿透式封裝**。Wrapper 的回傳值與異常用必須是 **Python 原生型別** 或 **專案自定義 DTO**，絕不可洩漏底層套件的物件或結構。
-    * ❌ **Bad (Leaky)**: `def get_file(key): return boto3.client('s3').get_object(Key=key)` (回傳了 AWS 特有的 Dict 結構，上層仍需查閱 AWS 文件才能使用)。
-    * ✅ **Good (Opaque)**: `def get_file(path) -> bytes:` (回傳標準 bytes，徹底隱藏來源是 S3 的事實)。
+- **封裝厚度標準 (Anti-Leaky Abstraction)**：
+    - 嚴禁 **穿透式封裝**。Wrapper 的回傳值與異常用必須是 **Python 原生型別** 或 **專案自定義 DTO**，絕不可洩漏底層套件的物件或結構。
+    - ❌ **Bad (Leaky)**: `def get_file(key): return boto3.client('s3').get_object(Key=key)` (回傳了 AWS 特有的 Dict 結構，上層仍需查閱 AWS 文件才能使用)。
+    - ✅ **Good (Opaque)**: `def get_file(path) -> bytes:` (回傳標準 bytes，徹底隱藏來源是 S3 的事實)。
 
-* **架構效益 (Architecture Benefits)**：
-    * **測試接縫 (Test Seam)**：業務邏輯測試只需 Mock 簡單的 Wrapper，無需 Mock 複雜的外部套件，徹底解決 "Mocking Hell"。
-    * **升級防火牆 (Upgrade Firewall)**：當底層套件升級或替換時 (e.g., `requests` -> `httpx`)，封裝層作為變更的防火牆，確保上層業務邏輯完全不受影響，僅需修改 Wrapper 內部實作。
+- **架構效益 (Architecture Benefits)**：
+    - **測試接縫 (Test Seam)**：業務邏輯測試只需 Mock 簡單的 Wrapper，無需 Mock 複雜的外部套件，徹底解決 "Mocking Hell"。
+    - **升級防火牆 (Upgrade Firewall)**：當底層套件升級或替換時 (e.g., `requests` -> `httpx`)，封裝層作為變更的防火牆，確保上層業務邏輯完全不受影響，僅需修改 Wrapper 內部實作。
 
 #### 規則 B：運算標準與語言延伸型 (Computation & Standards) — 允許直連
 
-* **定義**：屬於領域內的通用標準、純記憶體運算、無副作用且 API 極度穩定的套件。
-* **範例**：`numpy`, `pandas` (僅限 DataFrame 操作), `pydantic`, `decimal`, `uuid`.
-* **規範**：
-    * 為維持程式碼可讀性與開發效率，**允許** 業務層直接 `import`。
-    * **例外**：若涉及 I/O 操作 (如 `pandas.read_csv` 讀取 S3)，仍須遵循規則 A 進行封裝。
+- **定義**：屬於領域內的通用標準、純記憶體運算、無副作用且 API 極度穩定的套件。
+- **範例**：`numpy`, `pandas` (僅限 DataFrame 操作), `pydantic`, `decimal`, `uuid`.
+- **規範**：
+    - 為維持程式碼可讀性與開發效率，**允許** 業務層直接 `import`。
+    - **例外**：若涉及 I/O 操作 (如 `pandas.read_csv` 讀取 S3)，仍須遵循規則 A 進行封裝。
 
 -----
 

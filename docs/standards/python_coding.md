@@ -38,11 +38,11 @@ long_message = (
 
 ```python
 # ✅ 正確：使用 noqa 保持完整性
-API_ENDPOINT = "[https://very-long-domain.com/api/v1/resource/specific-id/action?query=param](https://very-long-domain.com/api/v1/resource/specific-id/action?query=param)"  # noqa: E501
+API_ENDPOINT = "https://very-long-domain.com/api/v1/resource/specific-id/action?query=param"  # noqa: E501
 
 # ❌ 避免：為了換行而破壞結構
 API_ENDPOINT = (
-    "[https://very-long-domain.com/api/v1/resource/](https://very-long-domain.com/api/v1/resource/)"
+    "https://very-long-domain.com/api/v1/resource/"
     "specific-id/action?query=param"
 )
 ```
@@ -54,9 +54,9 @@ API_ENDPOINT = (
 **例外豁免 (Conditions for Exception)**:
 在以下情境中，若參數過多是為了**架構完整性**或**依賴注入**需求，允許使用 `# noqa: PLR0913` 豁免：
 
-1.  **類別建構子 (`__init__`)**: 特別是 Service 層級的類別，常需注入多個 Repository 或 Utility 組件。
-2.  **方法覆寫 (Override)**: 子類別必須保持與父類別相同的簽章，或為了擴充功能而包含父類的所有參數。
-3.  **API 封裝 (Wrappers)**: 為了維持對底層函式的介面相容性。
+1. **類別建構子 (`__init__`)**: 特別是 Service 層級的類別，常需注入多個 Repository 或 Utility 組件。
+2. **方法覆寫 (Override)**: 子類別必須保持與父類別相同的簽章，或為了擴充功能而包含父類的所有參數。
+3. **API 封裝 (Wrappers)**: 為了維持對底層函式的介面相容性。
 
 ```python
 # ✅ 正確：建構子依賴注入可豁免

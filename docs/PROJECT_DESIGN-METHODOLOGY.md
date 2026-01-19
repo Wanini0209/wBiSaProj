@@ -102,25 +102,27 @@ Feature（業務價值單元）
 為了避免產生「巨型 Feature (Monolithic Feature)」，在定義 Feature 範圍時，必須執行以下拆解檢核：
 
 #### A. 複合式需求拆解 (Composite Requirement Breakdown)
+
 若一條原始需求描述包含了「多個步驟」或「多種資料維度」，**嚴禁**合併為一個 Feature。
 
-* **異質技術熱點 (Heterogeneous Tech Spots)**：
-    * *範例*：需求為「搜尋股票並顯示 K 線圖」。
-    * *拆解*：
-        1.  `stock-search` (專注於全文檢索與模糊比對)
-        2.  `stock-chart` (專注於時間序列資料的查詢與計算)
-    * *理由*：兩者依賴的底層技術 (Search Engine vs. Time-series DB) 與變動頻率完全不同。
+- **異質技術熱點 (Heterogeneous Tech Spots)**：
+    - *範例*：需求為「搜尋股票並顯示 K 線圖」。
+    - *拆解*：
+        1. `stock-search` (專注於全文檢索與模糊比對)
+        2. `stock-chart` (專注於時間序列資料的查詢與計算)
+    - *理由*：兩者依賴的底層技術 (Search Engine vs. Time-series DB) 與變動頻率完全不同。
 
-* **UI/流程 區塊分離**：
-    * *範例*：需求為「股票總覽看板 (含列表、篩選、當日走勢)」。
-    * *拆解*：
-        1.  `stock-overview-list` (列表與篩選邏輯)
-        2.  `stock-intraday-trend` (當日走勢計算)
-    * *理由*：確保每個 Feature 可獨立測試與交付，避免單一 Feature 牽涉過多 Repository。
+- **UI/流程 區塊分離**：
+    - *範例*：需求為「股票總覽看板 (含列表、篩選、當日走勢)」。
+    - *拆解*：
+        1. `stock-overview-list` (列表與篩選邏輯)
+        2. `stock-intraday-trend` (當日走勢計算)
+    - *理由*：確保每個 Feature 可獨立測試與交付，避免單一 Feature 牽涉過多 Repository。
 
 #### B. 共用能力提取 (Shared Capability Extraction)
+
 若某個業務邏輯 (e.g., 選擇權定價公式、複雜的市場狀態判斷) 會被多個 Feature 或 ETL Job 使用：
-* **Action**：必須將其拆分為獨立的 **Internal Service Feature** 或 **Library Feature**，作為其他 Feature 的依賴，而非重複實作。
+- **Action**：必須將其拆分為獨立的 **Internal Service Feature** 或 **Library Feature**，作為其他 Feature 的依賴，而非重複實作。
 
 ---
 
@@ -159,12 +161,12 @@ Feature（業務價值單元）
 | **Dual Track**<br>(雙軌交付) | 拆分為 **DB-only Feature** 先行交付，再交付業務 Feature | 1. **模型複雜**：需冷熱分離、涉及多個實體聚合<br>2. **混合儲存**：單一 Repository 封裝了 SQL + NoSQL/File<br>3. **跨模組共用**：該 Repository 需被多個 Feature 或 ETL Job 共用 |
 
 **DB-only Feature 規範**：
-* **Public Interface**: 必須明確定義 Repository Interface 與 Domain Schemas (Pydantic)。
-* **Encapsulation**: 必須完整封裝底層儲存實作 (SQL/FS/NoSQL)，下游不得感知。
+- **Public Interface**: 必須明確定義 Repository Interface 與 Domain Schemas (Pydantic)。
+- **Encapsulation**: 必須完整封裝底層儲存實作 (SQL/FS/NoSQL)，下游不得感知。
 
 **內部服務 (Internal Service) 規範**：
-* **適用情境**：複雜的業務運算（如定價公式），需被 ETL/Job 使用但不需暴露 API。
-* **限制**：不包含 API 層，僅包含 Service FU 與 Unit Tests。
+- **適用情境**：複雜的業務運算（如定價公式），需被 ETL/Job 使用但不需暴露 API。
+- **限制**：不包含 API 層，僅包含 Service FU 與 Unit Tests。
 
 #### Data Source Feature Tasks
 

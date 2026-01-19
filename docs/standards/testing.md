@@ -36,7 +36,7 @@ async def test_async_operation():
 | `@pytest.mark.unit` | 單元測試 | 執行速度快、無外部 I/O、邏輯驗證 |
 | `@pytest.mark.integration` | 整合測試 | 元件互動、使用 In-Memory DB |
 | `@pytest.mark.e2e` | 端到端測試 | 完整流程、真實外部連線 |
-| `@pytest.mark.slow` | 慢速測試 | 執行時間 \> 1秒 |
+| `@pytest.mark.slow` | 慢速測試 | 執行時間 > 1秒 |
 | `@pytest.mark.fast` | 快速測試 | 執行時間極短的測試 |
 | `@pytest.mark.database` | 資料庫測試 | 需要 DB Session 的測試 |
 | `@pytest.mark.network` | 網路測試 | 需要外部網路連線 (如爬蟲) |
@@ -45,7 +45,7 @@ async def test_async_operation():
 | `@pytest.mark.auth` | 認證測試 | 登入、權限驗證相關 |
 | `@pytest.mark.api` | API 測試 | 針對 Router Endpoint 的測試 |
 
------
+---
 
 ## 2. 檔案組織規範
 
@@ -62,10 +62,8 @@ async def test_async_operation():
 
 #### 範例 A：Library 型 FU (簡單結構)
 
-  - **FU Container**: `core/config`
-  - **實作**: `core/config/_environment.py`
-
-<!-- end list -->
+- **FU Container**: `core/config`
+- **實作**: `core/config/_environment.py`
 
 ```text
 tests/
@@ -80,10 +78,8 @@ tests/
 
 #### 範例 B：業務系統 FU (深層結構)
 
-  - **FU Container**: `gms/db/market/stock/price`
-  - **實作**: `gms/db/market/stock/price/_repository.py`
-
-<!-- end list -->
+- **FU Container**: `gms/db/market/stock/price`
+- **實作**: `gms/db/market/stock/price/_repository.py`
 
 ```text
 tests/
@@ -99,7 +95,7 @@ tests/
                         └── test_crud.py # 測試檔案
 ```
 
------
+---
 
 ## 3. 雙軌測試策略
 
@@ -107,19 +103,19 @@ tests/
 
 ### 3.1 標準 TDD (Standard TDD)
 
-  - **適用對象**：Library, DB Layer, Service Layer, Internal Logic。
-  - **特徵**：邏輯可控、輸入輸出明確。
-  - **流程**：先寫測試 (Red) → 實作 (Green) → 重構 (Refactor)。
-  - **要求**：必須覆蓋所有核心邏輯與邊界條件。
+- **適用對象**：Library, DB Layer, Service Layer, Internal Logic。
+- **特徵**：邏輯可控、輸入輸出明確。
+- **流程**：先寫測試 (Red) → 實作 (Green) → 重構 (Refactor)。
+- **要求**：必須覆蓋所有核心邏輯與邊界條件。
 
 ### 3.2 探索式驗證 (Exploratory Validation)
 
-  - **適用對象**：Collector (爬蟲), Extractor (外部 API), Job (端到端)。
-  - **特徵**：外部資料結構未知或不穩定。
-  - **流程**：撰寫探索腳本 → 分析回傳資料 → 定義驗證規則 → 轉化為測試案例。
-  - **要求**：重點在於驗證資料格式的相容性與錯誤處理機制。
+- **適用對象**：Collector (爬蟲), Extractor (外部 API), Job (端到端)。
+- **特徵**：外部資料結構未知或不穩定。
+- **流程**：撰寫探索腳本 → 分析回傳資料 → 定義驗證規則 → 轉化為測試案例。
+- **要求**：重點在於驗證資料格式的相容性與錯誤處理機制。
 
------
+---
 
 ## 4. 各類型 FU 測試規範與範例
 
@@ -127,9 +123,9 @@ tests/
 
 ### 4.1 Type I: Library FU (純邏輯)
 
-  - **特徵**：無外部依賴，純粹的輸入輸出函數或類別。
-  - **測試策略**：標準單元測試。
-  - **依賴處理**：無須 Mock。
+- **特徵**：無外部依賴，純粹的輸入輸出函數或類別。
+- **測試策略**：標準單元測試。
+- **依賴處理**：無須 Mock。
 
 **範例 (core/utils/time.py)**：
 
@@ -153,12 +149,12 @@ def test_to_taipei_time_conversion():
 
 ### 4.2 Type II: DB Layer FU (Repository)
 
-  - **特徵**：負責資料庫 CRUD，依賴 SQLAlchemy Session。
-  - **測試策略**：**整合測試**。
-  - **依賴處理**：
-      - **禁止 Mock 資料庫**：Mock SQL 行為沒有意義且容易出錯。
-      - **使用 SQLite In-Memory**：使用 `sqlite_session` fixture 進行快速、隔離的真實 DB 操作。
-  - **標記**：`@pytest.mark.database`, `@pytest.mark.integration`
+- **特徵**：負責資料庫 CRUD，依賴 SQLAlchemy Session。
+- **測試策略**：**整合測試**。
+- **依賴處理**：
+    - **禁止 Mock 資料庫**：Mock SQL 行為沒有意義且容易出錯。
+    - **使用 SQLite In-Memory**：使用 `sqlite_session` fixture 進行快速、隔離的真實 DB 操作。
+- **標記**：`@pytest.mark.database`, `@pytest.mark.integration`
 
 **範例 (gms/db/market/stock/price)**：
 
@@ -193,12 +189,12 @@ async def test_create_and_get_price(sqlite_session):
 
 ### 4.3 Type III: Service Layer FU (Business Logic)
 
-  - **特徵**：實作純業務邏輯，依賴 Repository 介面。
-  - **測試策略**：**標準單元測試**。
-  - **依賴處理**：
-      - **必須 Mock Repository**：Service 測試不應受限於 DB 狀態。
-      - **依賴注入**：透過構造函數注入 Mock 物件。
-  - **標記**：`@pytest.mark.unit`
+- **特徵**：實作純業務邏輯，依賴 Repository 介面。
+- **測試策略**：**標準單元測試**。
+- **依賴處理**：
+    - **必須 Mock Repository**：Service 測試不應受限於 DB 狀態。
+    - **依賴注入**：透過構造函數注入 Mock 物件。
+- **標記**：`@pytest.mark.unit`
 
 **範例 (gms/service/market/analysis)**：
 
@@ -230,12 +226,12 @@ async def test_analyze_abnormal_volume():
 
 ### 4.4 Type IV: API Layer FU (Router)
 
-  - **特徵**：處理 HTTP 請求、參數驗證、狀態碼。
-  - **測試策略**：**單元測試** (針對 Router 邏輯)。
-  - **依賴處理**：
-      - **Mock Service**：隔離業務邏輯，專注測試 API 行為。
-      - **使用 Dependency Overrides**：FastAPI 特有的測試機制。
-  - **標記**：`@pytest.mark.api`, `@pytest.mark.unit`
+- **特徵**：處理 HTTP 請求、參數驗證、狀態碼。
+- **測試策略**：**單元測試** (針對 Router 邏輯)。
+- **依賴處理**：
+    - **Mock Service**：隔離業務邏輯，專注測試 API 行為。
+    - **使用 Dependency Overrides**：FastAPI 特有的測試機制。
+- **標記**：`@pytest.mark.api`, `@pytest.mark.unit`
 
 **範例 (gms/api/market/stock)**：
 
@@ -269,21 +265,19 @@ async def test_get_volume_analysis_endpoint():
 
 ### 4.5 Type V: Data Source / ETL (Integration)
 
-  - **特徵**：與外部互動或執行長時間任務。
-  - **測試策略**：**整合測試** 或 **探索式驗證**。
-  - **依賴處理**：視情況使用真實連線 (需標記 `@external`) 或 VCR (錄製回應)。
-  - **標記**：`@pytest.mark.external`, `@pytest.mark.slow`
+- **特徵**：與外部互動或執行長時間任務。
+- **測試策略**：**整合測試** 或 **探索式驗證**。
+- **依賴處理**：視情況使用真實連線 (需標記 `@external`) 或 VCR (錄製回應)。
+- **標記**：`@pytest.mark.external`, `@pytest.mark.slow`
 
------
+---
 
 ## 5. 通用最佳實踐
 
 ### 5.1 斷言與異常
 
-  - 統一使用 Python 標準 `assert`。
-  - 測試異常時務必使用 `pytest.raises` 並驗證錯誤訊息，確保捕捉到正確的錯誤。
-
-<!-- end list -->
+- 統一使用 Python 標準 `assert`。
+- 測試異常時務必使用 `pytest.raises` 並驗證錯誤訊息，確保捕捉到正確的錯誤。
 
 ```python
 with pytest.raises(ValueError, match="Invalid symbol"):
@@ -292,15 +286,15 @@ with pytest.raises(ValueError, match="Invalid symbol"):
 
 ### 5.2 Fixtures 使用原則
 
-  - **共用 Fixtures**：通用的 DB Session, API Client 應定義在根目錄或模組層級的 `conftest.py` 中，避免重複程式碼。
-  - **Scope 管理**：
-      - `function` (預設)：每個測試獨立 (推薦用於 DB 測試以確保隔離)。
-      - `session`：整個測試過程只執行一次 (用於建立 expensive resources)。
+- **共用 Fixtures**：通用的 DB Session, API Client 應定義在根目錄或模組層級的 `conftest.py` 中，避免重複程式碼。
+- **Scope 管理**：
+    - `function` (預設)：每個測試獨立 (推薦用於 DB 測試以確保隔離)。
+    - `session`：整個測試過程只執行一次 (用於建立 expensive resources)。
 
 ### 5.3 導入規範
 
-  - **禁止區域導入**：嚴禁在測試函數內部進行 `import`。所有依賴必須在檔案頂部導入。
-  - **TDD 導入**：在 TDD 的 Red 階段，頂部導入不存在的模組導致測試報錯是預期行為，不應為了避開 ImportError 而改變導入位置。
+- **禁止區域導入**：嚴禁在測試函數內部進行 `import`。所有依賴必須在檔案頂部導入。
+- **TDD 導入**：在 TDD 的 Red 階段，頂部導入不存在的模組導致測試報錯是預期行為，不應為了避開 ImportError 而改變導入位置。
 
 ### 5.4 跨平台測試規範 (Cross-Platform Testing)
 
@@ -308,10 +302,8 @@ with pytest.raises(ValueError, match="Invalid symbol"):
 
 #### 5.4.1 路徑處理
 
-  - **禁止硬編碼絕對路徑**：嚴禁使用 `/root/`、`/tmp/`、`C:\` 等平台特定路徑。
-  - **統一使用 `tmp_path`**：所有需要檔案路徑的測試必須使用 Pytest 內建的 `tmp_path` fixture。
-
-<!-- end list -->
+- **禁止硬編碼絕對路徑**：嚴禁使用 `/root/`、`/tmp/`、`C:\` 等平台特定路徑。
+- **統一使用 `tmp_path`**：所有需要檔案路徑的測試必須使用 Pytest 內建的 `tmp_path` fixture。
 
 ```python
 # ❌ 錯誤：硬編碼 Unix 路徑，Windows 上會失敗
@@ -328,8 +320,8 @@ def test_permission_error(tmp_path: Path):
 
 #### 5.4.2 路徑型別
 
-  - 測試時應同時驗證 `pathlib.Path` 與 `str` 兩種路徑型別的相容性。
-  - 使用 `pathlib.Path` 進行路徑操作，避免手動字串拼接。
+- 測試時應同時驗證 `pathlib.Path` 與 `str` 兩種路徑型別的相容性。
+- 使用 `pathlib.Path` 進行路徑操作，避免手動字串拼接。
 
 ### 5.5 Mock 策略規範 (Mocking Strategy)
 
@@ -391,10 +383,8 @@ with patch("mymodule.exists", return_value=False):
 
 ### 5.6 測試類別
 
-  - 測試類別**不需要**繼承任何基礎類別。
-  - 類別名稱應以 `Test` 開頭。
-
-<!-- end list -->
+- 測試類別**不需要**繼承任何基礎類別。
+- 類別名稱應以 `Test` 開頭。
 
 ```python
 class TestStockPricing:
@@ -402,7 +392,7 @@ class TestStockPricing:
         ...
 ```
 
------
+---
 
 ## 6. 品質保證與自我檢查 (Quality Assurance & Self-Check)
 
@@ -410,26 +400,26 @@ class TestStockPricing:
 
 ### 6.1 自動化檢查 (Automated Checks)
 
-  - [ ] **測試通過**: 已執行 `pytest` 並確認所有測試皆通過 (Green Light)。
-  - [ ] **風格合規**: 測試程式碼本身已通過 `inv style` (Black/Ruff) 檢查。
-  - [ ] **Async 檢查**: 確認執行過程中無 `RuntimeWarning: coroutine ... was never awaited` 警告。
+- [ ] **測試通過**: 已執行 `pytest` 並確認所有測試皆通過 (Green Light)。
+- [ ] **風格合規**: 測試程式碼本身已通過 `inv style` (Black/Ruff) 檢查。
+- [ ] **Async 檢查**: 確認執行過程中無 `RuntimeWarning: coroutine ... was never awaited` 警告。
 
 ### 6.2 架構合規性檢查 (Architectural Compliance) [CRITICAL]
 
-  - [ ] **路徑對應性**: 測試檔案路徑是否嚴格對應 FU Container 路徑？(例如 `tests/gms/api/user` 對應 `gms/api/user`)。
-  - [ ] **跨平台相容性**:
-      - [ ] 是否使用 `tmp_path` 而非硬編碼路徑 (`/root/`, `/tmp/`, `C:\`)？
-      - [ ] Mock 檔案 I/O 時是否同時考慮 `builtins.open` 與 `Path.open`？
-  - [ ] **隔離性 (Isolation)**:
-      - [ ] **DB Layer**: 是否使用 `sqlite_session` fixture 而非連線真實/開發資料庫？
-      - [ ] **Service Layer**: 是否 Mock 了 Repository 層？確認沒有真實的 DB 操作。
-      - [ ] **API Layer**: 是否 Mock 了 Service 層？確認 API 測試不依賴業務邏輯的實作細節。
-  - [ ] **雙軌策略**:
-      - [ ] 對於 Collector/Extractor (外部資料源)，是否採用「探索式驗證」思路而非僅 Mock 快樂路徑？
+- [ ] **路徑對應性**: 測試檔案路徑是否嚴格對應 FU Container 路徑？(例如 `tests/gms/api/user` 對應 `gms/api/user`)。
+- [ ] **跨平台相容性**:
+    - [ ] 是否使用 `tmp_path` 而非硬編碼路徑 (`/root/`, `/tmp/`, `C:\`)？
+    - [ ] Mock 檔案 I/O 時是否同時考慮 `builtins.open` 與 `Path.open`？
+- [ ] **隔離性 (Isolation)**:
+    - [ ] **DB Layer**: 是否使用 `sqlite_session` fixture 而非連線真實/開發資料庫？
+    - [ ] **Service Layer**: 是否 Mock 了 Repository 層？確認沒有真實的 DB 操作。
+    - [ ] **API Layer**: 是否 Mock 了 Service 層？確認 API 測試不依賴業務邏輯的實作細節。
+- [ ] **雙軌策略**:
+    - [ ] 對於 Collector/Extractor (外部資料源)，是否採用「探索式驗證」思路而非僅 Mock 快樂路徑？
 
 ### 6.3 實作細節檢查 (Implementation Details)
 
-  - [ ] **Markers 標記**: 是否已根據測試性質加上正確的 `@pytest.mark.xxx` (如 `unit`, `integration`, `asyncio`)？
-  - [ ] **頂層導入**: 確認沒有在測試函數內部進行 `import` (除了解決循環依賴的極少數特例外)。
-  - [ ] **斷言使用**: 是否使用標準 `assert` 語句？
-  - [ ] **非同步語法**: 涉及 I/O 的測試是否定義為 `async def` 並正確使用 `await`？
+- [ ] **Markers 標記**: 是否已根據測試性質加上正確的 `@pytest.mark.xxx` (如 `unit`, `integration`, `asyncio`)？
+- [ ] **頂層導入**: 確認沒有在測試函數內部進行 `import` (除了解決循環依賴的極少數特例外)。
+- [ ] **斷言使用**: 是否使用標準 `assert` 語句？
+- [ ] **非同步語法**: 涉及 I/O 的測試是否定義為 `async def` 並正確使用 `await`？
