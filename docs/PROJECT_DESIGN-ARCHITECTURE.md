@@ -423,7 +423,7 @@ gms/db/user/profile/
 |:-----|:-----|:-----|
 | **Domain** | 業務領域 | 系統中的核心業務範疇 |
 | **Sub-Domain** | 子業務領域 | 隸屬於某個 Domain 的具體業務領域 |
-| **Feature** | 功能特性 | 實現特定業務需求的程式碼單元 |
+| **Feature** | 功能特性 | **可獨立交付的業務價值或技術能力單元** (包含 Use Cases 與對應的 Task 實作) |
 | **Toolkit** | 工具集 | Library 中的功能分類單位 |
 
 ### 5.3 專案核心變數定義 (Project Core Variable Definitions)
