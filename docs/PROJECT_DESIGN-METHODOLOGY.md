@@ -149,24 +149,45 @@ Feature（業務價值單元）
 | **Service Task** | 實作業務邏輯與規則 | 業務服務、領域邏輯 |
 | **API Task** | 定義對外介面端點 | RESTful API、回應格式 |
 
-#### 技術型特例：雙軌交付 (Dual Track Delivery)
+#### 技術型特例 (Technical Value Features)
 
-雖然標準 Business Feature 鼓勵垂直切片交付 (Merged Delivery)，但當遇到高複雜度的資料模型時，應採用 **「雙軌交付」** 策略，先行交付穩定的資料契約 (DB-only)，再開發業務邏輯。
+技術型特例是指**非 Library 卻不直接提供業務價值**的 Feature，其價值在於為其他 Feature 提供穩定的技術基礎。本專案定義兩種技術型特例：
 
-**交付模式決策表 (Delivery Mode Decision)**：
+##### A. DB-only Feature（資料存取能力）
 
-| 模式 | 定義 | 適用情境 (Criteria) |
-|:---|:---|:---|
-| **Merged Delivery**<br>(合併交付) | DB + Service + API 在同一個 Feature 內交付 | 1. **模型單純**：僅涉及單一 Table 或簡單關聯<br>2. **標準儲存**：僅使用 SQL，無混合儲存需求<br>3. **私有使用**：該資料結構僅被此 Feature 使用 |
-| **Dual Track**<br>(雙軌交付) | 拆分為 **DB-only Feature** 先行交付，再交付業務 Feature | 1. **模型複雜**：需冷熱分離、涉及多個實體聚合<br>2. **混合儲存**：單一 Repository 封裝了 SQL + NoSQL/File<br>3. **跨模組共用**：該 Repository 需被多個 Feature 或 ETL Job 共用 |
+DB-only Feature 專注於定義資料模型與存取能力，為下游的 Business Feature 或 Data Pipeline Feature 提供穩定的資料契約。
 
-**DB-only Feature 規範**：
+**交付策略**：本專案採用**資料需求獨立原則**，所有涉及資料的需求，**固定採用雙軌交付 (Dual Track Delivery)**：
+
+1. **第一軌**：先行交付 DB-only Feature（定義資料模型與存取能力）
+2. **第二軌**：再交付 Business Feature（僅含 Service + API，依賴 DB-only Feature）
+
+**設計理念**：
+
+| 理由 | 說明 |
+|:---|:---|
+| **Schema 穩定性** | 避免資料模型因多個業務需求零散變更而頻繁異動 |
+| **前瞻性設計** | 在資料層優先規劃，預先發想未來可能的資料需求 |
+| **儲存複雜性** | 本專案的 DB 層可能涉及 SQL、NoSQL、FileSystem 或混合儲存，設計複雜度較高 |
+| **契約穩定性** | DB-only Feature 成為下游 Business Feature 的穩定依賴契約 |
+
+**規範**：
 - **Public Interface**: 必須明確定義 Repository Interface 與 Domain Schemas (Pydantic)。
 - **Encapsulation**: 必須完整封裝底層儲存實作 (SQL/FS/NoSQL)，下游不得感知。
 
-**內部服務 (Internal Service) 規範**：
-- **適用情境**：複雜的業務運算（如定價公式），需被 ETL/Job 使用但不需暴露 API。
-- **限制**：不包含 API 層，僅包含 Service FU 與 Unit Tests。
+##### B. Internal Service Feature（內部運算能力）
+
+Internal Service Feature 專注於封裝複雜的業務運算邏輯，供多個 Feature 或 ETL Job 共用，但不對外暴露 API。
+
+**適用情境**：當符合以下條件時，應獨立為 Internal Service Feature：
+- 複雜的業務運算（如：選擇權定價公式、風險計算模型）
+- 需被多個 Business Feature 或 ETL Job 共用
+- 不需對外暴露 API
+
+**規範**：
+- **Scope**: 僅包含 Service 層，不包含 API 層。
+- **Testing**: 必須包含完整的 Unit Tests。
+- **Interface**: 應定義清晰的函數簽章與輸入輸出規格。
 
 #### Data Source Feature Tasks
 
