@@ -124,6 +124,16 @@
 > 2. **Responsibility**: 核心職責與關鍵能力描述
 > 3. **Boundary Rules**: 包含 (Includes) 與排除 (Excludes) 規則
 > 4. **Sub-toolkits**: 若有子工具集，列出其職責定義
+>
+> **⚠️ Responsibility 與 Boundary Rules 撰寫要點 [CRITICAL]**：
+> - **Responsibility** 應描述「職責範圍」（負責處理哪類問題），而非「具體功能」（目前能做什麼）。
+> - **Includes/Excludes** 的目的是「劃定邊界」，協助判斷新需求是否歸屬於此。應使用「通用的能力類別」，而非列舉具體功能。
+> - **禁止**將當前已知的具體功能需求直接寫入，這會限縮職責範圍的理解。
+>
+> **💡 思考方式**：
+> - Responsibility：「這個 Toolkit 存在的目的是解決哪一類問題？」
+> - Includes：「哪些類型的能力屬於這個職責範圍？」
+> - Excludes：「哪些類型的能力不屬於這個職責範圍，應歸屬於其他地方？」
 
 > **快速導覽**：本函式庫包含以下 Toolkit：
 >

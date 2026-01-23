@@ -112,6 +112,16 @@
 > - **Responsibility**: 定義核心實體或聚合概念。
 > - **Boundary Rules**: 若為 Aggregate，重點在於定義「跨 Sub-domain 的共用屬性」。
 >
+> **⚠️ Responsibility 與 Boundary Rules 撰寫要點 [CRITICAL]**：
+> - **Responsibility** 應描述「職責範圍」（負責管理哪類業務實體/資料），而非「具體功能」（目前能做什麼）。
+> - **Includes/Excludes** 的目的是「劃定邊界」，協助判斷新需求是否歸屬於此。應使用「通用的資料類型或業務概念」，而非列舉具體功能。
+> - **禁止**將當前已知的具體功能需求直接寫入，這會限縮職責範圍的理解。
+>
+> **💡 思考方式**：
+> - Responsibility：「這個 Domain 存在的目的是管理哪一類業務實體？」
+> - Includes：「哪些類型的資料/業務概念屬於這個職責範圍？」
+> - Excludes：「哪些類型的資料/業務概念不屬於這個職責範圍，應歸屬於其他 Domain？」
+>
 > **💡 範例 (單一子領域的聚合型)**：
 > - **Domain**: `market` (Type: `Aggregate`)
 > - **Sub-domain**: `stock`
@@ -199,21 +209,40 @@
 
 > **📝 撰寫指引**：
 > 請依照 3.1 的結構，對應說明每個 Toolkit (含子節點) 的職責。
-> **Responsibility** 應具體描述其提供的**關鍵能力 (Key Capabilities)**，例如：「提供 AES 加解密能力與 Key Rotation 機制」而非僅寫「負責加密」。
 > 若有巢狀結構，請使用 **縮排 (Indentation)** 清單來表示層級關係。
 >
-> **💡 範例**：
+> **⚠️ Responsibility 與 Boundary Rules 撰寫要點 [CRITICAL]**：
+> - **Responsibility** 應描述「職責範圍」（負責處理哪類問題），而非「具體功能」（目前能做什麼）。
+> - **Boundary Rules** 為**可選欄位**，當 Toolkit 職責較廣或與其他 Toolkit/Domain 有潛在歧義時填寫，用於劃定邊界。
+> - **禁止**將當前已知的具體功能需求直接寫入，這會限縮職責範圍的理解。
+>
+> **💡 思考方式**：
+> - Responsibility：「這個 Toolkit 存在的目的是解決哪一類問題？」
+> - Boundary Rules：「哪些能力屬於/不屬於這個 Toolkit？是否有與其他地方的職責重疊需要釐清？」
+>
+> **💡 範例（無 Boundary Rules）**：
+>
+> - **Toolkit**: `config`
+>     - **Responsibility**: 提供系統組態的讀取與驗證能力，包含環境變數解析、設定檔載入與強型別組態物件。
+>
+> **💡 範例（有 Boundary Rules 與 Sub-toolkits）**：
+>
 > - **Toolkit**: `security`
->     - **Responsibility**: 處理認證與授權的統一入口。
+>     - **Responsibility**: 處理系統內部的安全機制，包含身份驗證、授權檢查與加解密運算。
+>     - **Boundary Rules**:
+>         - **Includes**: Token 驗證與解析、加解密運算、權限檢查輔助工具
+>         - **Excludes**: 使用者帳號的 CRUD 管理（屬於 `user` Domain）
 >     - **Sub-toolkits**:
->         - **Toolkit**: `crypto`
->             - **Responsibility**: 實作系統專屬的加解密演算法 (AES-GCM) 與 Key Rotation 機制。
+>         - `auth` - 提供身份驗證令牌的解析與驗證能力。
+>         - `crypto` - 提供加解密運算與金鑰管理能力。
 
 - **Toolkit**: `<toolkit_root_name>`
     - **Responsibility**: <定義核心職責與關鍵能力>
+    - **Boundary Rules** (可選，當有歧義時填寫):
+        - **Includes**: <屬於此 Toolkit 的能力類別>
+        - **Excludes**: <不屬於此 Toolkit 的能力類別，並說明歸屬>
     - **Sub-toolkits** (若有):
-        - **Toolkit**: `<sub_toolkit_name>`
-            - **Responsibility**: <定義子工具集職責與關鍵能力>
+        - `<sub_toolkit_name>` - <一句話職責描述>
 
 - **Toolkit**: `<toolkit_root_name>`
     - **Responsibility**: ...

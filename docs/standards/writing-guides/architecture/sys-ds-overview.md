@@ -128,6 +128,16 @@
 > - **Data Description**: 描述此領域提供的資料內容與格式。
 > - **Boundary Rules**: 定義資料的包含與排除範圍。
 >
+> **⚠️ Data Description 與 Boundary Rules 撰寫要點 [CRITICAL]**：
+> - **Data Description** 應描述「資料類型與範圍」，而非「具體的資料欄位或當前需求」。
+> - **Includes/Excludes** 的目的是「劃定資料邊界」，協助判斷新資料需求是否歸屬於此。應使用「通用的資料類別」，而非列舉具體欄位。
+> - **禁止**將當前已知的具體資料欄位直接寫入，這會限縮資料範圍的理解。
+>
+> **💡 思考方式**：
+> - Data Description：「這個 Domain 負責提供哪一類資料？」
+> - Includes：「哪些類型的資料屬於這個範圍？」
+> - Excludes：「哪些類型的資料不屬於這個範圍，應由其他來源提供？」
+>
 > **💡 範例**：
 >
 > - **Domain**: `daily_price` (Type: `Independent`)
@@ -235,23 +245,44 @@
 ### 4.2 Toolkit Definitions (工具集職責定義)
 
 > **📝 撰寫指引**：
-> 請依照 4.1 的結構，對應說明每個 Toolkit 的職責。
-> **Responsibility** 應具體描述其提供的**關鍵能力 (Key Capabilities)**。
+> 請依照 4.1 的結構，對應說明每個 Toolkit (含子節點) 的職責。
+> 若有巢狀結構，請使用 **縮排 (Indentation)** 清單來表示層級關係。
 >
-> **💡 範例**：
+> **⚠️ Responsibility 與 Boundary Rules 撰寫要點 [CRITICAL]**：
+> - **Responsibility** 應描述「職責範圍」（負責處理哪類問題），而非「具體功能」（目前能做什麼）。
+> - **Boundary Rules** 為**可選欄位**，當 Toolkit 職責較廣或與其他 Toolkit 有潛在歧義時填寫，用於劃定邊界。
+> - **禁止**將當前已知的具體功能需求直接寫入，這會限縮職責範圍的理解。
+>
+> **💡 思考方式**：
+> - Responsibility：「這個 Toolkit 存在的目的是解決哪一類問題？」
+> - Boundary Rules：「哪些能力屬於/不屬於這個 Toolkit？」
+>
+> **💡 範例（無 Boundary Rules）**：
+>
 > - **Toolkit**: `http_client`
->     - **Responsibility**: 封裝 HTTP 請求，提供重試機制、Rate Limiting 與 Session 管理。
+>     - **Responsibility**: 提供 HTTP 請求的封裝能力，包含重試機制、Rate Limiting 與 Session 管理。
+>
+> **💡 範例（有 Boundary Rules 與 Sub-toolkits）**：
+>
 > - **Toolkit**: `parser`
->     - **Responsibility**: 解析外部資料格式。
+>     - **Responsibility**: 提供外部資料格式的解析能力，將原始資料轉換為結構化格式。
+>     - **Boundary Rules**:
+>         - **Includes**: HTML 表格解析、JSON 解析、XML 解析
+>         - **Excludes**: 資料驗證與商業邏輯轉換（屬於 Service 層）
 >     - **Sub-toolkits**:
->         - **Toolkit**: `html`
->             - **Responsibility**: 解析 HTML 表格，轉換為 DataFrame。
+>         - `html` - 提供 HTML 文件與表格的解析能力。
+>         - `json` - 提供 JSON 格式的解析與路徑提取能力。
 
 - **Toolkit**: `<toolkit_root_name>`
     - **Responsibility**: <定義核心職責與關鍵能力>
+    - **Boundary Rules** (可選，當有歧義時填寫):
+        - **Includes**: <屬於此 Toolkit 的能力類別>
+        - **Excludes**: <不屬於此 Toolkit 的能力類別，並說明歸屬>
     - **Sub-toolkits** (若有):
-        - **Toolkit**: `<sub_toolkit_name>`
-            - **Responsibility**: <定義子工具集職責與關鍵能力>
+        - `<sub_toolkit_name>` - <一句話職責描述>
+
+- **Toolkit**: `<toolkit_root_name>`
+    - **Responsibility**: ...
 
 ## 5. Technology Constraints (技術限制)
 
