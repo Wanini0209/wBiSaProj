@@ -99,57 +99,38 @@ docs/use-cases/<system>/core/
 >   - 函式庫：Toolkit 名稱 (e.g., `IO`, `Validator`)
 > - 本文件將被用作 Prompt Input 餵給 LLM 進行分析。請確保內容精簡、無歧義。
 
-## 1. Scope Definition (範圍定義)
+## 1. Context (上下文)
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
-> 本節定義當前層級的邊界與職責，協助使用者確認是否來對地方。
+> 本節說明當前 Overview 的位置與適用範圍，協助使用者確認是否來對地方。
 >
 > **💡 範例 (業務系統 Domain)**：
 >
+> - **System**: `gms` (Business System)
 > - **Scope Type**: `Domain`
 > - **Scope Name**: `market`
-> - **Parent**: `gms` (Business System)
 > - **Description**: 涵蓋所有金融市場相關的數據查詢與分析功能。
-> - **Boundary**:
->     - **Includes**: 股票、債券、基金等金融商品的價格、基本資料、技術指標。
->     - **Excludes**: 使用者投資組合管理（屬於 `portfolio` Domain）。
+>
+> **💡 範例 (業務系統 Sub-domain)**：
+>
+> - **System**: `gms` (Business System)
+> - **Scope Type**: `Sub-domain`
+> - **Scope Name**: `market/stock`
+> - **Description**: 處理股票類資產的查詢與分析功能。
 >
 > **💡 範例 (函式庫 Toolkit)**：
 >
+> - **Library**: `wutils`
 > - **Scope Type**: `Toolkit`
 > - **Scope Name**: `io`
-> - **Parent**: `wutils` (Library)
 > - **Description**: 提供統一的 I/O 操作介面，封裝檔案與網路存取的複雜度。
-> - **Boundary**:
->     - **Includes**: 檔案讀寫、格式轉換、網路請求封裝。
->     - **Excludes**: 業務資料的 Schema 定義（應由各系統定義）。
 
+- **System / Library**: `<name>` (<type>)
 - **Scope Type**: `<Domain | Sub-domain | Toolkit>`
-- **Scope Name**: `<name>`
-- **Parent**: `<parent_scope>` (<parent_type>)
+- **Scope Name**: `<name or path>`
 - **Description**: <簡述此範圍的核心職責>
-- **Boundary**:
-    - **Includes**: <列出包含的範圍>
-    - **Excludes**: <列出排除的範圍>
 
-## 2. Sub-Scope Navigation (子範圍導覽)
-
-> **📝 撰寫指引**（請勿保留本指引文字）：
-> 若當前層級有子範圍 (Sub-domain / Sub-toolkit)，請在此列出導覽連結。
-> **若無子範圍，請刪除此區塊。**
->
-> **💡 範例**：
->
-> | Sub-Scope | Description | Link |
-> |:----------|:------------|:-----|
-> | `stock` | 股票相關功能 | [→ stock/overview.md](./stock/overview.md) |
-> | `bond` | 債券相關功能 | [→ bond/overview.md](./bond/overview.md) |
-
-| Sub-Scope | Description | Link |
-|:----------|:------------|:-----|
-| `<sub_scope_name>` | <簡述> | [→ <path>](<relative_path>) |
-
-## 3. Feature Catalog (功能清單)
+## 2. Feature Catalog (功能清單)
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
 > 本節列出此範圍下所有已交付或開發中的 Feature。
@@ -190,7 +171,7 @@ docs/use-cases/<system>/core/
 |:-------------|:-------------|:-------|:-----|
 | `<feature_name>` | <交付的核心價值> | `<status>` | [→](<relative_path>) |
 
-## 4. Decision Guide (決策指引)
+## 3. Decision Guide (決策指引)
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
 > 本節提供具體的決策指引，協助 SA 快速判斷新需求應「修改既有 Feature」還是「新增 Feature」。
@@ -202,7 +183,7 @@ docs/use-cases/<system>/core/
 >
 > **💡 範例**：
 >
-> ### 4.1 修改既有 Feature 的情境
+> ### 3.1 修改既有 Feature 的情境
 >
 > | 若您要... | 建議行動 |
 > |:----------|:---------|
@@ -210,39 +191,39 @@ docs/use-cases/<system>/core/
 > | 調整自選清單的排序邏輯 | 修改 `stock-watchlist` Feature |
 > | 修復股價顯示的格式問題 | 修改 `stock-profile` Feature |
 >
-> ### 4.2 需要新增 Feature 的情境
+> ### 3.2 需要新增 Feature 的情境
 >
 > | 若您要... | 建議行動 |
 > |:----------|:---------|
 > | 提供股票的技術分析圖表 | 新增 `stock-chart` Feature |
 > | 提供股票的財報分析功能 | 新增 `stock-financial` Feature |
 >
-> ### 4.3 常見混淆情境
+> ### 3.3 常見混淆情境
 >
 > | 情境 | 正確歸屬 | 原因 |
 > |:-----|:---------|:-----|
 > | 「在自選清單中顯示即時股價」 | `stock-watchlist` | 這是自選清單的「顯示增強」，而非股價查詢的核心功能 |
 > | 「批次匯入多檔股票到自選清單」 | `stock-watchlist` | 這是自選清單的「輸入方式擴充」 |
 
-### 4.1 修改既有 Feature 的情境
+### 3.1 修改既有 Feature 的情境
 
 | 若您要... | 建議行動 |
 |:----------|:---------|
 | <情境描述> | 修改 `<feature_name>` Feature |
 
-### 4.2 需要新增 Feature 的情境
+### 3.2 需要新增 Feature 的情境
 
 | 若您要... | 建議行動 |
 |:----------|:---------|
 | <情境描述> | 新增 `<suggested_feature_name>` Feature |
 
-### 4.3 常見混淆情境
+### 3.3 常見混淆情境
 
 | 情境 | 正確歸屬 | 原因 |
 |:-----|:---------|:-----|
 | <混淆情境> | `<correct_feature>` | <判斷理由> |
 
-## 5. Related Resources (相關資源)
+## 4. Related Resources (相關資源)
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
 > 列出與此範圍相關的 L1 (Architecture) 與 L3 (Specs) 文件連結。
@@ -265,13 +246,12 @@ docs/use-cases/<system>/core/
 
 ### A. 結構完整性
 
-- [ ] **範圍定義**：Section 1 是否已明確定義 Scope Type, Name, Parent, Description, Boundary？
-- [ ] **子範圍導覽**：若有子範圍，Section 2 是否已列出完整的導覽連結？若無，是否已刪除此區塊？
-- [ ] **功能清單**：Section 3 是否已列出所有已知的 Feature？每個 Feature 是否都有 Value/Goal 說明？
+- [ ] **上下文**：Section 1 是否已明確定義 System/Library, Scope Type, Scope Name, Description？
+- [ ] **功能清單**：Section 2 是否已列出所有已知的 Feature？每個 Feature 是否都有 Value/Goal 說明？
 
 ### B. 決策指引品質
 
-- [ ] **情境覆蓋**：Section 4 是否覆蓋了「修改」與「新增」兩種情境？
+- [ ] **情境覆蓋**：Section 3 是否覆蓋了「修改」與「新增」兩種情境？
 - [ ] **混淆情境**：是否已識別並說明容易混淆的邊界案例？
 - [ ] **指向明確**：每個決策建議是否都指向具體的 Feature 名稱？
 
@@ -279,7 +259,7 @@ docs/use-cases/<system>/core/
 
 - [ ] **路徑正確**：所有相對路徑連結是否正確可達？
 - [ ] **與 L1 一致**：本 Overview 的 Scope 是否與 Architecture Overview 中的定義一致？
-- [ ] **與 L3 連結**：是否已在 Section 5 列出相關的 Specs Overview 連結？
+- [ ] **與 L3 連結**：是否已在 Section 4 列出相關的 Specs Overview 連結？
 
 ### D. 格式規範
 

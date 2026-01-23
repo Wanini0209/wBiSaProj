@@ -278,6 +278,92 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 | FU Name | Responsibility | Key Components | Spec |
 |:--------|:---------------|:---------------|:-----|
 | `<fu-name>` | <職責描述> | `<Component1>`, `<Component2>` | [→](<relative_path>) |
+
+## 4. Decision Guide (決策指引)
+
+> **📝 撰寫指引**（請勿保留本指引文字）：
+> 本節提供具體的決策指引，協助開發者快速判斷新需求應「擴充既有 FU」還是「新增 FU」。
+>
+> **撰寫原則**：
+> 1. **情境導向**：以「若您要...」開頭，描述常見的需求情境。
+> 2. **明確指向**：給出具體的建議行動（擴充哪個 FU / 新增 FU）。
+> 3. **覆蓋邊界案例**：特別說明容易混淆的情境。
+>
+> **💡 範例 (DB Layer)**：
+>
+> ### 4.1 擴充既有 FU 的情境
+>
+> | 若您要... | 建議行動 |
+> |:----------|:---------|
+> | 新增股票價格的查詢條件（如依日期範圍） | 擴充 `stock-price` FU |
+> | 新增股票基本資料的欄位 | 擴充 `stock-info` FU |
+>
+> ### 4.2 需要新增 FU 的情境
+>
+> | 若您要... | 建議行動 |
+> |:----------|:---------|
+> | 提供股票技術指標的儲存與查詢 | 新增 `stock-indicator` FU |
+> | 提供股票財報資料的存取 | 新增 `stock-financial` FU |
+>
+> ### 4.3 常見混淆情境
+>
+> | 情境 | 正確歸屬 | 原因 |
+> |:-----|:---------|:-----|
+> | 「在 stock-price 中加入技術指標計算」 | 新增獨立 FU | 技術指標是衍生計算，不應混入價格資料的 Repository |
+> | 「新增另一種價格資料來源的支援」 | 擴充 `stock-price` | 這是同一 FU 的資料來源擴充，非新職責 |
+>
+> **💡 範例 (Library Toolkit)**：
+>
+> ### 4.1 擴充既有 FU 的情境
+>
+> | 若您要... | 建議行動 |
+> |:----------|:---------|
+> | 新增 CSV 讀取時的編碼支援 | 擴充 `csv-processing` FU |
+> | 新增 JSON 的壓縮輸出選項 | 擴充 `json-io` FU |
+>
+> ### 4.2 需要新增 FU 的情境
+>
+> | 若您要... | 建議行動 |
+> |:----------|:---------|
+> | 提供 YAML 格式的讀寫能力 | 新增 `yaml-io` FU |
+> | 提供 Excel 檔案的處理能力 | 新增 `excel-processing` FU |
+
+### 4.1 擴充既有 FU 的情境
+
+| 若您要... | 建議行動 |
+|:----------|:---------|
+| <情境描述> | 擴充 `<fu_name>` FU |
+
+### 4.2 需要新增 FU 的情境
+
+| 若您要... | 建議行動 |
+|:----------|:---------|
+| <情境描述> | 新增 `<suggested_fu_name>` FU |
+
+### 4.3 常見混淆情境
+
+| 情境 | 正確歸屬 | 原因 |
+|:-----|:---------|:-----|
+| <混淆情境> | `<correct_fu>` | <判斷理由> |
+
+## 5. Related Resources (相關資源)
+
+> **📝 撰寫指引**（請勿保留本指引文字）：
+> 列出與此範圍相關的 L1 (Architecture) 與 L2 (Feature) 文件連結。
+>
+> **💡 範例 (業務系統)**：
+>
+> - **Architecture Overview**: [→ gms_overview.md](../../../../architecture/gms_overview.md)
+> - **Feature Overview**: [→ use-cases/gms/market/stock/overview.md](../../../../use-cases/gms/market/stock/overview.md)
+>
+> **💡 範例 (函式庫)**：
+>
+> - **Architecture Overview**: [→ wutils_overview.md](../../../architecture/wutils_overview.md)
+> - **Feature Overview**: [→ use-cases/wutils/io/overview.md](../../../use-cases/wutils/io/overview.md)
+
+- **Architecture Overview**: [→ <filename>](<relative_path>)
+- **Feature Overview**: [→ <path>](<relative_path>)
+
 ````
 
 ---
@@ -297,7 +383,19 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 - [ ] **層級限制**：Section 2 是否已列出此層級的依賴規則 (Allowed/Prohibited)？
 - [ ] **FU 清單**：Section 3 是否已列出所有已知的 FU？每個 FU 是否都有 Responsibility 與 Key Components？
 
-### C. 格式規範
+### C. 決策指引品質
+
+- [ ] **情境覆蓋**：Section 4 是否覆蓋了「擴充」與「新增」兩種情境？
+- [ ] **混淆情境**：是否已識別並說明容易混淆的邊界案例？
+- [ ] **指向明確**：每個決策建議是否都指向具體的 FU 名稱？
+
+### D. 導航一致性
+
+- [ ] **路徑正確**：所有相對路徑連結是否正確可達？
+- [ ] **與 L1 一致**：本 Overview 的 Scope 是否與 Architecture Overview 中的定義一致？
+- [ ] **與 L2 連結**：是否已在 Section 5 列出相關的 Feature Overview 連結？
+
+### E. 格式規範
 
 - [ ] **指引文字清理**：是否已移除所有「📝 撰寫指引」與「💡 範例」區塊？
 - [ ] **變數替換**：是否已將所有 `<...>` 佔位符替換為具體的資訊？
