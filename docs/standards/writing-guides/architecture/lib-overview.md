@@ -147,7 +147,7 @@
 ### 2.1 Toolkit: `<toolkit_name>`
 
 > **📝 撰寫指引**：
-> - **Structure**: 展示該 Toolkit 的完整目錄結構。
+> - **Structure**: 展示該 Toolkit 的 **sub-toolkit 階層結構**（僅列出子工具集目錄，不含實作檔案）。
 > - **Responsibility**: 應具體描述其提供的**關鍵能力 (Key Capabilities)**，例如：「提供 CSV/Parquet 格式的讀寫與 Schema 驗證能力」而非僅寫「負責檔案處理」。
 > - **Boundary Rules**: 明確定義包含與排除範圍，協助判斷新功能歸屬。
 > - **Sub-toolkits**: 若有子工具集，依層級深度使用 `###` 標題或縮排清單。
