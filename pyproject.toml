@@ -1,11 +1,13 @@
 [tool.black]
 line-length = 88
 target-version = ['py312']
+extend-exclude = '''^/experiments/'''
 
 [tool.ruff]
 # 設定 ruff 的行為，使其與 black 相容
 line-length = 88
 target-version = "py312"
+extend-exclude = ["experiments"]
 
 [tool.ruff.lint]
 # 選擇要啟用的規則集
