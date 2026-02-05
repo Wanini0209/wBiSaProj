@@ -53,7 +53,24 @@
 
 #### wutils 的設計理念
 
-wutils 作為專案依賴鏈的最底層，其核心職責並非僅「提供工具函數」，而是作為**基礎建設隔離層 (Infrastructure Isolation Layer)**，將具有副作用 (Side Effects) 的第三方套件封裝為穩定的內部 API。
+wutils 作為專案依賴鏈的最底層，提供**不專屬於本專案**、在任何 Python 專案中都適用的通用工具與知識。其中一項關鍵職責是作為**基礎建設隔離層 (Infrastructure Isolation Layer)**，將具有副作用 (Side Effects) 的第三方套件封裝為穩定的內部 API。
+
+**wutils 歸屬判斷原則（可攜性判斷）**：
+
+判斷一項功能是否應歸入 wutils，以**可攜性 (Portability)** 為唯一基準：
+
+> **此功能離開本專案，只要還在 Python 開發環境中，是否依舊適用？**
+
+若答案為「是」，無論該功能看起來是否與特定業務領域（金融、統計、地理...）相關，都應歸入 wutils。
+
+| 歸屬正確 | 歸屬錯誤 | 原因 |
+|:---------|:---------|:-----|
+| `wutils/finance/technical/indicators/` 中的 MA 計算 | `gms/core/` 中的 MA 計算 | MA 是金融技術分析中已確立的公式，不是 GMS 發明的，任何 Python 金融專案都適用 |
+| `wutils/locale/country/` 中的 Country 定義 | `gms/core/` 中的 Country 定義 | 國家定義是真實世界的通用知識，不專屬於任何業務系統 |
+
+**基礎建設隔離的設計理念**：
+
+wutils 的諸多 Toolkit 中，基礎建設類（I/O、Crypto、Network、System 等）具備額外的封裝要求。其設計理念如下：
 
 **為何需要此隔離層？**
 
@@ -63,14 +80,20 @@ wutils 作為專案依賴鏈的最底層，其核心職責並非僅「提供工�
 
 3. **政策集中化 (Policy Centralization)**：異常處理、重試機制、Timeout 等橫切關注點，統一在 wutils 層實作，避免各系統重複且不一致的處理邏輯。
 
-**常見的基礎建設領域**（包含但不限於）：
+**常見的 Toolkit 領域**（包含但不限於）：
 
-| 技術領域 | 典型功能 | 涵蓋範圍 |
+| Toolkit 領域 | 典型功能 | 涵蓋範圍 |
 |:---|:---|:---|
 | **I/O** | 檔案讀寫、格式處理 | Excel, CSV, PDF, Image |
 | **Crypto** | 安全性相關運算 | Hash, JWT, Encryption |
 | **Network** | 網路連線與傳輸 | HTTP Client, S3, FTP |
 | **System** | 系統層級操作 | OS, Environment, FileSystem |
+| **Concurrency** | 並行處理封裝 | Thread, Process |
+| **Time** | 時間處理與定義 | Date Formatter, Date Range, TimeZone 定義 |
+| **Locale** | 地區與國際化定義 | Country, Currency, Language 定義 |
+| **Text** | 文字處理 | String Sanitizer, Normalizer |
+| **Math** | 通用數學與統計 | 基礎統計函數, 插值演算法 |
+| **Finance** | 金融學科公式 | 技術指標 (MA, RSI), 定價模型, 風險指標 |
 
 **第三方套件的封裝判斷原則**：
 

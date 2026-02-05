@@ -121,8 +121,13 @@ Feature（業務價值單元）
 
 #### B. 共用能力提取 (Shared Capability Extraction)
 
-若某個業務邏輯 (e.g., 選擇權定價公式、複雜的市場狀態判斷) 會被多個 Feature 或 ETL Job 使用：
-- **Action**：必須將其拆分為獨立的 **Internal Service Feature** 或 **Library Feature**，作為其他 Feature 的依賴，而非重複實作。
+若某項能力可以被多個 Feature 或 ETL Job 使用，應該將其拆分為獨立的 Feature，作為其他 Feature 的依賴，而非重複實作。拆分時需依據**可攜性**判斷其歸屬層級：
+
+| 能力性質 | 判斷基準 | 歸屬 | 範例 |
+|:---------|:---------|:-----|:-----|
+| 真實世界已確立的通用公式、定義或演算法 | 離開本專案仍適用 | **wutils** Library Feature | MA 計算、Black-Scholes 定價、Country 定義 |
+| 本專案跨系統共用的介面或 Schema | 離開此系統仍適用，但限於本專案 | **core** Library Feature | 跨系統資料契約 |
+| 特定系統內部多處共用的邏輯 | 僅此系統內部適用 | **`<system>/core`** Library Feature 或 **Internal Service Feature** | 系統特有的商業規則組合 |
 
 ---
 
