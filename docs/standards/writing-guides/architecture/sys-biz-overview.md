@@ -97,10 +97,10 @@
 > **📝 總體撰寫指引**（請勿保留本指引文字）：
 > 本節定義了系統的領域邊界與職責。這是 **System Analyst (LLM)** 執行 **「領域歸屬判定 (Domain Ownership Check)」** 時的 **唯一真理來源 (SSOT)**。
 >
-> **⚠️ 架構規則 (Ref: `docs/PROJECT_DESIGN-ARCHITECTURE.md` Section 3.3)**：
+> **⚠️ 架構規則 (Ref: `docs/PROJECT_DESIGN-ARCHITECTURE.md` Section 3.2 & 3.3)**：
 > 1. **獨立型 (Independent)**：本質上不可分割的單一業務領域。
 > 2. **聚合型 (Aggregate)**：由多個子領域聚合而成的概念。
->    - **重要規則**：即使目前**只有一個** Sub-domain，若該 Domain 本質上是聚合概念（如 `market` 只有 `stock`，但未來會有 `bond`），仍**必須**定義為 `Aggregate` 類型，並建立 Sub-domain 層級，以預留未來擴充空間。
+>    - **重要規則（先驗式聚合, §3.2 路徑 B）**：即使目前**只有一個** Sub-domain，若該 Domain 的上層抽象概念來自**已確立的外部知識體系**（如金融學科中 `market` 已確立包含 stock, fund, bond 等子概念），且未來擴展預期合理，仍**必須**定義為 `Aggregate` 類型，並建立 Sub-domain 層級，以避免未來的結構性重構。
 
 ### 2.1 Domain: `<domain_name>`
 
@@ -108,7 +108,7 @@
 > - **Abbreviation**: 標準縮寫 (3-5 碼)，用於 DB/API 命名。
 > - **Type**:
 >   - `Independent`: 僅當此領域在可預見的未來都不會有子領域時選擇。
->   - `Aggregate`: 有多個子領域，**或**目前僅有一個但未來有擴充規劃。
+>   - `Aggregate`: 有多個子領域，**或**目前僅有一個但其上層抽象概念來自已確立的外部知識體系且未來擴展預期合理（先驗式聚合, §3.2 路徑 B）。
 > - **Responsibility**: 定義核心實體或聚合概念。
 > - **Boundary Rules**: 若為 Aggregate，重點在於定義「跨 Sub-domain 的共用屬性」。
 >

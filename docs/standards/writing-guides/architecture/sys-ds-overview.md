@@ -124,7 +124,7 @@
 > - **Abbreviation**: 標準縮寫 (3-5 碼)，用於命名。
 > - **Type**:
 >   - `Independent`: 僅當此領域在可預見的未來都不會有子領域時選擇。
->   - `Aggregate`: 有多個子領域，**或**目前僅有一個但未來有擴充規劃。
+>   - `Aggregate`: 有多個子領域，**或**目前僅有一個但其上層抽象概念來自已確立的外部知識體系且未來擴展預期合理（先驗式聚合, Ref: `docs/PROJECT_DESIGN-ARCHITECTURE.md` Section 3.2 路徑 B）。
 > - **Data Description**: 描述此領域提供的資料內容與格式。
 > - **Boundary Rules**: 定義資料的包含與排除範圍。
 >
