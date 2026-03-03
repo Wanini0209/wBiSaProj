@@ -135,14 +135,14 @@
 > - Includes：「哪些類型的能力屬於這個職責範圍？」
 > - Excludes：「哪些類型的能力不屬於這個職責範圍，應歸屬於其他地方？」
 
-> **快速導覽**：本函式庫包含以下 Toolkit：
->
-> ```text
-> <library>/
-> ├── <toolkit_A>/    → <一句話職責描述>
-> ├── <toolkit_B>/    → <一句話職責描述>
-> └── <toolkit_C>/    → <一句話職責描述>
-> ```
+**快速導覽**：本函式庫包含以下 Toolkit：
+
+```text
+<library>/
+├── <toolkit_A>/    → <一句話職責描述>
+├── <toolkit_B>/    → <一句話職責描述>
+└── <toolkit_C>/    → <一句話職責描述>
+```
 
 ### 2.1 Toolkit: `<toolkit_name>`
 
