@@ -26,7 +26,7 @@
 
 ### 1.3 核心概念釐清：FU vs Component
 
-> **⚠️ 關鍵理解**：本文件盤點的是 **FU (功能單元)**，而非 FU 內部的 Component。
+> **⚠️ 關鍵理解**：本文件的盤點粒度是 **FU (功能單元)**，但每個 FU 必須**完整列出**其所有公開 Components。
 >
 > *Ref: `docs/PROJECT_DESIGN-ARCHITECTURE.md` Section 4 & 5.3*
 
@@ -56,6 +56,16 @@ FU Container: gms/db/market/stock
 
 > **使用方式**：開發者透過 `from <fu_container_path> import <Component>` 使用 FU 的公開元件。
 > 詳見 `PROJECT_DESIGN-ARCHITECTURE.md` Section 5.5。
+
+#### Components 完整性契約
+
+本文件中每個 FU 所列出的 **Components 清單**，必須與該 FU Container 的 `__init__.py` 中 `__all__` 所匯出的公開元件**完全一致**。這是一份**完整清單 (Exhaustive List)**，而非摘要。
+
+| 規範 | 說明 |
+|:-----|:-----|
+| **完整性** | 必須列出 `__all__` 中的每一個公開元件，不得省略 |
+| **同步性** | 新增或移除 Component 時，必須同步更新本 Overview 文件 |
+| **用途** | 此清單作為自動化工具判定「Component → FU 歸屬」的 **Ground Truth** |
 
 ### 1.4 與其他層級的關係
 
@@ -224,60 +234,116 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 > 本節列出此 FU-Container 下所有的 Functional Units。
 >
 > **⚠️ 重要概念提醒**：
-> - 此處列出的是 **FU (功能單元)**，不是 Component (類別/函式)
-> - 一個 FU 可能包含多個 Components，但在 Overview 層級我們只關心 FU
-> - FU 的詳細 Components 請參閱各 FU 的 `design.md`
+> - 此處的組織粒度是 **FU (功能單元)**，每個 FU 以 `###` 標題呈現
+> - 每個 FU 必須**完整列出**其所有公開 Components（對應 `__init__.py` 的 `__all__`）
+> - Components 以子列表形式逐一列出，作為自動化工具判定歸屬的 Ground Truth
 >
-> **欄位說明**：
-> - **FU Name**: 功能單元名稱 (`kebab-case`)。
+> **通用欄位**：
 > - **Responsibility**: 一句話描述 FU 的核心職責。
-> - **Key Components**: 列出主要的公開 Components (供快速參考)。
-> - **Spec Link**: 連結至該 FU 的詳細規格文件目錄。
+> - **Components**: 完整列出該 FU 的所有公開 Components（對應 `__init__.py` 的 `__all__`）。
+> - **Spec**: 連結至該 FU 的詳細規格文件目錄。
 >
-> **⚠️ Layer 特定補充資訊**：
-> 根據不同 Layer，可在 Responsibility 中補充關鍵屬性：
-> - **DB Layer**: 儲存類型 (SQL/NoSQL/FS/Hybrid)
-> - **API Layer**: 主要 Endpoint Pattern
-> - **ETL Layer**: 資料流向 (Source → Target)
-> - **Collector Layer**: 資料來源類型
+> **Layer 專屬欄位**：
+> 不同 Layer 的 overview.md 需額外標註以下欄位（置於 Responsibility 之後、Components 之前）：
+>
+> | Layer | 專屬欄位 | 說明 |
+> |:------|:---------|:-----|
+> | **DB** | `Storage` | 儲存類型 (SQL / NoSQL / FS / Hybrid) |
+> | **API** | `Endpoints` | 主要 Endpoint Pattern |
+> | **ETL** | `Data Flow` | 資料流向 (Source → Target) |
+> | **Collector** | `Source Type` | 資料來源類型 |
+> | **Service** | （無額外欄位） | — |
+> | **Library / System Core** | （無額外欄位） | — |
 >
 > **💡 範例 (DB Layer)**：
 >
-> | FU Name | Responsibility | Key Components | Spec |
-> |:--------|:---------------|:---------------|:-----|
-> | `stock-price` | 管理股票每日價格的存取 (Hybrid: SQL + FS) | `StockPriceRepository`, `StockPriceSchema` | [→](./stock-price/) |
-> | `stock-info` | 管理股票基本資料的查詢 (SQL) | `StockInfoRepository`, `StockInfoSchema` | [→](./stock-info/) |
+> ### `stock-price`
+> - **Responsibility**: 管理股票每日價格的存取
+> - **Storage**: Hybrid (SQL + FS)
+> - **Components**:
+>   - `StockPriceRepository`
+>   - `StockPriceSchema`
+>   - `StockPriceInput`
+>   - `PRICE_TABLE_NAME`
+> - **Spec**: [→](./stock-price/)
+>
+> ### `stock-info`
+> - **Responsibility**: 管理股票基本資料的查詢
+> - **Storage**: SQL
+> - **Components**:
+>   - `StockInfoRepository`
+>   - `StockInfoSchema`
+> - **Spec**: [→](./stock-info/)
 >
 > **💡 範例 (Service Layer)**：
 >
-> | FU Name | Responsibility | Key Components | Spec |
-> |:--------|:---------------|:---------------|:-----|
-> | `stock-query` | 提供股票資料的查詢與聚合服務 | `StockQueryService`, `StockQueryInput` | [→](./stock-query/) |
-> | `stock-analysis` | 提供股票技術分析計算服務 | `StockAnalysisService`, `AnalysisResult` | [→](./stock-analysis/) |
+> ### `stock-query`
+> - **Responsibility**: 提供股票資料的查詢與聚合服務
+> - **Components**:
+>   - `StockQueryService`
+>   - `StockQueryInput`
+>   - `StockQueryResult`
+> - **Spec**: [→](./stock-query/)
 >
 > **💡 範例 (API Layer)**：
 >
-> | FU Name | Responsibility | Key Components | Spec |
-> |:--------|:---------------|:---------------|:-----|
-> | `stock-endpoint` | 提供股票相關 REST API (`/stocks/*`) | `get_stock`, `list_stocks`, `StockResponse` | [→](./stock-endpoint/) |
+> ### `stock-endpoint`
+> - **Responsibility**: 提供股票相關 REST API
+> - **Endpoints**: `/stocks/*`
+> - **Components**:
+>   - `get_stock`
+>   - `list_stocks`
+>   - `StockResponse`
+>   - `StockListResponse`
+> - **Spec**: [→](./stock-endpoint/)
 >
 > **💡 範例 (ETL Layer)**：
 >
-> | FU Name | Responsibility | Key Components | Spec |
-> |:--------|:---------------|:---------------|:-----|
-> | `daily-price-sync` | 每日股價同步 (twseprice → gms.db) | `DailyPriceExtractor`, `DailyPriceLoader`, `DailySyncJob` | [→](./daily-price-sync/) |
+> ### `daily-price-sync`
+> - **Responsibility**: 每日股價同步
+> - **Data Flow**: twseprice → gms.db
+> - **Components**:
+>   - `DailyPriceExtractor`
+>   - `DailyPriceLoader`
+>   - `DailySyncJob`
+> - **Spec**: [→](./daily-price-sync/)
+>
+> **💡 範例 (Collector Layer)**：
+>
+> ### `daily-price-crawler`
+> - **Responsibility**: 收集每日股票收盤價
+> - **Source Type**: Web Scraping (HTML)
+> - **Components**:
+>   - `DailyPriceCrawler`
+>   - `DailyPriceRawSchema`
+> - **Spec**: [→](./daily-price-crawler/)
 >
 > **💡 範例 (Library Toolkit)**：
 >
-> | FU Name | Responsibility | Key Components | Spec |
-> |:--------|:---------------|:---------------|:-----|
-> | `pickle-io` | 提供 Pickle 格式的序列化能力 | `pickle_dump`, `pickle_load` | [→](./pickle-io/) |
-> | `json-io` | 提供 JSON 格式的序列化能力 | `json_dump`, `json_load` | [→](./json-io/) |
-> | `csv-processing` | 提供 CSV 格式的讀寫與驗證能力 | `CsvReader`, `CsvWriter`, `CsvSchema` | [→](./csv-processing/) |
+> ### `pickle-io`
+> - **Responsibility**: 提供 Pickle 格式的序列化能力
+> - **Components**:
+>   - `pickle_dump`
+>   - `pickle_load`
+>   - `PickleError`
+>   - `DEFAULT_PICKLE_PROTOCOL`
+> - **Spec**: [→](./pickle-io/)
+>
+> ### `json-io`
+> - **Responsibility**: 提供 JSON 格式的序列化能力
+> - **Components**:
+>   - `json_dump`
+>   - `json_load`
+>   - `JsonParseError`
+>   - `JsonConfig`
+> - **Spec**: [→](./json-io/)
 
-| FU Name | Responsibility | Key Components | Spec |
-|:--------|:---------------|:---------------|:-----|
-| `<fu-name>` | <職責描述> | `<Component1>`, `<Component2>` | [→](<relative_path>) |
+### `<fu-name>`
+- **Responsibility**: <職責描述>
+- **Components**:
+  - `<Component1>`
+  - `<Component2>`
+- **Spec**: [→](<relative_path>)
 
 ## 4. Decision Guide (決策指引)
 
@@ -381,7 +447,8 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 
 - [ ] **上下文**：Section 1 是否已明確定義 System/Library, Layer, Scope, FU-Container Path？
 - [ ] **層級限制**：Section 2 是否已列出此層級的依賴規則 (Allowed/Prohibited)？
-- [ ] **FU 清單**：Section 3 是否已列出所有已知的 FU？每個 FU 是否都有 Responsibility 與 Key Components？
+- [ ] **FU 清單**：Section 3 是否已列出所有已知的 FU？每個 FU 是否都有 Responsibility 與完整的 Components 清單？
+- [ ] **Components 完整性**：每個 FU 的 Components 清單是否與其 `__init__.py` 的 `__all__` 完全一致？
 
 ### C. 決策指引品質
 

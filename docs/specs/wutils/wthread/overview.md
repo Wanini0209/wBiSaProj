@@ -17,9 +17,11 @@
 
 ## 3. FU Inventory (功能單元清單)
 
-| FU Name | Responsibility | Key Components | Spec |
-|:--------|:---------------|:---------------|:-----|
-| `future-thread` | 提供增強型的執行緒類別，封裝執行結果獲取與例外跨執行緒傳遞機制 | `FutureThread` | [→](./future-thread/) |
+### `future-thread`
+- **Responsibility**: 提供增強型的執行緒類別，封裝執行結果獲取與例外跨執行緒傳遞機制
+- **Components**:
+  - `FutureThread`
+- **Spec**: [→](./future-thread/)
 
 ## 4. Decision Guide (決策指引)
 

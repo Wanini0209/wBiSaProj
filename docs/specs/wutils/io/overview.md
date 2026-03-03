@@ -17,10 +17,19 @@
 
 ## 3. FU Inventory (功能單元清單)
 
-| FU Name | Responsibility | Key Components | Spec |
-|:--------|:---------------|:---------------|:-----|
-| `json-io` | 提供原子化的 JSON 檔案讀寫介面，強制 UTF-8 編碼與自動資源管理 | `json_dump`, `json_load` | [→](./json-io/) |
-| `pickle-io` | 提供原子化的 Pickle 檔案讀寫介面，支援多態路徑處理與自動資源管理 | `pickle_dump`, `pickle_load` | [→](./pickle-io/) |
+### `json-io`
+- **Responsibility**: 提供原子化的 JSON 檔案讀寫介面，強制 UTF-8 編碼與自動資源管理
+- **Components**:
+  - `json_dump`
+  - `json_load`
+- **Spec**: [→](./json-io/)
+
+### `pickle-io`
+- **Responsibility**: 提供原子化的 Pickle 檔案讀寫介面，支援多態路徑處理與自動資源管理
+- **Components**:
+  - `pickle_dump`
+  - `pickle_load`
+- **Spec**: [→](./pickle-io/)
 
 ## 4. Decision Guide (決策指引)
 
