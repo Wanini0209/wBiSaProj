@@ -7,6 +7,8 @@
 > - **資料源系統 (Data Source System)**：Domain 層級
 > - **專案級函式庫 (Library)**：Toolkit 層級
 > - **系統核心庫 (System Core)**：Toolkit 層級
+>
+> 各類型共用相同的文件結構，但在 **Feature Catalog** 與 **Decision Guide** 的內容要求上存在差異，詳見 [Section 4.2](#42-feature-catalog-功能清單) 與 [Section 4.3](#43-decision-guide-決策指引) 中的類型專屬規範。
 
 *供 Generator: Prompt4FeatureOverview 使用*
 
@@ -21,7 +23,7 @@
 ### 1.2 關鍵特性
 
 - **價值導向 (Value Oriented)**：以「交付的價值」而非「技術實作」來組織 Feature 清單。
-- **決策支援 (Decision Support)**：提供明確的決策指引，協助 SA 快速判斷「新增 vs 修改」。
+- **決策支援 (Decision Support)**：提供明確的決策指引，協助 SA 快速判斷「新增 vs 修改」，並（於業務系統中）引導正確的架構交付模式。
 - **導航樞紐 (Navigation Hub)**：作為 L1 (Architecture) 與 L3 (Specs) 之間的橋樑。
 
 ### 1.3 與其他層級的關係
@@ -29,8 +31,23 @@
 | 層級 | 文件類型 | 核心問題 | 本層級的角色 |
 |:-----|:---------|:---------|:-------------|
 | **L1** | Architecture Overview | 「新需求屬於哪個 Domain/Toolkit？」 | 被 L1 引導而來 |
-| **L2** | **Feature Overview (本文件)** | **「這個需求以前做過嗎？該新增還是修改？」** | **價值清單與決策支援** |
+| **L2** | **Feature Overview (本文件)** | **「這個需求以前做過嗎？該新增還是修改？屬於什麼類型的交付？」** | **價值清單與決策支援** |
 | **L3** | FU Overview (Specs) | 「有哪些現成的 FU 可以使用？」 | 引導至 L3 查看技術細節 |
+
+### 1.4 收錄範圍原則 (Scope Boundary)
+
+當一個 Domain/Toolkit 已發展出 Sub-domain/Sub-toolkit 結構時，父層級與子層級的 overview.md 各自負責不同範圍的 Feature：
+
+| 層級 | 收錄範圍 | 典型特徵 |
+|:-----|:---------|:---------|
+| **父層級** (Domain/Toolkit) | 僅收錄**歸屬於自身**的 Feature：橫跨多個子層級的聚合型或共用型 Feature | e.g., `market-dashboard` 聚合了 `stock` 與 `fund` 的資料 |
+| **子層級** (Sub-domain/Sub-toolkit) | 收錄歸屬於該子層級的所有 Feature | e.g., `stock-price-query` 僅涉及 `stock` 範疇 |
+
+**關鍵規則**：
+
+- **嚴禁上收**：子層級專屬的 Feature 不得登錄在父層級的 overview 中。
+- **子層級導覽不由本層負責**：父層級的 overview 不需要列出其下的 Sub-domain/Sub-toolkit 清單，該職責由 **L1 Architecture Overview** 承擔。
+- **觸發條件**：此規則僅在 Domain/Toolkit 確實存在子層級時適用。若無子層級，所有 Feature 自然歸屬於該層級本身。
 
 ---
 
@@ -46,10 +63,16 @@ docs/use-cases/<system>/
 │   ├── overview.md                    # Domain 層級 Feature 總覽
 │   └── <subdomain>/
 │       └── overview.md                # Sub-domain 層級 Feature 總覽
-└── etl/                               # (僅業務系統) ETL Feature
+└── etl/                               # (僅業務系統) ETL Feature — 獨立導航體系
     └── <domain>/
-        └── overview.md
+        └── overview.md                # ETL Domain 層級 Feature 總覽
 ```
+
+> **ETL Feature 的導航分離**
+>
+> Data Pipeline Feature (ETL) 擁有獨立的 `docs/use-cases/<system>/etl/` 導航體系，由其專屬的 overview.md 負責。業務系統的 Domain/Sub-domain 層級 overview.md **不包含** ETL Feature。
+>
+> 若需查閱 ETL 相關 Feature，請前往 `docs/use-cases/<system>/etl/<domain>/overview.md`。
 
 ### 2.2 專案級函式庫
 
@@ -75,7 +98,7 @@ docs/use-cases/<system>/core/
 
 | 屬性 | 格式規範 | 說明 | 範例 |
 |:-----|:---------|:-----|:-----|
-| **Feature Name** | `kebab-case` | 全小寫，使用連字號分隔。<br>必須描述「對外交付的完整能力」。 | ✅ `user-registration`, `stock-price-sync`<br>❌ `user_registration` (應用 kebab-case)<br>❌ `add-user-table` (過於技術導向) |
+| **Feature Name** | `kebab-case` | 全小寫，使用連字號分隔。<br>必須描述「對外交付的完整能力」。 | ✅ `user-registration`, `stock-price-sync`<br>❌ `user_registration` (應為 kebab-case)<br>❌ `add-user-table` (過於技術導向) |
 
 ### 3.2 命名導向原則
 
@@ -90,13 +113,16 @@ docs/use-cases/<system>/core/
 
 ## 4. 內容結構模板
 
+> **閱讀指引**：本章節定義 overview.md 的四大區塊。其中 Section 4.2 (Feature Catalog) 與 Section 4.3 (Decision Guide) 依系統類型有不同的內容要求，請務必參照對應的類型專屬規範。
+
 ````markdown
-# Feature Overview: <Scope Name>
+# Feature Overview: <root>/<scope_path>
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
-> - `<Scope Name>` 應填入當前層級的名稱：
->   - 業務/資料源系統：Domain 或 Sub-domain 名稱 (e.g., `Market`, `Stock`)
->   - 函式庫：Toolkit 名稱 (e.g., `IO`, `Validator`)
+> - 標題格式為 `Feature Overview: <root>/<scope_path>`，對應該 overview.md 在 `docs/use-cases/` 下的相對路徑。
+>   - 業務/資料源系統：`<system>/<domain>` 或 `<system>/<domain>/<subdomain>` (e.g., `gms/market`, `gms/market/stock`)
+>   - 專案級函式庫：`<library>/<toolkit_path>` (e.g., `wutils/io`, `wutils/concurrent/wthread`)
+>   - 系統核心庫：`<system>/core/<toolkit_path>` (e.g., `gms/core/config`)
 > - 本文件將被用作 Prompt Input 餵給 LLM 進行分析。請確保內容精簡、無歧義。
 
 ## 1. Context (上下文)
@@ -111,6 +137,8 @@ docs/use-cases/<system>/core/
 > - **Scope Name**: `market`
 > - **Description**: 涵蓋所有金融市場相關的數據查詢與分析功能。
 >
+> *→ 標題：`# Feature Overview: gms/market`*
+>
 > **💡 範例 (業務系統 Sub-domain)**：
 >
 > - **System**: `gms` (Business System)
@@ -118,12 +146,16 @@ docs/use-cases/<system>/core/
 > - **Scope Name**: `market/stock`
 > - **Description**: 處理股票類資產的查詢與分析功能。
 >
+> *→ 標題：`# Feature Overview: gms/market/stock`*
+>
 > **💡 範例 (函式庫 Toolkit)**：
 >
 > - **Library**: `wutils`
 > - **Scope Type**: `Toolkit`
 > - **Scope Name**: `io`
 > - **Description**: 提供統一的 I/O 操作介面，封裝檔案與網路存取的複雜度。
+>
+> *→ 標題：`# Feature Overview: wutils/io`*
 
 - **System / Library**: `<name>` (<type>)
 - **Scope Type**: `<Domain | Sub-domain | Toolkit>`
@@ -134,31 +166,48 @@ docs/use-cases/<system>/core/
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
 > 本節列出此範圍下所有已交付或開發中的 Feature。
+> 請依據當前 Overview 所屬的系統類型，選擇對應的表格格式：
 >
-> **欄位說明**：
-> - **Feature Name**: 功能名稱 (kebab-case)。
-> - **Value / Goal**: 此 Feature 交付的核心價值。
->   - 業務系統：描述業務價值 (e.g., 「讓使用者能夠...」)
->   - 函式庫：描述技術能力 (e.g., 「提供...能力」)
-> - **Status**: `Released` | `In Progress` | `Planned` | `Deprecated`
-> - **Link**: 連結至該 Feature 的 Use Case 目錄。
+> - **業務系統 (Business System)**：使用**含 Feature Type 欄位**的表格 → 參見下方「業務系統專用格式」
+> - **其他類型 (Library / Data Source / System Core)**：使用**標準格式** → 參見下方「通用格式」
 >
-> **Status 狀態說明**：
-> | 狀態 | 說明 |
-> |:-----|:-----|
-> | `Released` | 已發布，可正常使用 |
-> | `In Progress` | 開發中 |
-> | `Planned` | 已規劃，尚未開始開發 |
-> | `Deprecated` | 已棄用，不建議使用但尚未移除 |
+> **⚠️ 收錄範圍提醒**：
+> 若本 Overview 所屬的 Domain/Toolkit 已存在 Sub-domain/Sub-toolkit，本清單**僅收錄歸屬於本層級自身**的聚合型或共用型 Feature。屬於特定 Sub-domain/Sub-toolkit 的 Feature 應登錄在對應的子層級 overview.md 中，請勿列入本文件。
+
+### 業務系統專用格式
+
+> **📝 撰寫指引**（請勿保留本指引文字）：
+> 業務系統的 Domain/Sub-domain 下會同時存在三種 Feature 類型，必須透過 `Feature Type` 欄位明確區分。
 >
-> **💡 範例 (業務系統)**：
+> **Feature Type 定義**：
 >
-> | Feature Name | Value / Goal | Status | Link |
-> |:-------------|:-------------|:-------|:-----|
-> | `stock-profile` | 讓使用者能夠查詢股票的基本資料與即時報價 | Released | [→](./stock-profile/) |
-> | `stock-watchlist` | 讓使用者能夠建立與管理個人股票自選清單 | In Progress | [→](./stock-watchlist/) |
-> | `stock-comparison` | 讓使用者能夠比較多檔股票的關鍵指標 | Planned | - |
-> | `stock-alert-v1` | (舊版) 股價警示功能，請改用 `stock-notification` | Deprecated | [→](./stock-alert-v1/) |
+> | 類型 | 說明 | Ref |
+> |:-----|:-----|:----|
+> | `Standard` | 標準的端到端業務功能（通常包含 API + Service，依賴 DB-only Feature） | Methodology §3.2 Business Feature |
+> | `DB-only` | 技術型特例：僅定義底層資料模型與儲存介面，作為穩定的資料契約 | Methodology §3.2 DB-only Feature |
+> | `Internal Service` | 技術型特例：純後端運算邏輯封裝，不對外暴露 API，供其他 Feature 共用 | Methodology §3.2 Internal Service Feature |
+>
+> **排列順序建議**：依 Feature Type 分組排列（DB-only → Internal Service → Standard），同類型內依字母或業務相關性排列，以提升掃描效率。
+>
+> **💡 範例**：
+>
+> | Feature Name | Feature Type | Value / Goal | Status | Link |
+> |:-------------|:-------------|:-------------|:-------|:-----|
+> | `stock-price-storage` | **DB-only** | 提供股票價格的底層儲存模型與存取介面 (資料契約) | Released | [→](./stock-price-storage/) |
+> | `stock-info-storage` | **DB-only** | 提供股票基本資料的儲存模型與存取介面 (資料契約) | Released | [→](./stock-info-storage/) |
+> | `stock-valuation-calc` | **Internal Service** | 封裝股票估值演算法，供多個查詢 API 共用 | In Progress | [→](./stock-valuation-calc/) |
+> | `stock-price-query` | **Standard** | 提供前端查詢股票價格的 REST API | Released | [→](./stock-price-query/) |
+> | `stock-profile` | **Standard** | 提供股票基本資料與即時報價查詢 API | Released | [→](./stock-profile/) |
+
+| Feature Name | Feature Type | Value / Goal | Status | Link |
+|:-------------|:-------------|:-------------|:-------|:-----|
+| `<feature_name>` | `<DB-only / Internal Service / Standard>` | <交付的核心價值> | `<status>` | [→](<relative_path>) |
+
+### 通用格式 (Library / Data Source / System Core)
+
+> **📝 撰寫指引**（請勿保留本指引文字）：
+> Library、Data Source 與 System Core 的 Feature 不存在 DB-only / Internal Service 的分類需求，
+> 因此使用不含 Feature Type 的精簡表格。
 >
 > **💡 範例 (函式庫)**：
 >
@@ -166,44 +215,102 @@ docs/use-cases/<system>/core/
 > |:-------------|:-------------|:-------|:-----|
 > | `csv-processing` | 提供 CSV 格式的讀寫與 Schema 驗證能力 | Released | [→](./csv-processing/) |
 > | `parquet-processing` | 提供 Parquet 格式的讀寫與 Schema 管理能力 | Released | [→](./parquet-processing/) |
+>
+> **💡 範例 (資料源系統)**：
+>
+> | Feature Name | Value / Goal | Status | Link |
+> |:-------------|:-------------|:-------|:-----|
+> | `daily-price` | 提供每日收盤價的爬取與標準化存取介面 | Released | [→](./daily-price/) |
+> | `company-profile` | 提供上市公司基本資料的爬取與查詢介面 | In Progress | [→](./company-profile/) |
 
 | Feature Name | Value / Goal | Status | Link |
 |:-------------|:-------------|:-------|:-----|
 | `<feature_name>` | <交付的核心價值> | `<status>` | [→](<relative_path>) |
 
+### 共用欄位說明
+
+> **Status 狀態定義**：
+>
+> | 狀態 | 說明 |
+> |:-----|:-----|
+> | `Released` | 已發布，可正常使用 |
+> | `In Progress` | 開發中 |
+> | `Planned` | 已規劃，尚未開始開發 |
+> | `Deprecated` | 已棄用，不建議使用但尚未移除 |
+
 ## 3. Decision Guide (決策指引)
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
 > 本節提供具體的決策指引，協助 SA 快速判斷新需求應「修改既有 Feature」還是「新增 Feature」。
+> 請依據當前 Overview 所屬的系統類型，遵循對應的撰寫要求：
 >
-> **撰寫原則**：
+> - **業務系統 (Business System)**：**必須**包含雙軌交付引導與 Feature Type 指定 → 參見下方「業務系統專屬要求」
+> - **其他類型 (Library / Data Source / System Core)**：使用通用決策指引格式即可
+
+### 通用撰寫原則
+
+> **📝 撰寫指引**（請勿保留本指引文字）：
+> 無論系統類型，所有 Decision Guide 都必須遵循以下原則：
 > 1. **情境導向**：以「若您要...」開頭，描述常見的需求情境。
 > 2. **明確指向**：給出具體的建議行動（修改哪個 Feature / 新增 Feature）。
 > 3. **覆蓋邊界案例**：特別說明容易混淆的情境。
+
+### 業務系統專屬要求
+
+> **📝 撰寫指引**（請勿保留本指引文字）：
+> 業務系統的 Decision Guide **必須**額外滿足以下要求：
 >
-> **💡 範例**：
+> 1. **雙軌交付引導**：在「需要新增 Feature」的情境中，必須明確區分應新增 **DB-only**、**Internal Service** 還是 **Standard** Feature，引導 SA 遵循「先資料契約，後業務功能」的雙軌交付策略。
+> 2. **Feature Type 指定**：每條新增建議必須標註建議的 Feature Type。
+> 3. **跨類型混淆澄清**：在「常見混淆情境」中，必須涵蓋 DB-only 與 Standard 之間的職責邊界。
 >
-> ### 3.1 修改既有 Feature 的情境
+> *Ref: `docs/PROJECT_DESIGN-METHODOLOGY.md` Section 3.2 — 雙軌交付 (Dual Track Delivery)*
+>
+> **💡 範例 (業務系統)**：
+>
+> #### 3.1 修改既有 Feature 的情境
 >
 > | 若您要... | 建議行動 |
 > |:----------|:---------|
-> | 新增股票基本資料的欄位 | 修改 `stock-profile` Feature |
-> | 調整自選清單的排序邏輯 | 修改 `stock-watchlist` Feature |
-> | 修復股價顯示的格式問題 | 修改 `stock-profile` Feature |
+> | 擴充股票價格的查詢欄位或修改 API 回應格式 | 修改 `stock-price-query` (Standard) |
+> | 調整股票估值的核心公式 | 修改 `stock-valuation-calc` (Internal Service) |
+> | 為股票價格新增 FileSystem 儲存支援 | 修改 `stock-price-storage` (DB-only) |
 >
-> ### 3.2 需要新增 Feature 的情境
+> #### 3.2 需要新增 Feature 的情境
 >
 > | 若您要... | 建議行動 |
 > |:----------|:---------|
-> | 提供股票的技術分析圖表 | 新增 `stock-chart` Feature |
-> | 提供股票的財報分析功能 | 新增 `stock-financial` Feature |
+> | 建立 ETF 的資料模型與存取邏輯 | 新增 **DB-only** Feature (`etf-storage`)，定義底層資料契約 |
+> | 開發對外的 ETF 查詢 API | 新增 **Standard** Feature (`etf-query`)，依賴 `etf-storage` |
+> | 封裝金融風險計算公式，供多個 API 共用 | 新增 **Internal Service** Feature (`risk-calculator`) |
 >
-> ### 3.3 常見混淆情境
+> #### 3.3 常見混淆情境
 >
 > | 情境 | 正確歸屬 | 原因 |
 > |:-----|:---------|:-----|
-> | 「在自選清單中顯示即時股價」 | `stock-watchlist` | 這是自選清單的「顯示增強」，而非股價查詢的核心功能 |
-> | 「批次匯入多檔股票到自選清單」 | `stock-watchlist` | 這是自選清單的「輸入方式擴充」 |
+> | 「要在查詢 API 中新增一種儲存格式」 | `stock-price-storage` (DB-only) | 儲存模型屬於底層契約，應在 DB-only Feature 中修改，Standard Feature 嚴禁直接變更資料層實作 |
+> | 「在自選清單 API 中加入即時股價計算」 | 視情況判斷 | 若為簡單欄位查詢：修改 Standard Feature；若為複雜運算且需被多處共用：應提取為 Internal Service Feature |
+
+> **💡 範例 (函式庫 — 通用格式)**：
+>
+> #### 3.1 修改既有 Feature 的情境
+>
+> | 若您要... | 建議行動 |
+> |:----------|:---------|
+> | 新增 CSV 的欄位型別驗證規則 | 修改 `csv-processing` Feature |
+> | 調整 Parquet Schema 的版本管理邏輯 | 修改 `parquet-processing` Feature |
+>
+> #### 3.2 需要新增 Feature 的情境
+>
+> | 若您要... | 建議行動 |
+> |:----------|:---------|
+> | 提供 Excel 格式的讀寫能力 | 新增 `excel-processing` Feature |
+>
+> #### 3.3 常見混淆情境
+>
+> | 情境 | 正確歸屬 | 原因 |
+> |:-----|:---------|:-----|
+> | 「在 CSV Reader 中支援 TSV 格式」 | `csv-processing` | TSV 是 CSV 的分隔符變體，屬於同一 Feature 的能力擴充 |
 
 ### 3.1 修改既有 Feature 的情境
 
@@ -215,7 +322,7 @@ docs/use-cases/<system>/core/
 
 | 若您要... | 建議行動 |
 |:----------|:---------|
-| <情境描述> | 新增 `<suggested_feature_name>` Feature |
+| <情境描述> | 新增 `<suggested_feature_name>` Feature <(業務系統) 請標註 Feature Type> |
 
 ### 3.3 常見混淆情境
 
@@ -228,11 +335,17 @@ docs/use-cases/<system>/core/
 > **📝 撰寫指引**（請勿保留本指引文字）：
 > 列出與此範圍相關的 L1 (Architecture) 與 L3 (Specs) 文件連結。
 >
-> **💡 範例**：
+> **💡 範例 (業務系統)**：
 >
 > - **Architecture Overview**: [→ gms_overview.md](../../../architecture/gms_overview.md)
 > - **Specs (DB Layer)**: [→ specs/gms/db/market/stock/overview.md](../../../specs/gms/db/market/stock/overview.md)
 > - **Specs (Service Layer)**: [→ specs/gms/service/market/stock/overview.md](../../../specs/gms/service/market/stock/overview.md)
+> - **ETL Overview**: [→ use-cases/gms/etl/market/stock/overview.md](../etl/market/stock/overview.md)
+>
+> **💡 範例 (函式庫)**：
+>
+> - **Architecture Overview**: [→ wutils_overview.md](../../../architecture/wutils_overview.md)
+> - **Specs**: [→ specs/wutils/io/overview.md](../../../specs/wutils/io/overview.md)
 
 - **Architecture Overview**: [→ <filename>](<relative_path>)
 - **Specs (<layer>)**: [→ <path>](<relative_path>)
@@ -248,20 +361,29 @@ docs/use-cases/<system>/core/
 
 - [ ] **上下文**：Section 1 是否已明確定義 System/Library, Scope Type, Scope Name, Description？
 - [ ] **功能清單**：Section 2 是否已列出所有已知的 Feature？每個 Feature 是否都有 Value/Goal 說明？
+- [ ] **收錄範圍**：(若存在子層級) Section 2 是否僅收錄歸屬於本層級的 Feature，未混入子層級專屬的 Feature？
 
-### B. 決策指引品質
+### B. Feature Type 正確性 (僅業務系統)
+
+- [ ] **欄位存在**：Section 2 的 Catalog 是否使用了含 `Feature Type` 欄位的業務系統專用格式？
+- [ ] **類型正確**：所有 Feature 是否都正確標示為 `Standard`、`DB-only` 或 `Internal Service`？
+- [ ] **分組排列**：Feature 是否依 Feature Type 分組排列 (DB-only → Internal Service → Standard)？
+
+### C. 決策指引品質
 
 - [ ] **情境覆蓋**：Section 3 是否覆蓋了「修改」與「新增」兩種情境？
 - [ ] **混淆情境**：是否已識別並說明容易混淆的邊界案例？
 - [ ] **指向明確**：每個決策建議是否都指向具體的 Feature 名稱？
+- [ ] **雙軌交付引導**：(針對業務系統) 新增情境是否明確區分 DB-only / Internal Service / Standard 的建立時機？
+- [ ] **跨類型混淆**：(針對業務系統) 混淆情境是否涵蓋 DB-only 與 Standard 之間的職責邊界？
 
-### C. 導航一致性
+### D. 導航一致性
 
 - [ ] **路徑正確**：所有相對路徑連結是否正確可達？
 - [ ] **與 L1 一致**：本 Overview 的 Scope 是否與 Architecture Overview 中的定義一致？
 - [ ] **與 L3 連結**：是否已在 Section 4 列出相關的 Specs Overview 連結？
 
-### D. 格式規範
+### E. 格式規範
 
 - [ ] **指引文字清理**：是否已移除所有「📝 撰寫指引」與「💡 範例」區塊？
 - [ ] **變數替換**：是否已將所有 `<...>` 佔位符替換為具體的資訊？

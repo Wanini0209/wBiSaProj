@@ -75,6 +75,21 @@ FU Container: gms/db/market/stock
 | **L2** | Feature Overview | 「這個需求以前做過嗎？」 | 被 L2 引導而來 |
 | **L3** | **FU Overview (本文件)** | **「有哪些現成的 FU 可以使用？」** | **技術資產庫存** |
 
+### 1.5 收錄範圍原則 (Scope Boundary)
+
+當一個 Domain/Toolkit 已發展出 Sub-domain/Sub-toolkit 結構時，父層級與子層級的 overview.md 各自負責不同範圍的 FU：
+
+| 層級 | 收錄範圍 | 典型特徵 |
+|:-----|:---------|:---------|
+| **父層級** (Domain/Toolkit) | 僅收錄**歸屬於本層級自身**的 FU：橫跨多個子層級的聚合型或共用型 FU | e.g., `market-dashboard-service` 聚合了 `stock` 與 `fund` 的查詢邏輯 |
+| **子層級** (Sub-domain/Sub-toolkit) | 收錄歸屬於該子層級的所有 FU | e.g., `stock-price` 僅涉及 `stock` 範疇 |
+
+**關鍵規則**：
+
+- **嚴禁上收**：子層級專屬的 FU 不得登錄在父層級的 overview 中。
+- **子層級導覽不由本層負責**：父層級的 overview 不需要列出其下的 Sub-domain/Sub-toolkit 清單，該職責由 **L1 Architecture Overview** 承擔。
+- **觸發條件**：此規則僅在 Domain/Toolkit 確實存在子層級時適用。若無子層級，所有 FU 自然歸屬於該層級本身。
+
 ---
 
 ## 2. 檔案路徑標準
@@ -171,11 +186,15 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 ## 4. 內容結構模板
 
 ````markdown
-# FU Overview: <Layer> / <Scope>
+# FU Overview: <root>/<layer>/<scope_path>
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
-> - `<Layer>`: 模組層級名稱 (e.g., `DB`, `Service`, `API`, `ETL`, `Collector`, `Toolkit`)
-> - `<Scope>`: Domain / Sub-domain / Toolkit 名稱
+> - 標題格式為 `FU Overview: <root>/<layer>/<scope_path>`，對應該 overview.md 在 `docs/specs/` 下的相對路徑。
+>   - 業務系統：`<system>/<layer>/<domain>[/<subdomain>]` (e.g., `gms/db/market/stock`, `gms/service/market`)
+>   - 資料源系統：`<system>/<layer>/<domain>[/<subdomain>]` (e.g., `twseprice/collector/price`)
+>   - 專案級函式庫：`<library>/<toolkit_path>` (e.g., `wutils/io`, `wutils/concurrent/wthread`)
+>   - 系統核心庫：`<system>/core/<toolkit_path>` (e.g., `gms/core/config`)
+> - 函式庫與系統核心庫因路徑中不含獨立的 layer 層級，標題自然省略 `<layer>` 段。
 > - 本文件將被用作 Prompt Input 餵給 LLM 進行分析。請確保內容精簡、無歧義。
 
 ## 1. Context (上下文)
@@ -190,12 +209,16 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 > - **Scope**: `market/stock` (Sub-domain)
 > - **FU-Container Path**: `gms/db/market/stock`
 >
+> *→ 標題：`# FU Overview: gms/db/market/stock`*
+>
 > **💡 範例 (函式庫 Toolkit)**：
 >
 > - **Library**: `wutils`
 > - **Layer**: `Toolkit`
 > - **Scope**: `io`
 > - **FU-Container Path**: `wutils/io`
+>
+> *→ 標題：`# FU Overview: wutils/io`*
 
 - **System / Library**: `<name>` (<type>)
 - **Layer**: `<layer_name>`
@@ -237,6 +260,9 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 > - 此處的組織粒度是 **FU (功能單元)**，每個 FU 以 `###` 標題呈現
 > - 每個 FU 必須**完整列出**其所有公開 Components（對應 `__init__.py` 的 `__all__`）
 > - Components 以子列表形式逐一列出，作為自動化工具判定歸屬的 Ground Truth
+>
+> **⚠️ 收錄範圍提醒**：
+> 若本 Overview 所屬的 Domain/Toolkit 已存在 Sub-domain/Sub-toolkit，本清單**僅收錄歸屬於本層級自身**的聚合型或共用型 FU。屬於特定 Sub-domain/Sub-toolkit 的 FU 應登錄在對應的子層級 overview.md 中，請勿列入本文件。
 >
 > **通用欄位**：
 > - **Responsibility**: 一句話描述 FU 的核心職責。
@@ -448,6 +474,7 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 - [ ] **上下文**：Section 1 是否已明確定義 System/Library, Layer, Scope, FU-Container Path？
 - [ ] **層級限制**：Section 2 是否已列出此層級的依賴規則 (Allowed/Prohibited)？
 - [ ] **FU 清單**：Section 3 是否已列出所有已知的 FU？每個 FU 是否都有 Responsibility 與完整的 Components 清單？
+- [ ] **收錄範圍**：(若存在子層級) Section 3 是否僅收錄歸屬於本層級的 FU，未混入子層級專屬的 FU？
 - [ ] **Components 完整性**：每個 FU 的 Components 清單是否與其 `__init__.py` 的 `__all__` 完全一致？
 
 ### C. 決策指引品質
