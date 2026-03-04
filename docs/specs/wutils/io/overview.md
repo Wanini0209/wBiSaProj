@@ -7,15 +7,7 @@
 - **Scope**: `io`
 - **FU-Container Path**: `wutils/io`
 
-## 2. Layer Constraints (層級限制)
-
-- **Allowed Dependencies**: Python Standard Library (`json`, `pickle`, `pathlib`, `typing` etc.)
-- **Prohibited Dependencies**: `core`, All Business Systems (`businesssys`), All Data Source Systems (`datasource`)
-- **Special Rules**:
-    - 所有 I/O 操作必須具備自動資源管理機制 (Context Manager)。
-    - 禁止洩露實作細節的 Exception，需保留原始錯誤或適當封裝。
-
-## 3. FU Inventory (功能單元清單)
+## 2. FU Inventory (功能單元清單)
 
 ### `json-io`
 - **Responsibility**: 提供原子化的 JSON 檔案讀寫介面，強制 UTF-8 編碼與自動資源管理
@@ -31,9 +23,9 @@
   - `pickle_load`
 - **Spec**: [→](./pickle-io/)
 
-## 4. Decision Guide (決策指引)
+## 3. Decision Guide (決策指引)
 
-### 4.1 擴充既有 FU 的情境
+### 3.1 擴充既有 FU 的情境
 
 | 若您要... | 建議行動 |
 |:----------|:---------|
@@ -41,7 +33,7 @@
 | 新增 Pickle 讀寫時的 Protocol 強制性設定 | 擴充 `pickle-io` FU |
 | 調整預設的檔案開啟模式或權限設定 | 擴充對應的 IO FU (`json-io` 或 `pickle-io`) |
 
-### 4.2 需要新增 FU 的情境
+### 3.2 需要新增 FU 的情境
 
 | 若您要... | 建議行動 |
 |:----------|:---------|
@@ -50,7 +42,7 @@
 | 提供純文字檔案 (Text/Log) 的原子化讀寫 | 新增 `text-io` FU |
 | 提供二進位檔案 (Binary) 的串流處理 | 新增 `stream-io` FU |
 
-### 4.3 常見混淆情境
+### 3.3 常見混淆情境
 
 | 情境 | 正確歸屬 | 原因 |
 |:-----|:---------|:-----|

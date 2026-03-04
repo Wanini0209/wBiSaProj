@@ -231,33 +231,7 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 - **Scope**: `<domain_path or toolkit_path>`
 - **FU-Container Path**: `<fu_path>`
 
-## 2. Layer Constraints (層級限制)
-
-> **📝 撰寫指引**（請勿保留本指引文字）：
-> 本節說明此層級的架構限制。不同層級有不同的依賴規則。
-> *Ref: `docs/PROJECT_DESIGN-ARCHITECTURE.md` Section 6.3*
->
-> **💡 業務系統各層限制範例**：
->
-> | Layer | 可依賴 | 禁止依賴 |
-> |:------|:-------|:---------|
-> | `db` | `<system>/core`, `core`, `wutils` | `service`, `api`, `etl`, 外部 API |
-> | `service` | `db`, `<system>/core`, `core`, `wutils` | `api`, `etl`, 外部 API |
-> | `api` | `service`, `<system>/core`, `core`, `wutils` | `db` (直接), `etl` |
-> | `etl` | `db`, `<system>/core`, `core`, `wutils`, `core/interfaces` | `service`, `api` |
->
-> **💡 資料源系統各層限制範例**：
->
-> | Layer | 可依賴 | 禁止依賴 |
-> |:------|:-------|:---------|
-> | `collector` | `<system>/core`, `core`, `wutils` | `service`, 其他系統 |
-> | `service` | `collector`, `<system>/core`, `core`, `wutils` | 其他系統 (須透過 interface) |
-
-- **Allowed Dependencies**: <列出可依賴的層級/套件>
-- **Prohibited Dependencies**: <列出禁止依賴的層級/套件>
-- **Special Rules** (若有): <列出特殊規則>
-
-## 3. FU Inventory (功能單元清單)
+## 2. FU Inventory (功能單元清單)
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
 > 本節列出此 FU-Container 下所有的 Functional Units。
@@ -377,7 +351,7 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
   - `<Component2>`
 - **Spec**: [→](<relative_path>)
 
-## 4. Decision Guide (決策指引)
+## 3. Decision Guide (決策指引)
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
 > 本節提供具體的決策指引，協助開發者快速判斷新需求應「擴充既有 FU」還是「新增 FU」。
@@ -389,21 +363,21 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 >
 > **💡 範例 (DB Layer)**：
 >
-> ### 4.1 擴充既有 FU 的情境
+> ### 3.1 擴充既有 FU 的情境
 >
 > | 若您要... | 建議行動 |
 > |:----------|:---------|
 > | 新增股票價格的查詢條件（如依日期範圍） | 擴充 `stock-price` FU |
 > | 新增股票基本資料的欄位 | 擴充 `stock-info` FU |
 >
-> ### 4.2 需要新增 FU 的情境
+> ### 3.2 需要新增 FU 的情境
 >
 > | 若您要... | 建議行動 |
 > |:----------|:---------|
 > | 提供股票技術指標的儲存與查詢 | 新增 `stock-indicator` FU |
 > | 提供股票財報資料的存取 | 新增 `stock-financial` FU |
 >
-> ### 4.3 常見混淆情境
+> ### 3.3 常見混淆情境
 >
 > | 情境 | 正確歸屬 | 原因 |
 > |:-----|:---------|:-----|
@@ -412,33 +386,33 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 >
 > **💡 範例 (Library Toolkit)**：
 >
-> ### 4.1 擴充既有 FU 的情境
+> ### 3.1 擴充既有 FU 的情境
 >
 > | 若您要... | 建議行動 |
 > |:----------|:---------|
 > | 新增 CSV 讀取時的編碼支援 | 擴充 `csv-processing` FU |
 > | 新增 JSON 的壓縮輸出選項 | 擴充 `json-io` FU |
 >
-> ### 4.2 需要新增 FU 的情境
+> ### 3.2 需要新增 FU 的情境
 >
 > | 若您要... | 建議行動 |
 > |:----------|:---------|
 > | 提供 YAML 格式的讀寫能力 | 新增 `yaml-io` FU |
 > | 提供 Excel 檔案的處理能力 | 新增 `excel-processing` FU |
 
-### 4.1 擴充既有 FU 的情境
+### 3.1 擴充既有 FU 的情境
 
 | 若您要... | 建議行動 |
 |:----------|:---------|
 | <情境描述> | 擴充 `<fu_name>` FU |
 
-### 4.2 需要新增 FU 的情境
+### 3.2 需要新增 FU 的情境
 
 | 若您要... | 建議行動 |
 |:----------|:---------|
 | <情境描述> | 新增 `<suggested_fu_name>` FU |
 
-### 4.3 常見混淆情境
+### 3.3 常見混淆情境
 
 | 情境 | 正確歸屬 | 原因 |
 |:-----|:---------|:-----|
@@ -460,14 +434,13 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 ### B. 結構完整性
 
 - [ ] **上下文**：Section 1 是否已明確定義 System/Library, Layer, Scope, FU-Container Path？
-- [ ] **層級限制**：Section 2 是否已列出此層級的依賴規則 (Allowed/Prohibited)？
-- [ ] **FU 清單**：Section 3 是否已列出所有已知的 FU？每個 FU 是否都有 Responsibility 與完整的 Components 清單？
-- [ ] **收錄範圍**：(若存在子層級) Section 3 是否僅收錄歸屬於本層級的 FU，未混入子層級專屬的 FU？
+- [ ] **FU 清單**：Section 2 是否已列出所有已知的 FU？每個 FU 是否都有 Responsibility 與完整的 Components 清單？
+- [ ] **收錄範圍**：(若存在子層級) Section 2 是否僅收錄歸屬於本層級的 FU，未混入子層級專屬的 FU？
 - [ ] **Components 完整性**：每個 FU 的 Components 清單是否與其 `__init__.py` 的 `__all__` 完全一致？
 
 ### C. 決策指引品質
 
-- [ ] **情境覆蓋**：Section 4 是否覆蓋了「擴充」與「新增」兩種情境？
+- [ ] **情境覆蓋**：Section 3 是否覆蓋了「擴充」與「新增」兩種情境？
 - [ ] **混淆情境**：是否已識別並說明容易混淆的邊界案例？
 - [ ] **指向明確**：每個決策建議是否都指向具體的 FU 名稱？
 

@@ -7,15 +7,7 @@
 - **Scope**: `wthread`
 - **FU-Container Path**: `wutils/wthread`
 
-## 2. Layer Constraints (層級限制)
-
-- **Allowed Dependencies**: Python Standard Library (`threading`, `sys`, `typing` etc.)
-- **Prohibited Dependencies**: `core`, All Business Systems (`businesssys`), All Data Source Systems (`datasource`)
-- **Special Rules**:
-    - 嚴禁包含任何與特定業務流程編排相關的邏輯。
-    - 必須防止 Thread 內部的 Exception 導致 Silent Failure。
-
-## 3. FU Inventory (功能單元清單)
+## 2. FU Inventory (功能單元清單)
 
 ### `future-thread`
 - **Responsibility**: 提供增強型的執行緒類別，封裝執行結果獲取與例外跨執行緒傳遞機制
@@ -23,9 +15,9 @@
   - `FutureThread`
 - **Spec**: [→](./future-thread/)
 
-## 4. Decision Guide (決策指引)
+## 3. Decision Guide (決策指引)
 
-### 4.1 擴充既有 FU 的情境
+### 3.1 擴充既有 FU 的情境
 
 | 若您要... | 建議行動 |
 |:----------|:---------|
@@ -33,7 +25,7 @@
 | 調整執行結果獲取的超時 (Timeout) 預設行為 | 擴充 `future-thread` FU |
 | 增加執行緒狀態的回調 (Callback) 機制 | 擴充 `future-thread` FU |
 
-### 4.2 需要新增 FU 的情境
+### 3.2 需要新增 FU 的情境
 
 | 若您要... | 建議行動 |
 |:----------|:---------|
@@ -41,7 +33,7 @@
 | 提供執行緒安全的鎖定機制或同步原語 (如 RWLock) | 新增 `safe-lock` FU |
 | 提供週期性的背景任務執行器 | 新增 `periodic-task` FU |
 
-### 4.3 常見混淆情境
+### 3.3 常見混淆情境
 
 | 情境 | 正確歸屬 | 原因 |
 |:-----|:---------|:-----|
