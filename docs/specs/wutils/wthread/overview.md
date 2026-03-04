@@ -47,8 +47,3 @@
 |:-----|:---------|:-----|
 | 「實作一個股票報價的即時更新執行緒」 | ❌ 業務系統 | 具體的業務邏輯執行緒應位於 `<system>/service` 或 `<system>/etl`，而非通用工具庫 |
 | 「實作分佈式鎖 (Distributed Lock)」 | ❌ 禁止 | `wutils` 關注單機 Python 環境。分佈式鎖涉及外部基礎設施 (Redis/Zookeeper)，應屬於 System Core 或特定 Library |
-
-## 5. Related Resources (相關資源)
-
-- **Architecture Overview**: [→ wutils_overview.md](../../../architecture/wutils_overview.md)
-- **Feature Overview**: [→ use-cases/wutils/wthread/overview.md](../../../use-cases/wutils/wthread/overview.md)

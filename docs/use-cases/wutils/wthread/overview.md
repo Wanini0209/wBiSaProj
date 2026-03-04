@@ -37,8 +37,3 @@
 |:-----|:---------|:-----|
 | 「在背景執行定時任務 (Cron Job)」 | **業務系統的 ETL 或 Scheduler** | `wthread` 僅提供底層並發原語 (Primitives)，不包含任務排程與業務流程編排。 |
 | 「使用 Process 進行平行運算」 | 新增 `wprocess` Toolkit | `wthread` 專注於執行緒 (Thread) 層級，跨進程 (Process) 屬於不同的技術範疇。 |
-
-## 4. Related Resources (相關資源)
-
-- **Architecture Overview**: [→ wutils_overview.md](../../../architecture/wutils_overview.md)
-- **Specs (Toolkit Layer)**: [→ specs/wutils/wthread/overview.md](../../../specs/wutils/wthread/overview.md)

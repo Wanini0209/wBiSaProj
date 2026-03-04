@@ -39,8 +39,3 @@
 |:-----|:---------|:-----|
 | 「解析 JSON 內容並轉換為 Domain Model」 | **業務系統的 Service/Core** | `wutils.io` 僅負責「檔案到記憶體 (Dict/List)」的物理 I/O，不涉及業務邏輯或模型轉換。 |
 | 「驗證 JSON 是否符合特定 Schema」 | `wutils/core/validator` (假設存在) | I/O Toolkit 專注於讀寫，資料驗證屬於 Validator Toolkit 的職責。 |
-
-## 4. Related Resources (相關資源)
-
-- **Architecture Overview**: [→ wutils_overview.md](../../../architecture/wutils_overview.md)
-- **Specs (Toolkit Layer)**: [→ specs/wutils/io/overview.md](../../../specs/wutils/io/overview.md)

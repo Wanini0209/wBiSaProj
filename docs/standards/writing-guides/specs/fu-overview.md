@@ -106,21 +106,25 @@ docs/specs/<system>/
 │       └── <subtoolkit>/
 │           └── overview.md
 ├── db/                                # DB Layer
+│   ├── overview.md                    # (單一領域系統) DB 層級 FU 總覽
 │   └── <domain>/
 │       ├── overview.md                # Domain 層級 FU 總覽
 │       └── <subdomain>/
 │           └── overview.md            # Sub-domain 層級 FU 總覽
 ├── service/                           # Service Layer
+│   ├── overview.md                    # (單一領域系統) Service 層級 FU 總覽
 │   └── <domain>/
 │       ├── overview.md                # Domain 層級 FU 總覽
 │       └── <subdomain>/
 │           └── overview.md            # Sub-domain 層級 FU 總覽
 ├── api/                               # API Layer
+│   ├── overview.md                    # (單一領域系統) API 層級 FU 總覽
 │   └── <domain>/
 │       ├── overview.md                # Domain 層級 FU 總覽
 │       └── <subdomain>/
 │           └── overview.md            # Sub-domain 層級 FU 總覽
 └── etl/                               # ETL Layer
+    ├── overview.md                    # (單一領域系統) ETL 層級 FU 總覽
     └── <domain>/
         ├── overview.md                # Domain 層級 FU 總覽
         └── <subdomain>/
@@ -137,11 +141,13 @@ docs/specs/<system>/
 │       └── <subtoolkit>/
 │           └── overview.md
 ├── collector/                         # Collector Layer
+│   ├── overview.md                    # (單一領域系統) Collector 層級 FU 總覽
 │   └── <domain>/
 │       ├── overview.md                # Domain 層級 FU 總覽
 │       └── <subdomain>/
 │           └── overview.md            # Sub-domain 層級 FU 總覽
 └── service/                           # Service Layer
+    ├── overview.md                    # (單一領域系統) Service 層級 FU 總覽
     └── <domain>/
         ├── overview.md                # Domain 層級 FU 總覽
         └── <subdomain>/
@@ -190,8 +196,8 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
 > - 標題格式為 `FU Overview: <root>/<layer>/<scope_path>`，對應該 overview.md 在 `docs/specs/` 下的相對路徑。
->   - 業務系統：`<system>/<layer>/<domain>[/<subdomain>]` (e.g., `gms/db/market/stock`, `gms/service/market`)
->   - 資料源系統：`<system>/<layer>/<domain>[/<subdomain>]` (e.g., `twseprice/collector/price`)
+>   - 業務系統：`<system>/<layer>` (單一領域系統)、`<system>/<layer>/<domain>[/<subdomain>]` (e.g., `crm/db`, `gms/db/market/stock`, `gms/service/market`)
+>   - 資料源系統：`<system>/<layer>` (單一領域系統)、`<system>/<layer>/<domain>[/<subdomain>]` (e.g., `twseprice/collector/price`)
 >   - 專案級函式庫：`<library>/<toolkit_path>` (e.g., `wutils/io`, `wutils/concurrent/wthread`)
 >   - 系統核心庫：`<system>/core/<toolkit_path>` (e.g., `gms/core/config`)
 > - 函式庫與系統核心庫因路徑中不含獨立的 layer 層級，標題自然省略 `<layer>` 段。
@@ -438,24 +444,6 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 |:-----|:---------|:-----|
 | <混淆情境> | `<correct_fu>` | <判斷理由> |
 
-## 5. Related Resources (相關資源)
-
-> **📝 撰寫指引**（請勿保留本指引文字）：
-> 列出與此範圍相關的 L1 (Architecture) 與 L2 (Feature) 文件連結。
->
-> **💡 範例 (業務系統)**：
->
-> - **Architecture Overview**: [→ gms_overview.md](../../../../architecture/gms_overview.md)
-> - **Feature Overview**: [→ use-cases/gms/market/stock/overview.md](../../../../use-cases/gms/market/stock/overview.md)
->
-> **💡 範例 (函式庫)**：
->
-> - **Architecture Overview**: [→ wutils_overview.md](../../../architecture/wutils_overview.md)
-> - **Feature Overview**: [→ use-cases/wutils/io/overview.md](../../../use-cases/wutils/io/overview.md)
-
-- **Architecture Overview**: [→ <filename>](<relative_path>)
-- **Feature Overview**: [→ <path>](<relative_path>)
-
 ````
 
 ---
@@ -487,7 +475,6 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 
 - [ ] **路徑正確**：所有相對路徑連結是否正確可達？
 - [ ] **與 L1 一致**：本 Overview 的 Scope 是否與 Architecture Overview 中的定義一致？
-- [ ] **與 L2 連結**：是否已在 Section 5 列出相關的 Feature Overview 連結？
 
 ### E. 格式規範
 

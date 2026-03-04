@@ -261,7 +261,6 @@ docs/specs/<library>/          # e.g., wutils, core (project level)
         - **邊界與職責 (Critical)**：針對每個下級節點 (Domain/Toolkit)，明確定義**職責 (Responsibility)** 與 **排除事項 (Excludes)**。這是不看細節就能判斷「新需求該放哪」的關鍵。
     - **L2 (Features)**：必須作為「價值目錄」，包含：
         - **範圍描述**：簡述此領域 (Domain/Toolkit) 的業務或技術範疇。
-        - **子分類導覽**：若有 Sub-domain，提供連結與簡述。
         - **Feature 清單與價值說明**：列出 Feature 並說明其 **目的與價值 (Goal/Value)**，而不僅僅是名稱。
         - **SA 決策指引 (Decision Guide)**：提供「若您要...請參考...」的具體導航建議，協助 SA 快速判斷是新增還是修改。
     - **L3 (Specs)**：必須作為「技術資產庫」，包含：

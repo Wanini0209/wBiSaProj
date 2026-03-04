@@ -3,8 +3,8 @@
 本規範定義 **Feature Overview (功能總覽)** 文件的撰寫規範。適用於所有 `docs/use-cases/.../overview.md` 路徑下的總覽文件。目標是提供**價值清單 (Feature Catalog)** 與 **決策指引 (Decision Guide)**，作為 System Analyst (LLM) 執行「Feature 歸屬判定」與「新增 vs 修改決策」時的 **Ground Truth (單一真理來源)**。
 
 > **⚠️ 適用範圍**：本規範為**通用規範**，適用於以下所有類型：
-> - **業務系統 (Business System)**：Domain / Sub-domain 層級
-> - **資料源系統 (Data Source System)**：Domain 層級
+> - **業務系統 (Business System)**：System (單一領域) / Domain / Sub-domain 層級
+> - **資料源系統 (Data Source System)**：System (單一領域) / Domain 層級
 > - **專案級函式庫 (Library)**：Toolkit 層級
 > - **系統核心庫 (System Core)**：Toolkit 層級
 >
@@ -24,7 +24,6 @@
 
 - **價值導向 (Value Oriented)**：以「交付的價值」而非「技術實作」來組織 Feature 清單。
 - **決策支援 (Decision Support)**：提供明確的決策指引，協助 SA 快速判斷「新增 vs 修改」，並（於業務系統中）引導正確的架構交付模式。
-- **導航樞紐 (Navigation Hub)**：作為 L1 (Architecture) 與 L3 (Specs) 之間的橋樑。
 
 ### 1.3 與其他層級的關係
 
@@ -32,7 +31,7 @@
 |:-----|:---------|:---------|:-------------|
 | **L1** | Architecture Overview | 「新需求屬於哪個 Domain/Toolkit？」 | 被 L1 引導而來 |
 | **L2** | **Feature Overview (本文件)** | **「這個需求以前做過嗎？該新增還是修改？屬於什麼類型的交付？」** | **價值清單與決策支援** |
-| **L3** | FU Overview (Specs) | 「有哪些現成的 FU 可以使用？」 | 引導至 L3 查看技術細節 |
+| **L3** | FU Overview (Specs) | 「有哪些現成的 FU 可以使用？」 | (由 L1 導航至 L3) |
 
 ### 1.4 收錄範圍原則 (Scope Boundary)
 
@@ -59,13 +58,17 @@
 
 ```text
 docs/use-cases/<system>/
+├── overview.md                        # (單一領域系統) 系統級 Feature 總覽
 ├── <domain>/
 │   ├── overview.md                    # Domain 層級 Feature 總覽
 │   └── <subdomain>/
 │       └── overview.md                # Sub-domain 層級 Feature 總覽
 └── etl/                               # (僅業務系統) ETL Feature — 獨立導航體系
+    ├── overview.md                    # (單一領域系統) 系統級 ETL Feature 總覽
     └── <domain>/
-        └── overview.md                # ETL Domain 層級 Feature 總覽
+        ├── overview.md                # ETL Domain 層級 Feature 總覽
+        └── [<subdomain>]/
+            └── overview.md            # ETL Sub-domain 層級 Feature 總覽
 ```
 
 > **ETL Feature 的導航分離**
@@ -113,14 +116,14 @@ docs/use-cases/<system>/core/
 
 ## 4. 內容結構模板
 
-> **閱讀指引**：本章節定義 overview.md 的四大區塊。其中 Section 4.2 (Feature Catalog) 與 Section 4.3 (Decision Guide) 依系統類型有不同的內容要求，請務必參照對應的類型專屬規範。
+> **閱讀指引**：本章節定義 overview.md 的三大區塊。其中 Section 4.2 (Feature Catalog) 與 Section 4.3 (Decision Guide) 依系統類型有不同的內容要求，請務必參照對應的類型專屬規範。
 
 ````markdown
 # Feature Overview: <root>/<scope_path>
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
 > - 標題格式為 `Feature Overview: <root>/<scope_path>`，對應該 overview.md 在 `docs/use-cases/` 下的相對路徑。
->   - 業務/資料源系統：`<system>/<domain>` 或 `<system>/<domain>/<subdomain>` (e.g., `gms/market`, `gms/market/stock`)
+>   - 業務/資料源系統：`<system>` (單一領域系統)、`<system>/<domain>` 或 `<system>/<domain>/<subdomain>` (e.g., `crm`, `gms/market`, `gms/market/stock`)
 >   - 專案級函式庫：`<library>/<toolkit_path>` (e.g., `wutils/io`, `wutils/concurrent/wthread`)
 >   - 系統核心庫：`<system>/core/<toolkit_path>` (e.g., `gms/core/config`)
 > - 本文件將被用作 Prompt Input 餵給 LLM 進行分析。請確保內容精簡、無歧義。
@@ -158,7 +161,7 @@ docs/use-cases/<system>/core/
 > *→ 標題：`# Feature Overview: wutils/io`*
 
 - **System / Library**: `<name>` (<type>)
-- **Scope Type**: `<Domain | Sub-domain | Toolkit>`
+- **Scope Type**: `<System | Domain | Sub-domain | Toolkit>`
 - **Scope Name**: `<name or path>`
 - **Description**: <簡述此範圍的核心職責>
 
@@ -330,25 +333,7 @@ docs/use-cases/<system>/core/
 |:-----|:---------|:-----|
 | <混淆情境> | `<correct_feature>` | <判斷理由> |
 
-## 4. Related Resources (相關資源)
 
-> **📝 撰寫指引**（請勿保留本指引文字）：
-> 列出與此範圍相關的 L1 (Architecture) 與 L3 (Specs) 文件連結。
->
-> **💡 範例 (業務系統)**：
->
-> - **Architecture Overview**: [→ gms_overview.md](../../../architecture/gms_overview.md)
-> - **Specs (DB Layer)**: [→ specs/gms/db/market/stock/overview.md](../../../specs/gms/db/market/stock/overview.md)
-> - **Specs (Service Layer)**: [→ specs/gms/service/market/stock/overview.md](../../../specs/gms/service/market/stock/overview.md)
-> - **ETL Overview**: [→ use-cases/gms/etl/market/stock/overview.md](../etl/market/stock/overview.md)
->
-> **💡 範例 (函式庫)**：
->
-> - **Architecture Overview**: [→ wutils_overview.md](../../../architecture/wutils_overview.md)
-> - **Specs**: [→ specs/wutils/io/overview.md](../../../specs/wutils/io/overview.md)
-
-- **Architecture Overview**: [→ <filename>](<relative_path>)
-- **Specs (<layer>)**: [→ <path>](<relative_path>)
 ````
 
 ---
@@ -381,7 +366,6 @@ docs/use-cases/<system>/core/
 
 - [ ] **路徑正確**：所有相對路徑連結是否正確可達？
 - [ ] **與 L1 一致**：本 Overview 的 Scope 是否與 Architecture Overview 中的定義一致？
-- [ ] **與 L3 連結**：是否已在 Section 4 列出相關的 Specs Overview 連結？
 
 ### E. 格式規範
 

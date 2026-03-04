@@ -56,8 +56,3 @@
 |:-----|:---------|:-----|
 | 「在 json-io 中加入特定的 Data Schema 驗證」 | ❌ 禁止 | `wutils/io` 僅負責 I/O 與格式處理，資料驗證邏輯應屬於 `core/validator` 或業務系統層級 |
 | 「讀取 S3 上的 JSON 檔案」 | 新增 `network-io` Toolkit 或類似 FU | `wutils/io` 預設關注本地檔案系統操作，涉及網路副作用的操作應隔離 |
-
-## 5. Related Resources (相關資源)
-
-- **Architecture Overview**: [→ wutils_overview.md](../../../architecture/wutils_overview.md)
-- **Feature Overview**: [→ use-cases/wutils/io/overview.md](../../../use-cases/wutils/io/overview.md)
