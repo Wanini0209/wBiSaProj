@@ -160,7 +160,22 @@ docs/use-cases/<system>/core/
 >
 > *→ 標題：`# Feature Overview: wutils/io`*
 
-- **System / Library**: `<name>` (<type>)
+>
+> **💡 範例 (系統核心庫 Toolkit)**：
+>
+> - **Library**: `gms/core` (System-Level Library)
+> - **Scope Type**: `Toolkit`
+> - **Scope Name**: `config`
+> - **Description**: 提供 GMS 系統內部共用的配置管理能力。
+>
+> *→ 標題：`# Feature Overview: gms/core/config`*
+>
+> **⚠️ 欄位選擇規則**：第一個欄位依所屬類型而定：
+> - 業務/資料源系統的 Domain/Sub-domain → 使用 `**System**`
+> - 專案級函式庫 (Project-Level Library) → 使用 `**Library**`
+> - 系統核心庫 (System-Level Library) → 使用 `**Library**`（值為 `<system>/core`）
+
+- **System** / **Library**: `<name>` (<type>)
 - **Scope Type**: `<System | Domain | Sub-domain | Toolkit>`
 - **Scope Name**: `<name or path>`
 - **Description**: <簡述此範圍的核心職責>

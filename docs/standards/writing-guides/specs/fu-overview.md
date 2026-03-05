@@ -226,7 +226,22 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 >
 > *→ 標題：`# FU Overview: wutils/io`*
 
-- **System / Library**: `<name>` (<type>)
+>
+> **💡 範例 (系統核心庫 Toolkit)**：
+>
+> - **Library**: `gms/core` (System-Level Library)
+> - **Layer**: `Core`
+> - **Scope**: `config`
+> - **FU-Container Path**: `gms/core/config`
+>
+> *→ 標題：`# FU Overview: gms/core/config`*
+>
+> **⚠️ 欄位選擇規則**：第一個欄位依所屬類型而定：
+> - 業務/資料源系統的模組層 (db/service/api 等) → 使用 `**System**`
+> - 專案級函式庫 (Project-Level Library) → 使用 `**Library**`
+> - 系統核心庫 (System-Level Library) → 使用 `**Library**`（值為 `<system>/core`）
+
+- **System** / **Library**: `<name>` (<type>)
 - **Layer**: `<layer_name>`
 - **Scope**: `<domain_path or toolkit_path>`
 - **FU-Container Path**: `<fu_path>`
