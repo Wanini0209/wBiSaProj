@@ -17,21 +17,35 @@ PYTEST: str = f"{VENV_PREFIX} pytest"
 
 
 @task(default=True)
-def run(ctx: Context) -> None:
+def run(ctx: Context, path: str = "") -> None:
     """Run test cases.
 
     Parameters
     ----------
     ctx : invoke.Context
         The invoke context object.
+    path : str, optional
+        Specific test path to run. If empty, runs all tests.
 
     Notes
     -----
-    This runs all test cases using pytest. The USE_PTY flag is set
-    based on the platform to ensure proper terminal interaction.
+    This runs test cases using pytest. When a path is specified,
+    only tests in that directory are executed. The USE_PTY flag is
+    set based on the platform to ensure proper terminal interaction.
+
+    Examples
+    --------
+    Run all tests::
+
+        inv test.run
+
+    Run tests for a specific FU::
+
+        inv test.run --path tests/wutils/io/pickle-io/
 
     """
-    ctx.run(PYTEST, pty=USE_PTY)
+    cmd = f"{PYTEST} {path}" if path else PYTEST
+    ctx.run(cmd, pty=USE_PTY)
 
 
 @task
