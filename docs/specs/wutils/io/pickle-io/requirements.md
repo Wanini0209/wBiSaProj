@@ -8,6 +8,7 @@
 | :--- | :--- |
 | **FU Name** | `pickle-io` |
 | **Container Path** | `wutils/io` |
+| **Parent Feature** | `pickle-io` |
 | **Public Interface** | `wutils/io` (`__init__.py`) |
 | **Exports** | `pickle_dump`, `pickle_load` |
 | **Layer** | Library (No Business Dependencies) |
@@ -28,7 +29,7 @@
 
 | Version | Date | Description | Source |
 | :--- | :--- | :--- | :--- |
-| v1.0.0 | 2025-12-30 | Initial Release (Basic Dump/Load wrappers) | Feature: pickle-io (v1.0.0) |
+| v1.0.0 | 2025-12-30 | Initial Release (Basic Dump/Load wrappers) | Feature v1.0.0 |
 
 ## 3. 匯出能力 (Exported Capabilities)
 

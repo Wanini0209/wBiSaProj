@@ -9,9 +9,9 @@
 
 ## 2. Feature Catalog (功能清單)
 
-| Feature Name | Value / Goal | Status | Link |
-|:-------------|:-------------|:-------|:-----|
-| `future-thread` | 提供可獲取回傳值並自動傳遞子執行緒例外的增強版 Thread 類別 | Released | [→](./future-thread/) |
+| Feature Name | Value / Goal | Owned FUs | Status | Link |
+|:-------------|:-------------|:----------|:-------|:-----|
+| `future-thread` | 提供可獲取回傳值並自動傳遞子執行緒例外的增強版 Thread 類別 | `future-thread` | Released | [→](./future-thread/) |
 
 ## 3. Decision Guide (決策指引)
 

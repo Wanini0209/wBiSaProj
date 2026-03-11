@@ -10,6 +10,7 @@
 ## 2. FU Inventory (功能單元清單)
 
 ### `future-thread`
+- **Parent Feature**: `future-thread`
 - **Responsibility**: 提供增強型的執行緒類別，封裝執行結果獲取與例外跨執行緒傳遞機制
 - **Components**:
   - `FutureThread`

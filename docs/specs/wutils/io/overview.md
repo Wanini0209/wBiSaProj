@@ -10,6 +10,7 @@
 ## 2. FU Inventory (功能單元清單)
 
 ### `json-io`
+- **Parent Feature**: `json-io`
 - **Responsibility**: 提供原子化的 JSON 檔案讀寫介面，強制 UTF-8 編碼與自動資源管理
 - **Components**:
   - `json_dump`
@@ -17,6 +18,7 @@
 - **Spec**: [→](./json-io/)
 
 ### `pickle-io`
+- **Parent Feature**: `pickle-io`
 - **Responsibility**: 提供原子化的 Pickle 檔案讀寫介面，支援多態路徑處理與自動資源管理
 - **Components**:
   - `pickle_dump`

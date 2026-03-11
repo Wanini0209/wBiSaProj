@@ -262,9 +262,11 @@ docs/specs/<library>/          # e.g., wutils, core (project level)
     - **L2 (Features)**：必須作為「價值目錄」，包含：
         - **範圍描述**：簡述此領域 (Domain/Toolkit) 的業務或技術範疇。
         - **Feature 清單與價值說明**：列出 Feature 並說明其 **目的與價值 (Goal/Value)**，而不僅僅是名稱。
+        - **技術資產追溯 (Owned FUs)**：基於 FU 單一驅動原則，明確列出該 Feature 所唯一擁有與驅動的所有底層功能單元 (FU)，實現**由上而下 (Top-Down) 的架構追溯**。
         - **SA 決策指引 (Decision Guide)**：提供「若您要...請參考...」的具體導航建議，協助 SA 快速判斷是新增還是修改。
     - **L3 (Specs)**：必須作為「技術資產庫」，包含：
         - **FU 列表**：列出該 Domain/Toolkit 下所有的 Functional Units。
+        - **業務源頭追溯 (Parent Feature)**：明確標註該 FU 唯一隸屬的 Parent Feature，貫徹 FU 單一驅動原則，實現**由下而上 (Bottom-Up) 的價值追溯**。
         - **功能簡述**：說明每個 FU 的核心職責。
         - **FU-Container**：明確標註該 FU 所屬的 FU-container (即 Import Path)。
 3. **同步性**：符合以下任一情境時，必須同步更新對應父目錄的 `overview.md`：
@@ -275,7 +277,7 @@ docs/specs/<library>/          # e.g., wutils, core (project level)
 
     | 命令 | 用途 |
     |:-----|:-----|
-    | `inv docs.overview-check` | 檢查 `overview.md` 中列出的 Feature / FU 是否與實際檔案結構一致 |
+    | `inv docs.overview-check` | 檢查 `overview.md` 中列出的 Feature / FU 是否與實際檔案結構一致，並驗證 L2 與 L3 之間的雙向追溯 (Parent Feature ↔ Owned FUs) 是否契合 |
 
     > **使用時機**：建議在以下情境執行此檢查：
     > - 新增或移除 Feature / FU 後

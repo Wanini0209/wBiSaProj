@@ -62,6 +62,7 @@
 | :--- | :--- |
 | **FU Name** | `<fu_name>` |
 | **Container Path** | `<fu_path>` |
+| **Parent Feature** | `<feature_name>` |
 | **Public Interface** | `<fu_path>` (`__init__.py`) |
 | **Exports** | `<Component_1>`, `<Component_2>`, ... |
 | **Layer** | Library (No Business Dependencies) |
@@ -103,21 +104,22 @@
 ## 2. 變更歷史 (Change History)
 
 > **📝 撰寫指引**：
-> 記錄版本變更，並在 Source 欄位明確指出是由哪個 Feature 或 Task 驅動此變更。
+> 記錄版本變更。基於「FU 單一驅動原則」，此 FU 永遠隸屬於 Metadata 中定義的 `Parent Feature`。
+> 因此，此處的 `Source` 欄位不需重複填寫 Feature 名稱，而是明確指出是該 Parent Feature 的**哪一個版本 (Version)** 或是哪一個具體的 **Task ID** 驅動了此次變更。
 >
-> **Source 格式**：`Feature: <Name> (vX.Y.Z)` 或 `Task: <ID>`
+> **Source 格式**：`Feature vX.Y.Z` 或 `Task: <Task_ID>`
 >
 > **💡 範例**：
 >
 > | Version | Date | Description | Source |
 > | :--- | :--- | :--- | :--- |
-> | v1.0.0 | 2024-01-15 | Initial Release (Basic Dump/Load) | Feature: User-Profile-Sync (v1.0.0) |
-> | v1.1.0 | 2024-02-01 | Add pathlib support | Feature: Image-Processing-Pipeline (v1.2.0) |
-> | v1.1.1 | 2024-02-10 | Fix file handle leak | Bugfix: ISSUE-452 |
+> | v1.0.0 | 2024-01-15 | Initial Release (Basic Dump/Load) | Feature v1.0.0 |
+> | v1.1.0 | 2024-02-01 | Add pathlib support | Feature v1.1.0 |
+> | v1.1.1 | 2024-02-10 | Fix file handle leak | Task: TASK-452 |
 
 | Version | Date | Description | Source |
 | :--- | :--- | :--- | :--- |
-| v1.0.0 | <YYYY-MM-DD> | <變更描述> | <填入驅動此變更的 Feature/Task> |
+| v1.0.0 | <YYYY-MM-DD> | <變更描述> | <填入 Feature 版本或 Task ID> |
 
 ## 3. 匯出能力 (Exported Capabilities)
 
@@ -305,7 +307,7 @@ from <fu_path> import <ExportedClass>, <exported_function>
 ### A. 文件追溯性與元數據
 - [ ] **Metadata 一致性**：`Container Path` 與 `Public Interface` 格式正確，且 `Exports` 清單與 §3 定義完全一致？
 - [ ] ⚠️ **依賴合規性**：Local 依賴是否嚴格遵守禁止依賴 `businesssys` 或 `datasource` 層的紅線？
-- [ ] **變更歷史追溯**：§2 Change History 的 `Source` 欄位是否已明確標註來源 Feature 名稱與版本 (e.g., `Feature: xxx (v1.0)`)？
+- [ ] **變更歷史追溯**：§2 Change History 的 `Source` 欄位是否僅填寫 Parent Feature 的版本號或 Task ID (e.g., `Feature v1.1.0` 或 `Task: TASK-xxx`)，且未冗餘重複 Feature 名稱？
 
 ### B. 需求定義品質
 

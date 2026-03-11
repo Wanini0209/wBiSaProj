@@ -114,26 +114,32 @@ def json_load(path: Union[str, Path], **kwargs: Any) -> Any:
 | **US-003** | `json_dump` 與 `json_load` 的 `path` 參數型別設計 |
 | **US-004** | `json_dump` 與 `json_load` 的 `**kwargs` 參數設計 |
 
-## 4. 任務分解 (Task Breakdown)
+## 4. 功能單元劃分 (FU Decomposition)
 
-### Task 1: 實作 JSON 檔案讀寫功能
+### 4.1 FU: `json-io`
 
-#### 1. 功能單元 (Functional Unit, FU)
+#### 1. FU 屬性與整體職責 (Attributes & Responsibility)
 
 | Attribute | Value |
 | :--- | :--- |
-| **Name** | `json-io` |
 | **Container Path** | `wutils/io` |
 | **Responsibility** | 封裝標準庫 json 操作，提供統一的資源管理與編碼設定。 |
 
-#### 2. TDD 策略 (TDD Strategy)
+#### 2. 核心公開元件指派與契約 (Assigned Components & Contracts)
+
+| Component | Type | Expected Contract / Responsibility |
+| :--- | :--- | :--- |
+| `json_dump` | Function | 實作物件序列化為 JSON 並寫入檔案的邏輯，必須強制 UTF-8 編碼、封裝 Context Manager 確保資源釋放，支援 `str` 與 `Path` 雙路徑型別，並透傳 `**kwargs` 至底層 `json.dump`。 |
+| `json_load` | Function | 實作從檔案讀取並反序列化 JSON 的邏輯，必須強制 UTF-8 編碼、封裝 Context Manager，支援雙路徑型別，若檔案不存在需透傳 `FileNotFoundError`，若格式錯誤需透傳 `json.JSONDecodeError`。 |
+
+#### 3. TDD 策略指示 (TDD Strategy Directive)
 
 | Attribute | Value |
 | :--- | :--- |
 | **Strategy** | Standard TDD |
 | **Reasoning** | 本功能邏輯單純，主要依賴 Python 標準庫，行為預期明確，適合標準紅綠重構流程。 |
 
-#### 3. 實作重點 (Implementation Details)
+#### 4. 實作設計約定 (Implementation Design)
 
 ##### A. 功能需求對應 (FR Mapping)
 

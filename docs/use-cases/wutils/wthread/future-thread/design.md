@@ -154,26 +154,31 @@ class FutureThread(threading.Thread, Generic[T]):
 | **US-002** | `get_result()` (Re-raise Exception) |
 | **US-003** | Properties: `.done`, `.result`, `.exception` |
 
-## 4. 任務分解 (Task Breakdown)
+## 4. 功能單元劃分 (FU Decomposition)
 
-### Task 1: 實作 FutureThread 類別
+### 4.1 FU: `future-thread`
 
-#### 1. 功能單元 (Functional Unit, FU)
+#### 1. FU 屬性與整體職責 (Attributes & Responsibility)
 
 | Attribute | Value |
 | :--- | :--- |
-| **Name** | `future-thread` |
 | **Container Path** | `wutils/wthread` |
 | **Responsibility** | 封裝 threading.Thread，管理執行結果與例外的生命週期，並提供安全的存取介面 |
 
-#### 2. TDD 策略 (TDD Strategy)
+#### 2. 核心公開元件指派與契約 (Assigned Components & Contracts)
+
+| Component | Type | Expected Contract / Responsibility |
+| :--- | :--- | :--- |
+| `FutureThread` | Class | 繼承 `threading.Thread` 並實作 `Generic[T]` 的增強型執行緒類別。必須：(1) 在 `run()` 中自動捕獲 target 的回傳值與例外；(2) 提供 `get_result(timeout)` 方法，支援同步等待、結果回傳與例外重新拋出；(3) 提供 `.done`, `.result`, `.exception` 屬性，含未完成狀態的安全檢查（拋出 `RuntimeError`）；(4) 確保 Traceback 無循環引用。 |
+
+#### 3. TDD 策略指示 (TDD Strategy Directive)
 
 | Attribute | Value |
 | :--- | :--- |
 | **Strategy** | Standard TDD |
 | **Reasoning** | 本功能邏輯封閉且明確，僅依賴標準庫，適合透過嚴格的測試案例定義狀態機行為 (State Machine) 與邊界條件。 |
 
-#### 3. 實作重點 (Implementation Details)
+#### 4. 實作設計約定 (Implementation Design)
 
 ##### A. 功能需求對應 (FR Mapping)
 

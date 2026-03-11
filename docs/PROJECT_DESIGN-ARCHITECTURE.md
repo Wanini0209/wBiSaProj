@@ -418,6 +418,13 @@ graph TD
 >
 > 關於這三部分如何對應到具體檔案路徑的權威性定義，請**嚴格遵循 [Section 5.4 結構對應性原則](#54-結構對應性原則)** 的規範。
 
+**FU 的擁有權與修改邊界 (Ownership & Modification Boundary)**：
+
+功能單元不僅是邏輯完整性的單位，更是**修改權限的隔離邊界**。
+
+1. **依賴有界開放 (Bounded Open for Dependency)**：**在嚴格遵守「依賴方向規範」與「架構分層」的前提下**，FU 可對外開放，允許被其他合法模組或 Feature 中的 FU 依賴與呼叫。
+2. **修改封閉 (Closed for Multi-Drive)**：一個 FU 的規格定義與內部實作，不允許被多個 Feature 共同驅動。FU 的誕生與後續的每一次修改，都必須有唯一對應的 Feature 負責（如：DB-only Feature 專門驅動 DB FU；Internal Service Feature 專門驅動共用邏輯 FU）。這確保了 FU 演進的職責單一性，並從根本上消除了跨分支合併時的邏輯衝突。
+
 ### 4.2 公開容器 (Public Container)
 
 公開容器是功能單元的**承載者**與**組織者**，它定義了功能的可見性邊界。

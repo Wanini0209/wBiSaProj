@@ -114,26 +114,32 @@ def pickle_load(path: Union[str, Path], **kwargs: Any) -> Any:
 | **US-002** | `pickle_load(path, **kwargs)` |
 | **US-003** | `pickle_dump` 與 `pickle_load` 的 `**kwargs` 參數 |
 
-## 4. 任務分解 (Task Breakdown)
+## 4. 功能單元劃分 (FU Decomposition)
 
-### Task 1: 實作 Pickle I/O 封裝功能
+### 4.1 FU: `pickle-io`
 
-#### 1. 功能單元 (Functional Unit, FU)
+#### 1. FU 屬性與整體職責 (Attributes & Responsibility)
 
 | Attribute | Value |
 | :--- | :--- |
-| **Name** | `pickle-io` |
 | **Container Path** | `wutils/io` |
 | **Responsibility** | 提供自動管理資源的 Pickle 序列化與反序列化函式 |
 
-#### 2. TDD 策略 (TDD Strategy)
+#### 2. 核心公開元件指派與契約 (Assigned Components & Contracts)
+
+| Component | Type | Expected Contract / Responsibility |
+| :--- | :--- | :--- |
+| `pickle_dump` | Function | 實作物件序列化並寫入檔案的邏輯，必須以 `wb` 模式封裝 Context Manager 確保資源釋放，支援 `str` 與 `Path` 雙路徑型別，並透傳 `**kwargs`（如 `protocol`）至底層 `pickle.dump`。 |
+| `pickle_load` | Function | 實作從檔案讀取並反序列化的邏輯，必須以 `rb` 模式封裝 Context Manager，支援雙路徑型別，若檔案不存在需透傳 `FileNotFoundError`，序列化失敗需透傳 `pickle.PickleError`。 |
+
+#### 3. TDD 策略指示 (TDD Strategy Directive)
 
 | Attribute | Value |
 | :--- | :--- |
 | **Strategy** | Standard TDD |
 | **Reasoning** | 本功能為標準庫的薄層封裝 (Thin Wrapper)，邏輯單純且邊界明確，適合使用標準 TDD 流程進行驗證。 |
 
-#### 3. 實作重點 (Implementation Details)
+#### 4. 實作設計約定 (Implementation Design)
 
 ##### A. 功能需求對應 (FR Mapping)
 

@@ -88,6 +88,7 @@
 | :--- | :--- |
 | **FU Name** | `<fu_name>` |
 | **Container Path** | `<fu_path>` |
+| **Parent Feature** | `<feature_name>` |
 | **Public Interface** | `<fu_path>` (`__init__.py`) |
 | **Test Type** | Unit Test |
 | **Layer** | Library (No Business Dependencies) |

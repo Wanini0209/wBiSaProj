@@ -8,6 +8,7 @@
 | :--- | :--- |
 | **FU Name** | `future-thread` |
 | **Container Path** | `wutils/wthread` |
+| **Parent Feature** | `future-thread` |
 | **Public Interface** | `wutils/wthread/__init__.py` |
 | **Test Type** | Unit Test |
 | **Layer** | Library (No Business Dependencies) |

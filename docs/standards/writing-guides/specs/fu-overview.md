@@ -260,6 +260,7 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 > 若本 Overview 所屬的 Domain/Toolkit 已存在 Sub-domain/Sub-toolkit，本清單**僅收錄歸屬於本層級自身**的聚合型或共用型 FU。屬於特定 Sub-domain/Sub-toolkit 的 FU 應登錄在對應的子層級 overview.md 中，請勿列入本文件。
 >
 > **通用欄位**：
+> - **Parent Feature**: 該 FU 唯一隸屬的 Feature 名稱（貫徹 FU 單一驅動原則）。
 > - **Responsibility**: 一句話描述 FU 的核心職責。
 > - **Components**: 完整列出該 FU 的所有公開 Components（對應 `__init__.py` 的 `__all__`）。
 > - **Spec**: 連結至該 FU 的詳細規格文件目錄。
@@ -279,6 +280,7 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 > **💡 範例 (DB Layer)**：
 >
 > ### `stock-price`
+> - **Parent Feature**: `stock-price-repository`
 > - **Responsibility**: 管理股票每日價格的存取
 > - **Storage**: Hybrid (SQL + FS)
 > - **Components**:
@@ -289,6 +291,7 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 > - **Spec**: [→](./stock-price/)
 >
 > ### `stock-info`
+> - **Parent Feature**: `stock-info-repository`
 > - **Responsibility**: 管理股票基本資料的查詢
 > - **Storage**: SQL
 > - **Components**:
@@ -299,6 +302,7 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 > **💡 範例 (Service Layer)**：
 >
 > ### `stock-query`
+> - **Parent Feature**: `market-dashboard-service`
 > - **Responsibility**: 提供股票資料的查詢與聚合服務
 > - **Components**:
 >   - `StockQueryService`
@@ -309,6 +313,7 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 > **💡 範例 (API Layer)**：
 >
 > ### `stock-endpoint`
+> - **Parent Feature**: `market-dashboard-api`
 > - **Responsibility**: 提供股票相關 REST API
 > - **Endpoints**: `/stocks/*`
 > - **Components**:
@@ -321,6 +326,7 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 > **💡 範例 (ETL Layer)**：
 >
 > ### `daily-price-sync`
+> - **Parent Feature**: `daily-stock-sync-job`
 > - **Responsibility**: 每日股價同步
 > - **Data Flow**: twseprice → gms.db
 > - **Components**:
@@ -332,6 +338,7 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 > **💡 範例 (Collector Layer)**：
 >
 > ### `daily-price-crawler`
+> - **Parent Feature**: `twse-daily-price-scraper`
 > - **Responsibility**: 收集每日股票收盤價
 > - **Source Type**: Web Scraping (HTML)
 > - **Components**:
@@ -342,6 +349,7 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 > **💡 範例 (Library Toolkit)**：
 >
 > ### `pickle-io`
+> - **Parent Feature**: `pickle-io`
 > - **Responsibility**: 提供 Pickle 格式的序列化能力
 > - **Components**:
 >   - `pickle_dump`
@@ -351,6 +359,7 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 > - **Spec**: [→](./pickle-io/)
 >
 > ### `json-io`
+> - **Parent Feature**: `json-io`
 > - **Responsibility**: 提供 JSON 格式的序列化能力
 > - **Components**:
 >   - `json_dump`
@@ -360,6 +369,7 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 > - **Spec**: [→](./json-io/)
 
 ### `<fu-name>`
+- **Parent Feature**: `<feature_name>`
 - **Responsibility**: <職責描述>
 - **Components**:
   - `<Component1>`
@@ -449,8 +459,9 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 ### B. 結構完整性
 
 - [ ] **上下文**：Section 1 是否已明確定義 System/Library, Layer, Scope, FU-Container Path？
-- [ ] **FU 清單**：Section 2 是否已列出所有已知的 FU？每個 FU 是否都有 Responsibility 與完整的 Components 清單？
+- [ ] **FU 清單**：Section 2 是否已列出所有已知的 FU？每個 FU 是否都有 Parent Feature、Responsibility 與完整的 Components 清單？
 - [ ] **收錄範圍**：(若存在子層級) Section 2 是否僅收錄歸屬於本層級的 FU，未混入子層級專屬的 FU？
+- [ ] **Parent Feature 一致性**：每個 FU 的 `Parent Feature` 是否與其 `specs/<fu_path>/<fu_name>/requirements.md` Metadata 中的 `Parent Feature` 一致？
 - [ ] **Components 完整性**：每個 FU 的 Components 清單是否與其 `__init__.py` 的 `__all__` 完全一致？
 
 ### C. 決策指引品質

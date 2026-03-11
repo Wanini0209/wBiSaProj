@@ -97,6 +97,19 @@ Feature（業務價值單元）
 > - `Feature` 是從**業務價值**角度出發的交付單位
 > - 一個 Feature 的實現，通常涉及對一個或多個 FU 的新增或修改
 
+### 2.2 FU 單一驅動原則 (Single-Driver Principle for FU)
+
+在 Feature 與 Functional Unit (FU) 的關聯上，專案嚴格遵循以下「一對多與一對一」的非對稱映射原則：
+
+- **1 Feature 包含 N FUs (包含關係)**：一個 Feature 的完整價值交付，通常會包含對一個或多個 FU 的新增或修改（即透過多個 Task 來實現）。
+- **1 FU 對應 1 Feature (驅動關係) [CRITICAL]**：在任何時間點，**一個 FU 只能由「唯一一個」Feature 作為需求驅動端進行建立或修改**。
+
+**原則詳解與規範**：
+
+1. **單一修改權**：若多個 Feature 都需要使用同一個 FU（例如多個業務 API 都需要讀取 `UserProfileRepository`），該 FU **嚴禁**在這些業務 Feature 的分支中被交錯修改。
+2. **依賴者 vs. 驅動者**：其他需要用到該 FU 的 Feature 只能作為**依賴方 (Consumer)**，絕不能是驅動方。
+3. **觸發修改的正確途徑**：若現有的 FU 無法滿足新 Feature 的需求，開發者必須先發起一個獨立的**「技術型 Feature」**（如 DB-only Feature 或 Internal Service Feature）來專職修改該 FU，然後再由原業務 Feature 進行依賴（即**雙軌交付**）。
+
 ### 2.1 Feature 拆分與原子化原則 (Feature Decomposition)
 
 為了避免產生「巨型 Feature (Monolithic Feature)」，在定義 Feature 範圍時，必須執行以下拆解檢核：
@@ -228,48 +241,54 @@ Internal Service Feature 專注於封裝複雜的業務運算邏輯，供多個 
 
 ## 4. Feature 開發生命週期 (1+N 提交結構)
 
-每個 Feature 都遵循一個標準生命週期，確保「文件先行」與「原子化提交」。
+每個 Feature 都遵循一個標準的雙階段生命週期，確保「文件先行」與「原子化提交」。在進入開發前，必須先判斷該 Feature 是「新建」還是「修改」，以決定對應的文件產出流程。
 
-### 4.1 階段一：業務需求定義 (The First Commit)
+### 4.1 階段一：價值定義與架構設計 (Feature Level)
 
-**目標**：定義功能的 **What, Why, 以及執行層面的 How**
-
+**目標**：定義功能的 **What, Why, 以及架構層面的 How**
 **執行者**：專案關係人、SA (系統分析師)、Developer
+**產出**：完整的 `use-cases` 文件，包含 `requirements.md` 與 `design.md`
 
-**產出**：完整的 `use-cases` 文件，必須包含 `requirements.md` 與 `design.md`
+根據 Feature 的當前狀態，選擇對應的執行模式：
 
-**Git 操作流程**：
+#### 模式一：新建 Feature (New Feature)
+1. **需求定義**：從零撰寫 `use-cases/.../requirements.md`，定義業務價值與驗收條件。
+2. **架構設計**：基於需求，撰寫 `use-cases/.../design.md`，定義高階設計並完成 **FU 劃分 (FU Decomposition)**。
 
-1. 基於 `develop` 分支，建立新的 `feature` 分支
-2. 撰寫完整的 `use-cases` 文件：
-   - **`requirements.md`**：定義 What (業務需求、使用者故事)
-   - **`design.md`**：定義 Why (背景目標) 與 How (高階技術設計、任務分解)
-3. 將包含上述完整內容的 `use-cases` 目錄，作為此分支的**第一個 Commit** 提交
-   - Commit 類型：`docs`
-   - Scope：對應的 `use-cases` 路徑
-
-> 此提交確立了整個 Feature 的開發目標、邊界、以及詳細的執行計畫。
-
-### 4.2 階段二：技術任務執行 (The N Commits)
-
-**目標**：根據**已規劃好的任務清單**，逐步實現功能的技術細節
-
-**執行者**：Developer、Operator (在人機協作模式下)
-
-**產出**：規格文件 (`specs`)、測試程式與功能程式碼
+#### 模式二：修改 Feature (Modify Feature)
+1. **更新需求**：修改原有的 `requirements.md`，並同步產出 `requirements_changes.md*`，詳細記錄變更理由與需求差異。
+2. **更新架構**：修改原有的 `design.md`，調整 API 簽章或 FU 劃分，並同步產出 `design_changes.md*`，記錄架構設計的變更細節。
+> *(註：`*_changes.md` 為揮發性文件，僅作為開發過程或 LLM 協作時的差異追蹤輸入，絕不納入 Git 版本控制)*
 
 **Git 操作流程**：
+1. 基於 `develop` 分支，建立或切換至對應的 `feature` 分支。
+2. 將上述完成的 `use-cases` 更新，作為此分支的**第一個 Commit** 提交（提交類型：`docs`）。
+   > 此提交確立了整個 Feature 的開發目標、邊界、以及靜態的技術架構藍圖。
 
-1. 根據 `use-cases/design.md` 中已定義的「任務分解」清單，Developer 開始逐一執行技術任務 (Tasks)
-2. 針對**每一個 Task**，嚴格遵循 TDD 執行模式進行開發
-3. 每個 Task 完成後，將其**所有產出**（`specs` 文件、測試碼、實作碼）作為一個**原子化的 Commit** 提交
+### 4.2 階段二：任務拆解與執行 (Task Level)
+
+**目標**：根據 `design.md` 中宣告的「目標架構 (FU 劃分)」，比對系統現狀，轉化為具體的揮發性技術任務 (Tasks) 並逐步實現。
+**執行者**：Developer、Operator (人機協作模式)
+**產出**：FU 規格文件 (`specs`)、測試程式與功能程式碼
+
+**任務拆解邏輯 (Deriving Tasks)**：
+開發者檢視 Feature `design.md` 中所定義的每一個 FU (Owned FUs)，對照系統現有資產，發起對應的具體任務：
+
+1. **新建 FU 任務 (Create FU Task)**：
+   - **觸發條件**：`design.md` 中宣告了一個系統中尚未存在的全新 FU。
+   - **執行流程**：依次產出 `specs/.../requirements.md` → `design.md` → `tests.md` → 進行 TDD 實作（對應第 5 章的「新增模式」）。
+2. **修改 FU 任務 (Modify FU Task)**：
+   - **觸發條件**：`design.md` 中宣告需調整一個既有的 FU（或因上游 Feature 需求變更而連帶影響其邏輯）。
+   - **執行流程**：更新 `specs/.../requirements.md` (+ 產生 changes) → 更新 `design.md` (+ 產生 changes) → 更新 `tests.md` (+ 產生 changes) → 進行 TDD 實作（對應第 5 章的「修改模式」）。
+
+**Git 操作流程**：
+針對拆解出的**每一個 Task**，嚴格遵循第 5 章的 TDD 雙軌測試策略進行開發。每個 Task 完成後，將其所有產出（該 FU 的 `specs` 變更、測試碼、實作碼）打包為一個**原子化的 Commit**（提交類型：`feat`, `fix`, `refactor` 等）。
 
 **最終結果**：
-
 ```text
 Feature Branch
-├── 1 個 docs 類型的 use-cases 提交 (已包含任務規劃)
-└── N 個 feat/fix/refactor 類型的 Task 提交
+├── 1 個 docs 類型的 use-cases 提交 (定義了靜態架構與價值)
+└── N 個 feat/fix/refactor 類型的 Task 提交 (執行了動態的新建/修改 FU 任務)
 ```
 
 ---
@@ -658,15 +677,15 @@ docs(use-cases/core/validator/rules): define data format validator api and requi
 | 文件 | 職責 | 內容結構 |
 |:-----|:-----|:---------|
 | **requirements.md** | 定義 **What** | 業務需求、使用者故事、驗收條件 |
-| **design.md** | 定義 **Why** 和 **How** | 1. 背景與目標<br/>2. 高階技術設計<br/>3. 任務分解 |
+| **design.md** | 定義 **Why** 和 **How** | 1. 背景與目標<br/>2. 高階技術設計<br/>3. FU 劃分與協作 |
 
 #### design.md 三大區塊詳細說明
 
 | 區塊 | 內容 | 目的 |
 |:-----|:-----|:-----|
 | **背景與目標** | 簡述 Feature 的商業價值與要解決的問題 | 說明 Why |
-| **高階技術設計** | 整體架構、模組互動、資料流、API 規格等 | 說明 How (架構層面) |
-| **任務分解** | 可執行的、有序的技術任務清單 | 說明 How (執行層面) |
+| **高階技術設計** | 整體架構、模組互動、資料流、API 規格等 | 說明 How (宏觀架構層面) |
+| **FU 劃分與協作** | 列出此 Feature 所擁有及驅動的所有功能單元 (FU)，以及其各自的職責與內部契約 | 說明 How (微觀實體層面) |
 
 ---
 

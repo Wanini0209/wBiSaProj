@@ -8,6 +8,7 @@
 | :--- | :--- |
 | **FU Name** | `json-io` |
 | **Container Path** | `wutils/io` |
+| **Parent Feature** | `json-io` |
 | **Public Interface** | `wutils/io` (`__init__.py`) |
 | **Exports** | `json_dump`, `json_load` |
 | **Layer** | Library (No Business Dependencies) |
@@ -28,7 +29,7 @@
 
 | Version | Date | Description | Source |
 | :--- | :--- | :--- | :--- |
-| v1.0.0 | 2026-01-02 | Initial Release (Basic Dump/Load with UTF-8 support) | Feature: json-io (v1.0.0) |
+| v1.0.0 | 2026-01-02 | Initial Release (Basic Dump/Load with UTF-8 support) | Feature v1.0.0 |
 
 ## 3. 匯出能力 (Exported Capabilities)
 

@@ -191,6 +191,11 @@ docs/use-cases/<system>/core/
 >
 > **⚠️ 收錄範圍提醒**：
 > 若本 Overview 所屬的 Domain/Toolkit 已存在 Sub-domain/Sub-toolkit，本清單**僅收錄歸屬於本層級自身**的聚合型或共用型 Feature。屬於特定 Sub-domain/Sub-toolkit 的 Feature 應登錄在對應的子層級 overview.md 中，請勿列入本文件。
+>
+> **⚠️ 欄位說明 - Owned FUs (擁有的 FU)**：
+> 基於「FU 單一驅動原則」，此欄位必須列出由該 Feature 唯一驅動與擁有的所有功能單元 (FU) 名稱。
+> - **業務系統/資料源系統 [CRITICAL]**：因 FU 分散於不同模組層 (Layer)，**必須加上層級前綴**，格式為 `<layer>:<fu_name>`（例如：`db:stock-price`, `service:stock-query`）。若有多個，以逗號分隔。
+> - **函式庫 (Library/System Core)**：因無分層結構，直接填寫 `<fu_name>` 即可（例如：`pickle-io`）。
 
 ### 業務系統專用格式
 
@@ -209,17 +214,17 @@ docs/use-cases/<system>/core/
 >
 > **💡 範例**：
 >
-> | Feature Name | Feature Type | Value / Goal | Status | Link |
-> |:-------------|:-------------|:-------------|:-------|:-----|
-> | `stock-price-storage` | **DB-only** | 提供股票價格的底層儲存模型與存取介面 (資料契約) | Released | [→](./stock-price-storage/) |
-> | `stock-info-storage` | **DB-only** | 提供股票基本資料的儲存模型與存取介面 (資料契約) | Released | [→](./stock-info-storage/) |
-> | `stock-valuation-calc` | **Internal Service** | 封裝股票估值演算法，供多個查詢 API 共用 | In Progress | [→](./stock-valuation-calc/) |
-> | `stock-price-query` | **Standard** | 提供前端查詢股票價格的 REST API | Released | [→](./stock-price-query/) |
-> | `stock-profile` | **Standard** | 提供股票基本資料與即時報價查詢 API | Released | [→](./stock-profile/) |
+> | Feature Name | Feature Type | Value / Goal | Owned FUs | Status | Link |
+> |:-------------|:-------------|:-------------|:----------|:-------|:-----|
+> | `stock-price-storage` | **DB-only** | 提供股票價格的底層儲存模型與存取介面 (資料契約) | `db:stock-price` | Released | [→](./stock-price-storage/) |
+> | `stock-info-storage` | **DB-only** | 提供股票基本資料的儲存模型與存取介面 (資料契約) | `db:stock-info` | Released | [→](./stock-info-storage/) |
+> | `stock-valuation-calc`| **Internal Service** | 封裝股票估值演算法，供多個查詢 API 共用 | `service:valuation-core` | In Progress | [→](./stock-valuation-calc/) |
+> | `stock-price-query` | **Standard** | 提供前端查詢股票價格的 REST API | `service:stock-query, api:stock-price` | Released | [→](./stock-price-query/) |
+> | `stock-profile` | **Standard** | 提供股票基本資料與即時報價查詢 API | `service:stock-profile, api:stock-profile` | Released | [→](./stock-profile/) |
 
-| Feature Name | Feature Type | Value / Goal | Status | Link |
-|:-------------|:-------------|:-------------|:-------|:-----|
-| `<feature_name>` | `<DB-only / Internal Service / Standard>` | <交付的核心價值> | `<status>` | [→](<relative_path>) |
+| Feature Name | Feature Type | Value / Goal | Owned FUs | Status | Link |
+|:-------------|:-------------|:-------------|:----------|:-------|:-----|
+| `<feature_name>` | `<DB-only / Internal Service / Standard>` | <交付的核心價值> | `<layer>:<fu_name>` | `<status>` | [→](<relative_path>) |
 
 ### 通用格式 (Library / Data Source / System Core)
 
@@ -229,21 +234,21 @@ docs/use-cases/<system>/core/
 >
 > **💡 範例 (函式庫)**：
 >
-> | Feature Name | Value / Goal | Status | Link |
-> |:-------------|:-------------|:-------|:-----|
-> | `csv-processing` | 提供 CSV 格式的讀寫與 Schema 驗證能力 | Released | [→](./csv-processing/) |
-> | `parquet-processing` | 提供 Parquet 格式的讀寫與 Schema 管理能力 | Released | [→](./parquet-processing/) |
+> | Feature Name | Value / Goal | Owned FUs | Status | Link |
+> |:-------------|:-------------|:----------|:-------|:-----|
+> | `csv-processing` | 提供 CSV 格式的讀寫與 Schema 驗證能力 | `csv-io, csv-validator` | Released | [→](./csv-processing/) |
+> | `parquet-processing` | 提供 Parquet 格式的讀寫與 Schema 管理能力 | `parquet-io` | Released | [→](./parquet-processing/) |
 >
 > **💡 範例 (資料源系統)**：
 >
-> | Feature Name | Value / Goal | Status | Link |
-> |:-------------|:-------------|:-------|:-----|
-> | `daily-price` | 提供每日收盤價的爬取與標準化存取介面 | Released | [→](./daily-price/) |
-> | `company-profile` | 提供上市公司基本資料的爬取與查詢介面 | In Progress | [→](./company-profile/) |
+> | Feature Name | Value / Goal | Owned FUs | Status | Link |
+> |:-------------|:-------------|:----------|:-------|:-----|
+> | `daily-price` | 提供每日收盤價的爬取與標準化存取介面 | `collector:daily-price, service:daily-price` | Released | [→](./daily-price/) |
+> | `company-profile` | 提供上市公司基本資料的爬取與查詢介面 | `collector:company-profile, service:company-profile` | In Progress | [→](./company-profile/) |
 
-| Feature Name | Value / Goal | Status | Link |
-|:-------------|:-------------|:-------|:-----|
-| `<feature_name>` | <交付的核心價值> | `<status>` | [→](<relative_path>) |
+| Feature Name | Value / Goal | Owned FUs | Status | Link |
+|:-------------|:-------------|:----------|:-------|:-----|
+| `<feature_name>` | <交付的核心價值> | `<layer>:<fu_name>` 或 `<fu_name>` | `<status>` | [→](<relative_path>) |
 
 ### 共用欄位說明
 
@@ -360,7 +365,8 @@ docs/use-cases/<system>/core/
 ### A. 結構完整性
 
 - [ ] **上下文**：Section 1 是否已明確定義 System/Library, Scope Type, Scope Name, Description？
-- [ ] **功能清單**：Section 2 是否已列出所有已知的 Feature？每個 Feature 是否都有 Value/Goal 說明？
+- [ ] **功能清單**：Section 2 是否已列出所有已知的 Feature？每個 Feature 是否都有 Value/Goal 與 Owned FUs 說明？
+- [ ] **Owned FUs 雙向一致性**：每個 Feature 的 `Owned FUs` 欄位所列出的 FU，其對應的 `specs/.../requirements.md` Metadata 中的 `Parent Feature` 是否反向指回同一個 Feature？
 - [ ] **收錄範圍**：(若存在子層級) Section 2 是否僅收錄歸屬於本層級的 Feature，未混入子層級專屬的 Feature？
 
 ### B. Feature Type 正確性 (僅業務系統)

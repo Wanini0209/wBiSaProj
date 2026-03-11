@@ -68,6 +68,7 @@
 | :--- | :--- |
 | **FU Name** | `<fu_name>` |
 | **Container Path** | `<fu_path>` |
+| **Parent Feature** | `<feature_name>` |
 | **Public Interface** | `<fu_path>` (`__init__.py`) |
 | **Exports** | `<Component_1>`, `<Component_2>`, ... |
 | **Layer** | Library (No Business Dependencies) |

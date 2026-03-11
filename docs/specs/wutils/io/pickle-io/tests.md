@@ -8,6 +8,7 @@
 | :--- | :--- |
 | **FU Name** | `pickle-io` |
 | **Container Path** | `wutils/io` |
+| **Parent Feature** | `pickle-io` |
 | **Public Interface** | `wutils/io` (`__init__.py`) |
 | **Test Type** | Unit Test |
 | **Layer** | Library (No Business Dependencies) |

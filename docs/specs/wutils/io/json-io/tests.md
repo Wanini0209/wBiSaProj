@@ -8,6 +8,7 @@
 | :--- | :--- |
 | **FU Name** | `json-io` |
 | **Container Path** | `wutils/io` |
+| **Parent Feature** | `json-io` |
 | **Public Interface** | `wutils/io` (`__init__.py`) |
 | **Test Type** | Unit Test |
 | **Layer** | Library (No Business Dependencies) |

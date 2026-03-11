@@ -8,6 +8,7 @@
 | :--- | :--- |
 | **FU Name** | `future-thread` |
 | **Container Path** | `wutils/wthread` |
+| **Parent Feature** | `future-thread` |
 | **Public Interface** | `wutils/wthread/__init__.py` |
 | **Exports** | `FutureThread` |
 | **Layer** | Library (No Business Dependencies) |
@@ -28,7 +29,7 @@
 
 | Version | Date | Description | Source |
 | :--- | :--- | :--- | :--- |
-| v1.0.0 | 2026-01-07 | Initial Specification | Feature: future-thread (v1.0.0) |
+| v1.0.0 | 2026-01-07 | Initial Specification | Feature v1.0.0 |
 
 ## 3. 匯出能力 (Exported Capabilities)
 

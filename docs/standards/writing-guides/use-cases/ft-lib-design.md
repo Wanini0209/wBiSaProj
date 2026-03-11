@@ -36,19 +36,17 @@
 
 ### 3.1 本文件定義 ID
 
-| ID 格式 | 說明 | 用途 |
-| :--- | :--- | :--- |
-| `Task N` | 任務編號（數字流水號） | §4 任務分解 |
+本文件不定義獨立的 ID。FU 劃分 (§4) 以 FU Name 作為識別。
 
 ### 3.2 引用 ID（來自 requirements.md）
 
 | ID 格式 | 說明 | 用途 |
 | :--- | :--- | :--- |
 | `US-XXX` | User Story | §3.2.1 需求覆蓋檢查 |
-| `FR-XX` | Functional Requirement | §4 任務分解 |
-| `AC-XX` | Acceptance Criteria | §4 任務分解 |
-| `NFR-XX` | Non-Functional Requirement | §4 任務分解 |
-| `CONS-XX` | Architectural Constraint | §4 任務分解 |
+| `FR-XX` | Functional Requirement | §4 FU 劃分 |
+| `AC-XX` | Acceptance Criteria | §4 FU 劃分 |
+| `NFR-XX` | Non-Functional Requirement | §4 FU 劃分 |
+| `CONS-XX` | Architectural Constraint | §4 FU 劃分 |
 
 ---
 
@@ -222,46 +220,60 @@
 | :--- | :--- |
 | **US-XXX** | <填入對應 API> |
 
-## 4. 任務分解 (Task Breakdown)
+## 4. 功能單元劃分 (FU Decomposition)
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
-> 依據 **Feature → Task → Action** 階層拆解。
-> - **原則**：一個 Task 對應一個 Functional Unit (FU) 的新增或修改。
-> - **粒度**：Task 的描述需足夠具體，足以作為開發者撰寫該 FU 技術規格（Requirements, Design, Tests Specs）的輸入。
-> - **ID 規範**：`Task N`（N 為數字流水號，如 `Task 1`, `Task 2`）。
+> 本章節定義此 Feature 在實體層面上由哪些 **功能單元 (FU)** 所組成。
+> - **原則**：這是一份永久性的架構設計，請描述 FU 的「目標狀態」，而非「施工步驟 (Task)」。
+> - **追溯性**：此處列出的每一個 FU，都代表該 Feature 在實體架構中擁有的資產（即 Owned FUs）。開發者將依據此處的定義，判斷在開發階段需要執行「新建 FU」還是「修改既有 FU」的具體任務。
 
-### Task 1: <任務名稱>
+### 4.1 FU: `<fu_name>`
 
 > **💡 範例**：
 >
-> `實作檔案儲存功能`
+> `### 4.1 FU: pickle-io`
 
-#### 1. 功能單元 (Functional Unit, FU)
+#### 1. FU 屬性與整體職責 (Attributes & Responsibility)
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
-> 定義此 Task 對應的功能單元 (FU)。
-> - **Name**：對應 `<fu_name>`。
-> - **Container Path**：對應 `<fu_path>`。
-> - **Responsibility**：該單元的主要職責。
+> 定義此 FU 的基本屬性與它在這個 Feature 中扮演的整體角色。
 >
 > **💡 範例**：
 >
 > | Attribute | Value |
 > | :--- | :--- |
-> | **Name** | `pickle-io` |
 > | **Container Path** | `wutils/io` |
 > | **Responsibility** | 負責 pickle 格式的讀寫操作與資源管理 |
 
 | Attribute | Value |
 | :--- | :--- |
-| **Name** | <fu_name> |
-| **Container Path** | <fu_path> |
+| **Container Path** | `<fu_path>` |
 | **Responsibility** | <填入功能職責摘要> |
 
-#### 2. TDD 策略 (TDD Strategy)
+#### 2. 核心公開元件指派與契約 (Assigned Components & Contracts)
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
-> 選擇測試驅動開發策略：
+> **【關鍵發包清單】**：請列出從 `§3.2 公開 API 介面設計` 中，指派給此 FU 負責實作的具體 Components，並明確定義其**實作期待與契約**。
+> 這將是後續開發者撰寫該 FU `specs/design.md` 時最核心的規格輸入。FU 開發者將依此清單，自行擴充必要的附屬公開元件（如 Exceptions、Schemas）並設計私有實作。
+>
+> **⚠️ 禁止「名稱丟包」**：每個 Component 都必須附帶具體的 Expected Contract，說明該元件要完成的任務、行為期待或邊界條件。僅列出名稱而不說明契約，視為不合格。
+>
+> **💡 範例**：
+>
+> | Component | Type | Expected Contract / Responsibility |
+> | :--- | :--- | :--- |
+> | `pickle_dump` | Function | 實作物件序列化並寫入檔案的邏輯，必須封裝 Context Manager 確保資源釋放，支援 `str` 與 `Path` 雙路徑型別，並透傳底層 `pickle` 與 I/O 異常。 |
+> | `pickle_load` | Function | 實作從檔案讀取並反序列化的邏輯，必須封裝 Context Manager，若檔案不存在需透傳 `FileNotFoundError`，支援 `**kwargs` 透傳至底層 `pickle.load`。 |
+
+| Component | Type | Expected Contract / Responsibility |
+| :--- | :--- | :--- |
+| `<Component_1>` | `<Class / Function>` | <具體說明該元件要完成的任務、行為期待或邊界條件> |
+| `<Component_2>` | `<Class / Function>` | <具體說明該元件要完成的任務、行為期待或邊界條件> |
+
+#### 3. TDD 策略指示 (TDD Strategy Directive)
+
+> **📝 撰寫指引**（請勿保留本指引文字）：
+> 指定該 FU 在後續實作與驗證時應採用的策略：
 > - **Standard TDD**：適用於邏輯明確的 Library Feature（預設選項）。
 > - **Exploratory TDD**：適用於涉及複雜 I/O 或需探索性開發的功能。
 >
@@ -277,15 +289,15 @@
 | **Strategy** | <Standard TDD / Exploratory TDD> |
 | **Reasoning** | <填入選擇理由> |
 
-#### 3. 實作重點 (Implementation Details)
+#### 4. 實作設計約定 (Implementation Design)
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
-> 本區塊子項目採用字母編號 (A, B, C...)，以區別於文件標準章節結構。
+> 描述此 FU 內部設計如何滿足上游需求。本區塊子項目採用字母編號 (A, B, C...)。
 
 ##### A. 功能需求對應 (FR Mapping)
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
-> 描述程式碼邏輯如何滿足 `requirements.md` 中定義的 FR。
+> 描述此 FU 的程式碼邏輯如何滿足 `requirements.md` 中定義的 FR。
 > - 引用 `requirements.md` 中的 `FR-XX` ID。
 >
 > **💡 範例**：
@@ -302,7 +314,7 @@
 ##### B. 驗收標準對應 (AC Mapping)
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
-> 描述測試案例如何驗證 `requirements.md` 中定義的 AC。
+> 描述此 FU 的測試案例如何驗證 `requirements.md` 中定義的 AC。
 > - 引用 `requirements.md` 中的 `AC-XX` ID。
 >
 > **💡 範例**：
@@ -317,10 +329,10 @@
 | :--- | :--- | :--- |
 | **AC-XX** | <填入情境> | <填入驗證重點> |
 
-##### C. 異常處理 (Exception Handling)
+##### C. 異常處理約定 (Exception Handling)
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
-> 定義每種例外情況的處理策略。
+> 定義此 FU 中每種例外情況的處理策略。
 >
 > **策略選項**：
 > - **透傳 (Propagate)**：直接向上傳遞，不做處理。
@@ -338,20 +350,20 @@
 
 | Exception | Trigger | Strategy |
 | :--- | :--- | :--- |
-| <例外類型> | <觸發條件> | <處理方式> |
+| <例外類型> | <觸發條件> | <透傳 / 封裝 / 吞噬 / 混合> |
 
 ##### D. 架構約束對應 (Architectural Constraints Mapping)
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
-> 確認本 Task 符合 `requirements.md` 第 7 章定義的架構約束。
+> 確認此 FU 的設計符合 `requirements.md` 第 7 章定義的架構約束。
 > - 引用 `requirements.md` 中的 `CONS-XX` ID。
-> - 說明本 Task 如何滿足該約束。
+> - 說明此 FU 如何滿足該約束。
 >
 > **💡 範例**：
 >
 > | ID | Constraint | Compliance Note |
 > | :--- | :--- | :--- |
-> | **CONS-01** | 僅依賴標準庫 | 本 Task 僅使用 `pickle`, `pathlib` |
+> | **CONS-01** | 僅依賴標準庫 | 本 FU 僅使用 `pickle`, `pathlib` |
 > | **CONS-02** | 保持無狀態 | 所有函式皆為 Pure Function，無 Side Effect |
 > | **CONS-03** | 封裝私有實作 | 實作檔案命名為 `_pickle_io.py` |
 
@@ -364,7 +376,7 @@
 > **📝 撰寫指引**（請勿保留本指引文字）：
 > 僅當 `requirements.md` 第 6 章有定義 NFR 時填寫，否則可省略本區塊。
 > - 引用 `requirements.md` 中的 `NFR-XX` ID。
-> - 針對 NFR 說明具體的技術實現策略。
+> - 針對 NFR 說明此 FU 具體的技術實現策略。
 >
 > **💡 範例**：
 >
@@ -377,13 +389,13 @@
 | :--- | :--- | :--- |
 | **NFR-XX** | <指標> | <實作策略> |
 
-### Task 2: <任務名稱> [Optional]
+### 4.2 FU: `<另一個 fu_name>` [Optional]
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
-> 僅當 Feature 涉及多個獨立的 Functional Unit 時才需要，否則請省略本章節。
-> 結構同 Task 1。
+> 若此 Feature 由多個 FU 組成，請繼續展開。結構同 4.1。
 
 ...
+
 ````
 
 ---
@@ -404,10 +416,11 @@
 - [ ] **API 簽章**：公開介面是否包含完整 Type Hints、Docstring，且明確定義了 `__all__` 導出內容 (對應 §3.2)？
 - [ ] **需求覆蓋**：是否確保所有 `US-XXX` 都有對應的 API 進入點 (對應 §3.2.1)？
 
-### C. 任務分解與 TDD 策略
+### C. FU 劃分與設計約定
 
-- [ ] **Task 粒度**：每個 Task 是否精確對應一個 Functional Unit (FU) (對應 §4)？
-- [ ] **映射完整性**：確保已完成 FR Mapping (A)、AC Mapping (B)、CONS Mapping (D)，若有 NFR 需求亦已完成 NFR Mapping (E) (對應 §4)？
+- [ ] **FU 劃分完整性**：§4 是否列出了此 Feature 擁有的所有 FU，且每個 FU 都有明確的 Container Path 與 Responsibility (對應 §4)？
+- [ ] **契約發包明確性**：每個 FU 的「核心公開元件指派與契約」是否明確交代了每個 Component 的 Expected Contract（任務、行為期待、邊界條件），而非僅列出名稱 (對應 §4)？
+- [ ] **映射完整性**：每個 FU 是否已完成 FR Mapping (A)、AC Mapping (B)、CONS Mapping (D)，若有 NFR 需求亦已完成 NFR Mapping (E) (對應 §4)？
 - [ ] **異常處理策略**：是否針對每種 Exception 明確定義了處理方式，如透傳、封裝、吞噬或混合 (對應 §4)？
 - [ ] **ID 追溯性**：所有引用的 `US/FR/AC/NFR/CONS` ID 是否與 `requirements.md` 完全一致 (對應 §4)？
 
