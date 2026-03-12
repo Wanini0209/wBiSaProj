@@ -1,5 +1,8 @@
-default_stages: [pre-push]
+default_stages: [pre-commit]
 repos:
+  # ------------------------------------------
+  # Basic file hygiene
+  # ------------------------------------------
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
@@ -9,38 +12,36 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
 
+  # ------------------------------------------
+  # Commit message convention (Conventional Commits)
+  # ------------------------------------------
   - repo: https://github.com/commitizen-tools/commitizen
     rev: master
     hooks:
       - id: commitizen
         stages: [commit-msg]
 
+  # ------------------------------------------
+  # Code formatting & linting
+  # ------------------------------------------
   - repo: https://github.com/psf/black
-    rev: 24.8.0
+    rev: 25.11.0
     hooks:
       - id: black
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.5.0
+    rev: v0.14.6
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
 
-  # 如果您希望在 commit 前強制執行本地的 invoke style/test 任務，保留此區塊
-  # 如果覺得速度太慢，可以移除
+  # ------------------------------------------
+  # Test suite
+  # ------------------------------------------
   - repo: local
     hooks:
-      - id: style-check
-        name: style-check
-        stages: [pre-commit]
-        language: system
-        pass_filenames: false
-        entry: pipenv run inv style
-        types: [python]
-
       - id: test
         name: test
-        stages: [pre-commit]
         language: system
         pass_filenames: false
         entry: pipenv run inv test
