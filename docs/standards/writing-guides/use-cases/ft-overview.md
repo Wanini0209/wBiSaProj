@@ -183,19 +183,24 @@ docs/use-cases/<system>/core/
 ## 2. Feature Catalog (功能清單)
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
-> 本節列出此範圍下所有已交付或開發中的 Feature。
-> 請依據當前 Overview 所屬的系統類型，選擇對應的表格格式：
+> 本節列出此範圍下所有已交付或開發中的 Feature。每個 Feature 以 `###` 標題呈現。
+> 請依據當前 Overview 所屬的系統類型，選擇對應的格式：
 >
-> - **業務系統 (Business System)**：使用**含 Feature Type 欄位**的表格 → 參見下方「業務系統專用格式」
+> - **業務系統 (Business System)**：使用**含 Feature Type 欄位**的格式 → 參見下方「業務系統專用格式」
 > - **其他類型 (Library / Data Source / System Core)**：使用**標準格式** → 參見下方「通用格式」
 >
 > **⚠️ 收錄範圍提醒**：
 > 若本 Overview 所屬的 Domain/Toolkit 已存在 Sub-domain/Sub-toolkit，本清單**僅收錄歸屬於本層級自身**的聚合型或共用型 Feature。屬於特定 Sub-domain/Sub-toolkit 的 Feature 應登錄在對應的子層級 overview.md 中，請勿列入本文件。
 >
-> **⚠️ 欄位說明 - Owned FUs (擁有的 FU)**：
-> 基於「FU 單一驅動原則」，此欄位必須列出由該 Feature 唯一驅動與擁有的所有功能單元 (FU) 名稱。
-> - **業務系統/資料源系統 [CRITICAL]**：因 FU 分散於不同模組層 (Layer)，**必須加上層級前綴**，格式為 `<layer>:<fu_name>`（例如：`db:stock-price`, `service:stock-query`）。若有多個，以逗號分隔。
-> - **函式庫 (Library/System Core)**：因無分層結構，直接填寫 `<fu_name>` 即可（例如：`pickle-io`）。
+> **通用欄位**：
+> - **Value / Goal**: 一句話描述此 Feature 交付的核心價值。
+> - **Owned FUs**: 基於「FU 單一驅動原則」，列出由該 Feature 唯一驅動與擁有的所有功能單元 (FU)。
+>   - **業務系統/資料源系統 [CRITICAL]**：因 FU 分散於不同模組層 (Layer)，**必須加上層級前綴**，格式為 `<layer>:<fu_name>`（例如：`db:stock-price, service:stock-query`）。
+>   - **函式庫 (Library/System Core)**：因無分層結構，直接填寫 `<fu_name>` 即可（例如：`pickle-io`）。
+> - **Status**: Feature 的當前狀態（`Released` / `In Progress` / `Planned` / `Deprecated`）。
+>
+> **Layer 專屬欄位**：
+> - **業務系統**需額外標註 **Feature Type**（`DB-only` / `Internal Service` / `Standard`）。
 
 ### 業務系統專用格式
 
@@ -214,52 +219,76 @@ docs/use-cases/<system>/core/
 >
 > **💡 範例**：
 >
-> | Feature Name | Feature Type | Value / Goal | Owned FUs | Status |
-> |:-------------|:-------------|:-------------|:----------|:-------|
-> | `stock-price-storage` | **DB-only** | 提供股票價格的底層儲存模型與存取介面 (資料契約) | `db:stock-price` | Released |
-> | `stock-info-storage` | **DB-only** | 提供股票基本資料的儲存模型與存取介面 (資料契約) | `db:stock-info` | Released |
-> | `stock-valuation-calc`| **Internal Service** | 封裝股票估值演算法，供多個查詢 API 共用 | `service:valuation-core` | In Progress |
-> | `stock-price-query` | **Standard** | 提供前端查詢股票價格的 REST API | `service:stock-query, api:stock-price` | Released |
-> | `stock-profile` | **Standard** | 提供股票基本資料與即時報價查詢 API | `service:stock-profile, api:stock-profile` | Released |
+> ### `stock-price-storage`
+> - **Feature Type**: `DB-only`
+> - **Value / Goal**: 提供股票價格的底層儲存模型與存取介面 (資料契約)
+> - **Owned FUs**: `db:stock-price`
+> - **Status**: Released
+>
+> ### `stock-info-storage`
+> - **Feature Type**: `DB-only`
+> - **Value / Goal**: 提供股票基本資料的儲存模型與存取介面 (資料契約)
+> - **Owned FUs**: `db:stock-info`
+> - **Status**: Released
+>
+> ### `stock-valuation-calc`
+> - **Feature Type**: `Internal Service`
+> - **Value / Goal**: 封裝股票估值演算法，供多個查詢 API 共用
+> - **Owned FUs**: `service:valuation-core`
+> - **Status**: In Progress
+>
+> ### `stock-price-query`
+> - **Feature Type**: `Standard`
+> - **Value / Goal**: 提供前端查詢股票價格的 REST API
+> - **Owned FUs**: `service:stock-query, api:stock-price`
+> - **Status**: Released
+>
+> ### `stock-profile`
+> - **Feature Type**: `Standard`
+> - **Value / Goal**: 提供股票基本資料與即時報價查詢 API
+> - **Owned FUs**: `service:stock-profile, api:stock-profile`
+> - **Status**: Released
 
-| Feature Name | Feature Type | Value / Goal | Owned FUs | Status |
-|:-------------|:-------------|:-------------|:----------|:-------|
-| `<feature_name>` | `<DB-only / Internal Service / Standard>` | <交付的核心價值> | `<layer>:<fu_name>` | `<status>` |
+### `<feature_name>`
+- **Feature Type**: `<DB-only / Internal Service / Standard>`
+- **Value / Goal**: <交付的核心價值>
+- **Owned FUs**: `<layer>:<fu_name>`
+- **Status**: `<status>`
 
 ### 通用格式 (Library / Data Source / System Core)
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
 > Library、Data Source 與 System Core 的 Feature 不存在 DB-only / Internal Service 的分類需求，
-> 因此使用不含 Feature Type 的精簡表格。
+> 因此使用不含 Feature Type 的精簡格式。
 >
 > **💡 範例 (函式庫)**：
 >
-> | Feature Name | Value / Goal | Owned FUs | Status |
-> |:-------------|:-------------|:----------|:-------|
-> | `csv-processing` | 提供 CSV 格式的讀寫與 Schema 驗證能力 | `csv-io, csv-validator` | Released |
-> | `parquet-processing` | 提供 Parquet 格式的讀寫與 Schema 管理能力 | `parquet-io` | Released |
+> ### `csv-processing`
+> - **Value / Goal**: 提供 CSV 格式的讀寫與 Schema 驗證能力
+> - **Owned FUs**: `csv-io, csv-validator`
+> - **Status**: Released
+>
+> ### `parquet-processing`
+> - **Value / Goal**: 提供 Parquet 格式的讀寫與 Schema 管理能力
+> - **Owned FUs**: `parquet-io`
+> - **Status**: Released
 >
 > **💡 範例 (資料源系統)**：
 >
-> | Feature Name | Value / Goal | Owned FUs | Status |
-> |:-------------|:-------------|:----------|:-------|
-> | `daily-price` | 提供每日收盤價的爬取與標準化存取介面 | `collector:daily-price, service:daily-price` | Released |
-> | `company-profile` | 提供上市公司基本資料的爬取與查詢介面 | `collector:company-profile, service:company-profile` | In Progress |
-
-| Feature Name | Value / Goal | Owned FUs | Status |
-|:-------------|:-------------|:----------|:-------|
-| `<feature_name>` | <交付的核心價值> | `<layer>:<fu_name>` 或 `<fu_name>` | `<status>` |
-
-### 共用欄位說明
-
-> **Status 狀態定義**：
+> ### `daily-price`
+> - **Value / Goal**: 提供每日收盤價的爬取與標準化存取介面
+> - **Owned FUs**: `collector:daily-price, service:daily-price`
+> - **Status**: Released
 >
-> | 狀態 | 說明 |
-> |:-----|:-----|
-> | `Released` | 已發布，可正常使用 |
-> | `In Progress` | 開發中 |
-> | `Planned` | 已規劃，尚未開始開發 |
-> | `Deprecated` | 已棄用，不建議使用但尚未移除 |
+> ### `company-profile`
+> - **Value / Goal**: 提供上市公司基本資料的爬取與查詢介面
+> - **Owned FUs**: `collector:company-profile, service:company-profile`
+> - **Status**: In Progress
+
+### `<feature_name>`
+- **Value / Goal**: <交付的核心價值>
+- **Owned FUs**: `<layer>:<fu_name>` 或 `<fu_name>`
+- **Status**: `<status>`
 
 ## 3. Decision Guide (決策指引)
 
@@ -371,9 +400,9 @@ docs/use-cases/<system>/core/
 
 ### B. Feature Type 正確性 (僅業務系統)
 
-- [ ] **欄位存在**：Section 2 的 Catalog 是否使用了含 `Feature Type` 欄位的業務系統專用格式？
+- [ ] **欄位存在**：每個 Feature 條目是否都標註了 `Feature Type` 欄位？
 - [ ] **類型正確**：所有 Feature 是否都正確標示為 `Standard`、`DB-only` 或 `Internal Service`？
-- [ ] **分組排列**：Feature 是否依 Feature Type 分組排列 (DB-only → Internal Service → Standard)？
+- [ ] **分組排列**：Feature 是否盡量依 Feature Type 分組排列 (DB-only → Internal Service → Standard)？
 
 ### C. 決策指引品質
 

@@ -9,10 +9,15 @@
 
 ## 2. Feature Catalog (功能清單)
 
-| Feature Name | Value / Goal | Owned FUs | Status |
-|:-------------|:-------------|:----------|:-------|
-| `json-io` | 提供標準化的 JSON 讀寫能力，內建 UTF-8 強制編碼與自動資源釋放 | `json-io` | Released |
-| `pickle-io` | 提供安全的 Pickle 序列化與反序列化能力，封裝檔案開關與路徑處理細節 | `pickle-io` | Released |
+### `json-io`
+- **Value / Goal**: 提供標準化的 JSON 讀寫能力，內建 UTF-8 強制編碼與自動資源釋放
+- **Owned FUs**: `json-io`
+- **Status**: Released
+
+### `pickle-io`
+- **Value / Goal**: 提供安全的 Pickle 序列化與反序列化能力，封裝檔案開關與路徑處理細節
+- **Owned FUs**: `pickle-io`
+- **Status**: Released
 
 ## 3. Decision Guide (決策指引)
 
