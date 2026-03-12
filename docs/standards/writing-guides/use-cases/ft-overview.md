@@ -214,17 +214,17 @@ docs/use-cases/<system>/core/
 >
 > **💡 範例**：
 >
-> | Feature Name | Feature Type | Value / Goal | Owned FUs | Status | Link |
-> |:-------------|:-------------|:-------------|:----------|:-------|:-----|
-> | `stock-price-storage` | **DB-only** | 提供股票價格的底層儲存模型與存取介面 (資料契約) | `db:stock-price` | Released | [→](./stock-price-storage/) |
-> | `stock-info-storage` | **DB-only** | 提供股票基本資料的儲存模型與存取介面 (資料契約) | `db:stock-info` | Released | [→](./stock-info-storage/) |
-> | `stock-valuation-calc`| **Internal Service** | 封裝股票估值演算法，供多個查詢 API 共用 | `service:valuation-core` | In Progress | [→](./stock-valuation-calc/) |
-> | `stock-price-query` | **Standard** | 提供前端查詢股票價格的 REST API | `service:stock-query, api:stock-price` | Released | [→](./stock-price-query/) |
-> | `stock-profile` | **Standard** | 提供股票基本資料與即時報價查詢 API | `service:stock-profile, api:stock-profile` | Released | [→](./stock-profile/) |
+> | Feature Name | Feature Type | Value / Goal | Owned FUs | Status |
+> |:-------------|:-------------|:-------------|:----------|:-------|
+> | `stock-price-storage` | **DB-only** | 提供股票價格的底層儲存模型與存取介面 (資料契約) | `db:stock-price` | Released |
+> | `stock-info-storage` | **DB-only** | 提供股票基本資料的儲存模型與存取介面 (資料契約) | `db:stock-info` | Released |
+> | `stock-valuation-calc`| **Internal Service** | 封裝股票估值演算法，供多個查詢 API 共用 | `service:valuation-core` | In Progress |
+> | `stock-price-query` | **Standard** | 提供前端查詢股票價格的 REST API | `service:stock-query, api:stock-price` | Released |
+> | `stock-profile` | **Standard** | 提供股票基本資料與即時報價查詢 API | `service:stock-profile, api:stock-profile` | Released |
 
-| Feature Name | Feature Type | Value / Goal | Owned FUs | Status | Link |
-|:-------------|:-------------|:-------------|:----------|:-------|:-----|
-| `<feature_name>` | `<DB-only / Internal Service / Standard>` | <交付的核心價值> | `<layer>:<fu_name>` | `<status>` | [→](<relative_path>) |
+| Feature Name | Feature Type | Value / Goal | Owned FUs | Status |
+|:-------------|:-------------|:-------------|:----------|:-------|
+| `<feature_name>` | `<DB-only / Internal Service / Standard>` | <交付的核心價值> | `<layer>:<fu_name>` | `<status>` |
 
 ### 通用格式 (Library / Data Source / System Core)
 
@@ -234,21 +234,21 @@ docs/use-cases/<system>/core/
 >
 > **💡 範例 (函式庫)**：
 >
-> | Feature Name | Value / Goal | Owned FUs | Status | Link |
-> |:-------------|:-------------|:----------|:-------|:-----|
-> | `csv-processing` | 提供 CSV 格式的讀寫與 Schema 驗證能力 | `csv-io, csv-validator` | Released | [→](./csv-processing/) |
-> | `parquet-processing` | 提供 Parquet 格式的讀寫與 Schema 管理能力 | `parquet-io` | Released | [→](./parquet-processing/) |
+> | Feature Name | Value / Goal | Owned FUs | Status |
+> |:-------------|:-------------|:----------|:-------|
+> | `csv-processing` | 提供 CSV 格式的讀寫與 Schema 驗證能力 | `csv-io, csv-validator` | Released |
+> | `parquet-processing` | 提供 Parquet 格式的讀寫與 Schema 管理能力 | `parquet-io` | Released |
 >
 > **💡 範例 (資料源系統)**：
 >
-> | Feature Name | Value / Goal | Owned FUs | Status | Link |
-> |:-------------|:-------------|:----------|:-------|:-----|
-> | `daily-price` | 提供每日收盤價的爬取與標準化存取介面 | `collector:daily-price, service:daily-price` | Released | [→](./daily-price/) |
-> | `company-profile` | 提供上市公司基本資料的爬取與查詢介面 | `collector:company-profile, service:company-profile` | In Progress | [→](./company-profile/) |
+> | Feature Name | Value / Goal | Owned FUs | Status |
+> |:-------------|:-------------|:----------|:-------|
+> | `daily-price` | 提供每日收盤價的爬取與標準化存取介面 | `collector:daily-price, service:daily-price` | Released |
+> | `company-profile` | 提供上市公司基本資料的爬取與查詢介面 | `collector:company-profile, service:company-profile` | In Progress |
 
-| Feature Name | Value / Goal | Owned FUs | Status | Link |
-|:-------------|:-------------|:----------|:-------|:-----|
-| `<feature_name>` | <交付的核心價值> | `<layer>:<fu_name>` 或 `<fu_name>` | `<status>` | [→](<relative_path>) |
+| Feature Name | Value / Goal | Owned FUs | Status |
+|:-------------|:-------------|:----------|:-------|
+| `<feature_name>` | <交付的核心價值> | `<layer>:<fu_name>` 或 `<fu_name>` | `<status>` |
 
 ### 共用欄位說明
 
@@ -385,7 +385,6 @@ docs/use-cases/<system>/core/
 
 ### D. 導航一致性
 
-- [ ] **路徑正確**：所有相對路徑連結是否正確可達？
 - [ ] **與 L1 一致**：本 Overview 的 Scope 是否與 Architecture Overview 中的定義一致？
 
 ### E. 格式規範

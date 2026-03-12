@@ -263,7 +263,6 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 > - **Parent Feature**: 該 FU 唯一隸屬的 Feature 名稱（貫徹 FU 單一驅動原則）。
 > - **Responsibility**: 一句話描述 FU 的核心職責。
 > - **Components**: 完整列出該 FU 的所有公開 Components（對應 `__init__.py` 的 `__all__`）。
-> - **Spec**: 連結至該 FU 的詳細規格文件目錄。
 >
 > **Layer 專屬欄位**：
 > 不同 Layer 的 overview.md 需額外標註以下欄位（置於 Responsibility 之後、Components 之前）：
@@ -288,7 +287,6 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 >   - `StockPriceSchema`
 >   - `StockPriceInput`
 >   - `PRICE_TABLE_NAME`
-> - **Spec**: [→](./stock-price/)
 >
 > ### `stock-info`
 > - **Parent Feature**: `stock-info-repository`
@@ -297,7 +295,6 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 > - **Components**:
 >   - `StockInfoRepository`
 >   - `StockInfoSchema`
-> - **Spec**: [→](./stock-info/)
 >
 > **💡 範例 (Service Layer)**：
 >
@@ -308,7 +305,6 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 >   - `StockQueryService`
 >   - `StockQueryInput`
 >   - `StockQueryResult`
-> - **Spec**: [→](./stock-query/)
 >
 > **💡 範例 (API Layer)**：
 >
@@ -321,7 +317,6 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 >   - `list_stocks`
 >   - `StockResponse`
 >   - `StockListResponse`
-> - **Spec**: [→](./stock-endpoint/)
 >
 > **💡 範例 (ETL Layer)**：
 >
@@ -333,7 +328,6 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 >   - `DailyPriceExtractor`
 >   - `DailyPriceLoader`
 >   - `DailySyncJob`
-> - **Spec**: [→](./daily-price-sync/)
 >
 > **💡 範例 (Collector Layer)**：
 >
@@ -344,7 +338,6 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 > - **Components**:
 >   - `DailyPriceCrawler`
 >   - `DailyPriceRawSchema`
-> - **Spec**: [→](./daily-price-crawler/)
 >
 > **💡 範例 (Library Toolkit)**：
 >
@@ -356,7 +349,6 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 >   - `pickle_load`
 >   - `PickleError`
 >   - `DEFAULT_PICKLE_PROTOCOL`
-> - **Spec**: [→](./pickle-io/)
 >
 > ### `json-io`
 > - **Parent Feature**: `json-io`
@@ -366,7 +358,6 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 >   - `json_load`
 >   - `JsonParseError`
 >   - `JsonConfig`
-> - **Spec**: [→](./json-io/)
 
 ### `<fu-name>`
 - **Parent Feature**: `<feature_name>`
@@ -374,7 +365,6 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 - **Components**:
   - `<Component1>`
   - `<Component2>`
-- **Spec**: [→](<relative_path>)
 
 ## 3. Decision Guide (決策指引)
 
@@ -472,7 +462,6 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 
 ### D. 導航一致性
 
-- [ ] **路徑正確**：所有相對路徑連結是否正確可達？
 - [ ] **與 L1 一致**：本 Overview 的 Scope 是否與 Architecture Overview 中的定義一致？
 
 ### E. 格式規範
@@ -480,4 +469,3 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 - [ ] **指引文字清理**：是否已移除所有「📝 撰寫指引」與「💡 範例」區塊？
 - [ ] **變數替換**：是否已將所有 `<...>` 佔位符替換為具體的資訊？
 - [ ] **FU 命名**：所有 FU Name 是否都使用 `kebab-case`？
-- [ ] **Spec Link 正確**：所有 Spec Link 路徑是否正確可達？

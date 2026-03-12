@@ -15,7 +15,6 @@
 - **Components**:
   - `json_dump`
   - `json_load`
-- **Spec**: [→](./json-io/)
 
 ### `pickle-io`
 - **Parent Feature**: `pickle-io`
@@ -23,7 +22,6 @@
 - **Components**:
   - `pickle_dump`
   - `pickle_load`
-- **Spec**: [→](./pickle-io/)
 
 ## 3. Decision Guide (決策指引)
 
