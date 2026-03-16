@@ -6,6 +6,7 @@ LLM-assisted automation tasks in ``wsatools``.
 """
 
 import os
+import re
 import subprocess
 from abc import ABC, abstractmethod
 from enum import StrEnum
@@ -18,6 +19,7 @@ EDITOR = r'"C:\Program Files\Notepad++\notepad++.exe"'
 LLM_REQUEST_TMP = "_llm_request.tmp"
 LLM_RESPONSE_TMP = "_llm_response.tmp"
 UPLOAD_BATCH_MAX_LEN = 240
+_HUMAN_ONLY_RE = re.compile(r"(`{3,})human-only[ \t]*\r?\n[\s\S]*?\1(?:\r?\n)?")
 
 
 # ==========================================
@@ -143,16 +145,19 @@ class LlmTaskBase(ABC):
         """Build the final prompt by substituting template parameters.
 
         Replaces all ``{{KEY}}`` placeholders in ``PROMPT_TEMPLATE``
-        with the corresponding values from ``get_prompt_params()``.
+        with the corresponding values from ``get_prompt_params()``,
+        then strips all ``human-only`` fenced code blocks so that
+        human-only content never reaches the LLM.
 
         Returns
         -------
         str
-            The fully assembled prompt string.
+            The fully assembled and sanitized prompt string.
         """
         prompt = self.PROMPT_TEMPLATE
         for key, value in self.get_prompt_params().items():
             prompt = prompt.replace(f"{{{{{key}}}}}", str(value))
+        prompt = _HUMAN_ONLY_RE.sub("", prompt)
         return prompt
 
     def run(self) -> Any:
