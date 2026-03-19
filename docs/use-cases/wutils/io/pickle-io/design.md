@@ -49,7 +49,8 @@
 wutils/
 └── io/
     ├── __init__.py      # Public Interface (Exposes pickle_dump, pickle_load)
-    └── _pickle_io.py    # Private Implementation
+    └── _pickle_io/      # pickle-io Feature 的私有實作空間
+        └── _pickle.py   # Private Implementation
 ```
 
 #### 3.1.2 外部依賴矩陣 (Dependency Matrix)
@@ -176,7 +177,7 @@ def pickle_load(path: Union[str, Path], **kwargs: Any) -> Any:
 | **CONS-01** | 僅依賴標準庫 | 僅使用 `pickle`, `pathlib`, `typing`，無第三方依賴 |
 | **CONS-02** | 無業務依賴 | 位於 `wutils` 底層，完全獨立於業務與資料層 |
 | **CONS-03** | 無狀態性 | `pickle_dump` 與 `pickle_load` 實作為 Pure Function |
-| **CONS-04** | 內聚性 | 兩者皆定義於 `wutils/io/_pickle_io.py` 並透過 `__init__.py` 匯出 |
+| **CONS-04** | 內聚性 | 兩者皆定義於 Feature 級私有目錄 `_pickle_io/` 內，並透過 `__init__.py` 匯出 |
 
 ##### E. 非功能需求對應 (NFR Mapping)
 

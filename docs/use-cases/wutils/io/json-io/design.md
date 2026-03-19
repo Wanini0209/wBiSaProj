@@ -51,7 +51,8 @@
 wutils/
 └── io/
     ├── __init__.py      # Public Interface (Exports json_dump, json_load)
-    └── _json_io.py      # Private Implementation
+    └── _json_io/        # json-io Feature 的私有實作空間
+        └── _json.py     # Private Implementation
 ```
 
 #### 3.1.2 外部依賴矩陣 (Dependency Matrix)
@@ -176,7 +177,7 @@ def json_load(path: Union[str, Path], **kwargs: Any) -> Any:
 | :--- | :--- | :--- |
 | **CONS-01** | 僅依賴標準庫 | 檢查 import 區段，僅包含 `json`, `pathlib`, `typing`。 |
 | **CONS-02** | 保持無狀態 | 實作為 Module-level functions，無 class state 或 global variables。 |
-| **CONS-03** | 同一 FU | `dump` 與 `load` 實作於同一檔案 `_json_io.py` 並由同一個 `__init__.py` 導出。 |
+| **CONS-03** | 同一 FU | `dump` 與 `load` 實作於同一 Feature 級私有目錄 `_json_io/` 內，並由 `__init__.py` 導出。 |
 | **CONS-04** | 無業務依賴 | 確保不 import 任何 `businesssys` 或 `datasource` 模組。 |
 
 ##### E. 非功能需求對應 (NFR Mapping)

@@ -118,6 +118,6 @@ pickle_dump(data, "data_v4.pkl", protocol=4)
 | ID | Constraint | Notes |
 | :--- | :--- | :--- |
 | **CONS-01** | **Isolation**: 禁止依賴 `businesssys` 或 `datasource` 層。 | 作為 `wutils` 底層元件，必須保持對業務邏輯的零依賴。 |
-| **CONS-02** | **Encapsulation**: 實作檔必須為私有 (`_pickle_io.py`)。 | 僅透過 Container (`__init__.py`) 暴露功能，隱藏實作細節。 |
+| **CONS-02** | **Encapsulation**: 實作檔必須位於 Feature 級私有目錄 (`_pickle_io/`) 內。 | 僅透過 Container (`__init__.py`) 暴露功能，隱藏實作細節。 |
 | **CONS-03** | **Dependency**: 僅依賴標準庫。 | 禁止引入任何第三方套件，以維持輕量化與高相容性。 |
 | **CONS-04** | **Stateless**: 函式必須設計為 Pure Function (或接近)。 | 不應保存任何全域狀態，確保執行緒安全與可預測性。 |

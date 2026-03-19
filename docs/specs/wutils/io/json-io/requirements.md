@@ -124,5 +124,5 @@ json_dump(data, "data_str.json")
 | :--- | :--- | :--- |
 | **CONS-01** | **Dependency**: 僅依賴標準庫 | 禁止引入任何第三方套件，確保輕量化與高移植性 |
 | **CONS-02** | **Stateless**: 保持無狀態設計 | 實作為 Module-level functions，禁止使用 Global Variables 保存狀態 |
-| **CONS-03** | **Cohesion**: 單一檔案實作 | `dump` 與 `load` 邏輯應實作於同一私有模組 (`_json_io.py`) |
+| **CONS-03** | **Cohesion**: 單一 Feature 目錄實作 | `dump` 與 `load` 邏輯應實作於同一 Feature 級私有目錄 (`_json_io/`) 內的私有模組中 |
 | **CONS-04** | **Isolation**: 禁止依賴業務層 | 嚴禁 import `businesssys` 或 `datasource` 等上層模組 |

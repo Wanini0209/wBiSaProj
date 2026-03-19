@@ -28,7 +28,8 @@
 ```text
 wutils/io/
 ├── __init__.py      # Public Container
-└── _json_io.py      # Private Implementation: JSON 讀寫邏輯
+└── _json_io/        # json-io Feature 的私有實作空間
+    └── _json.py     # Private Implementation: JSON 讀寫邏輯
 ```
 
 ### 3.1 公開介面 (Public Interface)
@@ -36,7 +37,7 @@ wutils/io/
 **檔案**: `wutils/io/__init__.py`
 
 ```python
-from ._json_io import json_dump, json_load
+from ._json_io._json import json_dump, json_load
 
 __all__ = ["json_dump", "json_load"]
 ```
@@ -45,7 +46,7 @@ __all__ = ["json_dump", "json_load"]
 
 | File Path | Responsibility |
 | :--- | :--- |
-| `_json_io.py` | 實作 `json_dump` 與 `json_load` 函式，處理檔案開啟、編碼強制與異常透傳邏輯 |
+| `_json_io/_json.py` | 實作 `json_dump` 與 `json_load` 函式，處理檔案開啟、編碼強制與異常透傳邏輯 |
 
 ## 4. 依賴項 (Dependencies)
 
@@ -167,7 +168,7 @@ def json_load(path: Union[str, Path], **kwargs: Any) -> Any:
 | :--- | :--- | :--- |
 | **CONS-01** | 僅依賴標準庫 | 依賴項表格 (§4) 已確認僅使用 `json`, `pathlib`, `typing` (Std) |
 | **CONS-02** | 無狀態設計 | 所有函式設計為 Pure Function，無全域變數 (見 §5 介面設計) |
-| **CONS-03** | 實作檔為私有 | 實作邏輯位於 `_json_io.py`，僅透過 `__init__.py` 匯出 (見 §3) |
+| **CONS-03** | 實作檔為私有 | 實作邏輯位於 Feature 級私有目錄 `_json_io/_json.py`，僅透過 `__init__.py` 匯出 (見 §3) |
 | **CONS-04** | 禁止依賴業務層 | 本 FU 位於 Library 層，未引入任何上層依賴 |
 
 ## 10. 需求追溯矩陣 (Traceability Matrix)
@@ -188,5 +189,5 @@ def json_load(path: Union[str, Path], **kwargs: Any) -> Any:
 - [ ] **型別安全**：符合 **PNFR-CDE-01**，實作具備 100% Type Hint 覆蓋率（Strict Mode）。
 - [ ] **文件規範**：符合 **PNFR-DOC-01**，所有公開介面均具備完整的 NumPy Style Docstrings。
 - [ ] **架構紅線 (DIP)**：
-    - [ ] **封裝性**：具體實作存放於 `_json_io.py` 私有模組中。
+    - [ ] **封裝性**：具體實作存放於 Feature 級私有目錄 `_json_io/` 中。
     - [ ] **導入規範**：本模組無 Local 依賴，符合依賴原則。
