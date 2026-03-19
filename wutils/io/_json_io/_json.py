@@ -1,4 +1,4 @@
-"""Implementation module for _json_io.py."""
+"""Implementation module for json-io."""
 
 import json
 from pathlib import Path

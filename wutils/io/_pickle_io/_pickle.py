@@ -1,4 +1,4 @@
-"""Implementation module for _pickle_io.py."""
+"""Implementation module for pickle-io."""
 
 import pickle
 from pathlib import Path
