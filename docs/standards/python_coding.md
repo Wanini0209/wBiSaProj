@@ -92,9 +92,14 @@ def __init__(  # noqa: PLR0913
 - **公開容器 (Public Container)**:
   - 目錄名稱**不使用**底線開頭。
   - 例如: `api`, `service`, `db`
+- **Feature 級私有實作目錄 (Feature-Scoped Private Directory)**:
+  - 在 FU Container 內，每個 Feature 的所有私有實作檔案**必須**放置在以 Feature name 命名的私有目錄中。
+  - 命名規則：`_` 前綴 + Feature name 的 `kebab-case` 轉 `snake_case`。
+  - 例如: Feature `json-io` → `_json_io/`，Feature `stock-price-storage` → `_stock_price_storage/`
+  - 詳見《架構篇》§4.3「Feature 級私有實作隔離」。
 - **私有實作 (Private Implementation)**:
-  - 實作細節檔案**必須**以底線 `_` 開頭，表示不應被外部直接導入。
-  - 例如: `_models.py`, `_repository.py`, `_utils.py`
+  - 實作細節檔案**必須**以底線 `_` 開頭，且位於 Feature 級私有目錄內，表示不應被外部直接導入。
+  - 例如: `_json_io/_json.py`, `_stock_price_storage/_repository.py`
 
 ---
 
@@ -117,21 +122,25 @@ def __init__(  # noqa: PLR0913
 在適用範圍內，需遵守以下依賴管理規則：
 
 1. **依賴閘門**: 每個 FU Container (如 `gms/service/user`) 的 `_imports.py` 負責管理該層級的所有外部依賴。
-2. **實作檔案限制**: 內部的實作檔案 (如 `_service.py`) **嚴禁**跳出容器去 import 父層或兄弟層的內容，必須統一從同層的 `._imports` 取得依賴。
-3. **內部協作例外**: 同一容器內的私有檔案（如 `_x.py` 導入 `_y.py`）屬於內部協作，**允許**直接使用相對導入。
+2. **實作檔案限制**: Feature 級私有目錄內的實作檔案 (如 `_user_registration/_service.py`) **嚴禁**跳出 FU Container 去 import 父層或兄弟層的內容，必須統一從 FU Container 的 `_imports.py` 取得依賴（由於實作檔案位於 Feature 目錄內，需使用 `from .._imports` 回上一層）。
+3. **Feature 內部協作**: 同一 Feature 私有目錄內的檔案（如 `_user_registration/_x.py` 導入 `_user_registration/_y.py`）屬於內部協作，**允許**直接使用相對導入。
+4. **禁止跨 Feature 私有共用**: 同一個 FU Container 內，不同 Feature 的私有目錄之間**嚴禁**互相導入（例如 `_feature_a/_utils.py` 不可被 `_feature_b/_service.py` 導入）。若需共用，應提升為獨立 FU 或各自維護副本。
 
 ```python
-# ✅ 正確 (在 gms/service/user/_service.py 中)
-# 透過同層 _imports 取得所有外部依賴 (包含 core, db 介面等)
-from ._imports import IUserRepository, BusinessLogicError
+# ✅ 正確 (在 gms/service/user/_user_registration/_service.py 中)
+# 透過 FU Container 的 _imports 取得所有外部依賴（回上一層）
+from .._imports import IUserRepository, BusinessLogicError
 
-# ✅ 正確 (在 gms/service/user/_service.py 中)
-# 從同容器內的私有檔案導入 (內部協作)
+# ✅ 正確 (在同一 Feature 目錄內)
+# 從同 Feature 私有目錄內的私有檔案導入 (內部協作)
 from ._utils import validate_email
 
 # ❌ 錯誤 (違反架構封裝)
-from ...db.user import IUserRepository  # 禁止跳出容器
+from ....db.user import IUserRepository  # 禁止跳出容器
 from core.exceptions import BusinessLogicError  # 禁止繞過 _imports
+
+# ❌ 錯誤 (違反跨 Feature 私有共用禁令)
+from .._other_feature._helpers import some_util  # 禁止跨 Feature 導入
 ```
 
 ---
@@ -296,8 +305,9 @@ inv style  # 執行格式化與檢查
 **依賴管理 (`_imports.py` 機制)**
 
 - [ ] **無越級導入**：確認沒有任何程式碼跳過容器邊界去 import 私有實作 (例如：沒有出現 `from ..other_pkg._models import ...`)。
-- [ ] **單一入口 (外部依賴)**：確認所有**來自容器外部**的依賴 (如父層、兄弟層、System Core)，是否統一從同層的 `._imports` 取得？(同一容器內的私有檔案互調不在此限，如 `from ._models import ...` 是允許的)。
-- [ ] **無循環依賴**：確認 `_imports.py` 沒有反向導入同層的實作檔案 (這會導致 Circular Import)。
+- [ ] **單一入口 (外部依賴)**：確認所有**來自容器外部**的依賴 (如父層、兄弟層、System Core)，是否統一從 FU Container 的 `_imports.py` 取得？(同一 Feature 私有目錄內的檔案互調不在此限，如 `from ._models import ...` 是允許的)。
+- [ ] **無循環依賴**：確認 `_imports.py` 沒有反向導入 Feature 級私有目錄內的實作檔案 (這會導致 Circular Import)。
+- [ ] **Feature 隔離**：確認所有實作檔案均放置於對應的 `_<feature_name>/` 私有目錄中，且無跨 Feature 私有目錄互相導入的情形。
 
 **依賴反轉 (DIP)**
 
@@ -306,7 +316,7 @@ inv style  # 執行格式化與檢查
 
 ### 7.3 實作細節檢查 (Implementation Details)
 
-- [ ] **檔案命名**：私有實作檔案是否已加上底線前綴 (如 `_service.py`, `_utils.py`)。
+- [ ] **檔案命名**：私有實作檔案是否已加上底線前綴，且位於 Feature 級私有目錄內 (如 `_json_io/_json.py`)。
 - [ ] **公開介面**：若新增了對外公開的元件，是否已在 `__init__.py` 的 `__all__` 中註冊？
 - [ ] **類型提示**：是否使用了現代語法 (如 `list[str]`, `str | None`) 以及 **3.12+ 泛型語法**？
 - [ ] **函數引數**：`__init__` 以外的函數是否保持在 5 個參數以內？

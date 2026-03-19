@@ -28,7 +28,8 @@
 ```text
 wutils/io/
 ├── __init__.py      # Public Container
-└── _pickle_io.py    # Private Implementation
+└── _pickle_io/      # pickle-io Feature 的私有實作空間
+    └── _pickle.py   # Private Implementation
 ```
 
 ### 3.1 公開介面 (Public Interface)
@@ -36,7 +37,7 @@ wutils/io/
 **檔案**: `wutils/io/__init__.py`
 
 ```python
-from ._pickle_io import pickle_dump, pickle_load
+from ._pickle_io._pickle import pickle_dump, pickle_load
 
 __all__ = ["pickle_dump", "pickle_load"]
 ```
@@ -45,7 +46,7 @@ __all__ = ["pickle_dump", "pickle_load"]
 
 | File Path | Responsibility |
 | :--- | :--- |
-| `_pickle_io.py` | 實作 `pickle` 的序列化與反序列化封裝邏輯，包含資源管理與路徑處理。 |
+| `_pickle_io/_pickle.py` | 實作 `pickle` 的序列化與反序列化封裝邏輯，包含資源管理與路徑處理。 |
 
 ## 4. 依賴項 (Dependencies)
 
@@ -162,7 +163,7 @@ def pickle_load(path: Union[str, Path], **kwargs: Any) -> Any:
 | ID | Constraint | Compliance Note |
 | :--- | :--- | :--- |
 | **CONS-01** | Isolation | 依賴項表格 (§4) 確認僅依賴標準庫，無 Business 層依賴。 |
-| **CONS-02** | Encapsulation | 實作檔命名為 `_pickle_io.py` (見 §3.2)，且僅透過 `__init__.py` 匯出功能。 |
+| **CONS-02** | Encapsulation | 實作檔位於 Feature 級私有目錄 `_pickle_io/_pickle.py` (見 §3.2)，且僅透過 `__init__.py` 匯出功能。 |
 | **CONS-03** | Dependency | 依賴項表格 (§4) 確認所有 Imports 皆為 `Std` 類型。 |
 | **CONS-04** | Stateless | 函式設計為 Pure Function (§5.1, §5.2)，無保存全域狀態。 |
 
@@ -183,5 +184,5 @@ def pickle_load(path: Union[str, Path], **kwargs: Any) -> Any:
 - [ ] **型別安全**：符合 **PNFR-CDE-01**，實作具備 100% Type Hint 覆蓋率（Strict Mode）。
 - [ ] **文件規範**：符合 **PNFR-DOC-01**，所有公開介面均具備完整的 NumPy Style Docstrings。
 - [ ] **架構紅線 (DIP)**：
-    - [ ] **封裝性**：所有具體實作皆存放於 `_pickle_io.py` 中。
+    - [ ] **封裝性**：所有具體實作皆存放於 Feature 級私有目錄 `_pickle_io/` 中。
     - [ ] **導入規範**：本單元無 Local 依賴，符合規範。

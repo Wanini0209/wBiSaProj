@@ -96,7 +96,7 @@ GMS 的核心職責是匯聚全球市場數據並提供深度分析服務。在�
 
 - **FU**: `StockPriceRepo`
 - **Container**: `gms/db/market/stock/price/`
-- **對應檔案**: `_models.py`, `_interfaces.py`, `_repository.py`, `_imports.py`。
+- **對應檔案**: `_imports.py`, `_stock_price_storage/_models.py`, `_stock_price_storage/_interfaces.py`, `_stock_price_storage/_repository.py`。
 - **實作重點**:
     - 嚴格遵循 DIP，透過 `__init__.py` 僅暴露介面與 Repository。
     - 使用 `_imports.py` 管理依賴。
@@ -138,7 +138,7 @@ GMS 的核心職責是匯聚全球市場數據並提供深度分析服務。在�
 
 - **FU**: `DailyStockSyncJob`
 - **Container**: `gms/etl/market/stock/sync_job/`
-- **對應檔案**: `_imports.py`, `_pipeline.py`, `_loader.py`。
+- **對應檔案**: `_imports.py`, `_daily_sync_job/_pipeline.py`, `_daily_sync_job/_loader.py`。
 - **實作重點**:
     - 在 `_imports.py` 中同時引入 Source 介面與 Target 介面。
     - 實作 Extract -> Transform -> Load 流程。
@@ -166,14 +166,14 @@ GMS 的核心職責是匯聚全球市場數據並提供深度分析服務。在�
 
 - **FU**: `StockAnalysisService`
 - **Container**: `gms/service/market/stock/analysis/`
-- **對應檔案**: `_service.py`, `_dto.py`。
+- **對應檔案**: `_stock_analysis_api/_service.py`, `_stock_analysis_api/_dto.py`。
 - **實作重點**: 透過介面實作純粹的業務邏輯，不觸碰 HTTP。
 
 #### Task 6.2: 實作 API 介面 (API Layer)
 
 - **FU**: `StockAnalysisApi`
 - **Container**: `gms/api/market/stock/`
-- **對應檔案**: `_router.py`, `_schemas.py`。
+- **對應檔案**: `_stock_analysis_api/_router.py`, `_stock_analysis_api/_schemas.py`。
 - **實作重點**: 定義 Endpoint 並使用 FastAPI `Depends` 注入 Service。
 
 #### Task 6.3: 更新系統組裝 (Register API Router)

@@ -28,7 +28,8 @@
 ```text
 wutils/wthread/
 ├── __init__.py          # Public Container
-└── _future_thread.py    # Private Implementation
+└── _future_thread/      # future-thread Feature 的私有實作空間
+    └── _thread.py       # Private Implementation
 ```
 
 ### 3.1 公開介面 (Public Interface)
@@ -36,7 +37,7 @@ wutils/wthread/
 **檔案**: `wutils/wthread/__init__.py`
 
 ```python
-from ._future_thread import FutureThread
+from ._future_thread._thread import FutureThread
 
 __all__ = ["FutureThread"]
 ```
@@ -45,7 +46,7 @@ __all__ = ["FutureThread"]
 
 | File Path | Responsibility |
 | :--- | :--- |
-| `_future_thread.py` | 實作 `FutureThread` 類別，包含執行緒生命週期管理、結果/例外捕獲與同步等待邏輯。 |
+| `_future_thread/_thread.py` | 實作 `FutureThread` 類別，包含執行緒生命週期管理、結果/例外捕獲與同步等待邏輯。 |
 
 ## 4. 依賴項 (Dependencies)
 
@@ -264,5 +265,5 @@ class FutureThread(threading.Thread, Generic[T]):
 - [ ] **型別安全**：符合 **PNFR-CDE-01**，實作具備 100% Type Hint 覆蓋率（Strict Mode）。
 - [ ] **文件規範**：符合 **PNFR-DOC-01**，所有公開介面均具備完整的 NumPy Style Docstrings。
 - [ ] **架構紅線 (DIP)**：
-    - [ ] **封裝性**：`FutureThread` 具體實作存放於 `_future_thread.py` 私有模組中。
+    - [ ] **封裝性**：`FutureThread` 具體實作存放於 Feature 級私有目錄 `_future_thread/` 中。
     - [ ] **導入規範**：本模組僅依賴標準庫，無其他 Library 依賴。

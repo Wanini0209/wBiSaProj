@@ -106,34 +106,38 @@
 ## 3. 檔案組織 (File Organization)
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
-> 使用 tree 格式展示 FU Container 的實體檔案結構，包含公開介面與私有實作的位置。
+> 使用 tree 格式展示 FU Container 的實體檔案結構，包含公開介面與 Feature 級私有實作目錄的位置。
+> 私有實作檔案必須位於以 Feature name 命名的私有目錄內（`_` 前綴 + `snake_case`）。
 >
 > **💡 範例**：
 >
 > ```text
 > wutils/io/
-> ├── __init__.py   # Public Container: 匯出 pickle_dump, pickle_load
-> └── _pickle.py    # Private Implementation: 序列化邏輯
+> ├── __init__.py          # Public Container: 匯出 pickle_dump, pickle_load
+> └── _pickle_io/          # pickle-io Feature 的私有實作空間
+>     └── _pickle.py       # Private Implementation: 序列化邏輯
 > ```
 
 ```text
 <fu_path>/
-├── __init__.py      # Public Container
-├── <impl_file>      # Private Implementation
-└── ...
+├── __init__.py                    # Public Container
+└── _<feature_snake_name>/         # Feature 的私有實作空間
+    ├── <impl_file>                # Private Implementation
+    └── ...
 ```
 
 ### 3.1 公開介面 (Public Interface)
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
 > 定義 Container 的匯出內容，必須與 Requirements 的 Export List 一致。
+> 注意：import 路徑需包含 Feature 級私有目錄。
 >
 > **💡 範例**：
 >
 > **檔案**: `wutils/io/__init__.py`
 >
 > ```python
-> from ._pickle_io import pickle_dump, pickle_load
+> from ._pickle_io._pickle import pickle_dump, pickle_load
 >
 > __all__ = ["pickle_dump", "pickle_load"]
 > ```
@@ -141,7 +145,7 @@
 **檔案**: `<fu_path>/__init__.py`
 
 ```python
-from .<impl_file> import <Component_1>, <Component_2>, ...
+from ._<feature_snake_name>.<impl_file> import <Component_1>, <Component_2>, ...
 
 __all__ = ["<Component_1>", "<Component_2>", "..."]
 ```
@@ -153,21 +157,22 @@ __all__ = ["<Component_1>", "<Component_2>", "..."]
 >
 > **⚠️ 重要路徑規範**：
 > - **必須** 使用 **相對路徑** (Relative Path)，相對於 FU Container (`<fu_path>`)。
+> - **必須** 包含 Feature 級私有目錄前綴。
 > - **嚴禁** 使用絕對路徑或重複包含 Container Path 的完整路徑。
 >
 > **💡 範例**：
 >
-> 若 Container Path 為 `wutils/io`：
+> 若 Container Path 為 `wutils/io`，Feature Name 為 `pickle-io`：
 >
 > | File Path | Responsibility |
 > | :--- | :--- |
-> | `_pickle/_load.py` | **(O) 正確**：相對於 `wutils/io` 的路徑 |
-> | `wutils/io/_pickle/_load.py` | **(X) 錯誤**：請勿包含 Container Path |
-> | `/src/wutils/io/_pickle.py` | **(X) 錯誤**：請勿使用絕對路徑 |
+> | `_pickle_io/_pickle.py` | **(O) 正確**：相對於 `wutils/io`，位於 Feature 級目錄內 |
+> | `_pickle.py` | **(X) 錯誤**：私有檔案未放入 Feature 級目錄 |
+> | `wutils/io/_pickle_io/_pickle.py` | **(X) 錯誤**：請勿包含 Container Path |
 
 | File Path | Responsibility |
 | :--- | :--- |
-| `<impl_file>` | <填入職責> |
+| `_<feature_snake_name>/<impl_file>` | <填入職責> |
 
 ## 4. 依賴項 (Dependencies)
 
@@ -385,7 +390,7 @@ def <function_name>(<params with type hints>) -> <return_type>:
 - [ ] **型別安全**：符合 **PNFR-CDE-01**，實作具備 100% Type Hint 覆蓋率（Strict Mode）。
 - [ ] **文件規範**：符合 **PNFR-DOC-01**，所有公開介面均具備完整的 NumPy Style Docstrings。
 - [ ] **架構紅線 (DIP)**：
-    - [ ] **封裝性**：所有具體實作皆存放於以 `_` 開頭的私有模組或目錄中。
+    - [ ] **封裝性**：所有具體實作皆存放於 Feature 級私有目錄（`_<feature_snake_name>/`）中。
     - [ ] **導入規範**：對專案內其他 Library 的依賴，嚴格僅透過目標容器的 `__init__.py` 導入，禁止穿透存取私有實作。
 ````
 
@@ -401,8 +406,8 @@ def <function_name>(<params with type hints>) -> <return_type>:
 
 ### B. 結構與依賴規範
 
-- [ ] **檔案組織樹狀圖**：是否清晰呈現 Public/Private 結構 (對應 §3)？
-- [ ] ⚠️ **路徑規範**：私有實作路徑是否嚴格使用「相對路徑」，且嚴禁包含 Container Path 或絕對路徑 (對應 §3.2)？
+- [ ] **檔案組織樹狀圖**：是否清晰呈現 Public/Private 結構，且私有實作檔案位於 Feature 級私有目錄內 (對應 §3)？
+- [ ] ⚠️ **路徑規範**：私有實作路徑是否嚴格使用「相對路徑」（含 Feature 級目錄前綴），且嚴禁包含 Container Path 或絕對路徑 (對應 §3.2)？
 - [ ] ⚠️ **Local 依賴紅線**：若依賴專案內其他 FU，是否僅透過 Container (`__init__.py`) 導入，嚴禁穿透導入私有模組 (對應 §4)？
 
 ### C. 介面設計與 TDD 核心

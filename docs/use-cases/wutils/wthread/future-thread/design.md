@@ -52,7 +52,8 @@
 wutils/
 └── wthread/
     ├── __init__.py         # Public Interface (Exports FutureThread)
-    └── _future_thread.py   # Private Implementation
+    └── _future_thread/      # future-thread Feature 的私有實作空間
+        └── _thread.py       # Private Implementation
 ```
 
 #### 3.1.2 外部依賴矩陣 (Dependency Matrix)
