@@ -103,13 +103,21 @@ Scope 必須精準反映變更的影響範圍。本專案採用三軌制 Scope�
 |:---------|:--------------|:-----------|:-----|
 | 專案規範文件（獨立於功能外） | 1. `docs/` 根目錄文件<br>2. `docs/standards/` 下所有文件 | 固定使用 `project` | `docs(project): update vcs standards` |
 | 功能定義文件（Use Cases） | `docs/use-cases/...` | 對應 `use-cases` 的分類路徑 | `docs(use-cases/gms/user): define requirements` |
-| 功能實作（Code & Specs） | `<fu_path>` 下的程式碼、Specs 與測試 | 對應受影響的 FU Container 路徑 | `feat(gms/api/user/profile): impl user api` |
+| 功能實作（Code & Specs） | `<fu_path>` 下的程式碼、Specs 與測試 | 對應受影響的 FU Container 路徑 | `feat(gms/api/user/profile): add user profile endpoint` |
 | 專案級工具 | `wutils`, 根目錄設定檔 | 使用模組名稱 | `chore(build): update poetry.lock` |
 
 #### 3. Subject (主旨)
 
 - 使用英文撰寫。
-- 使用祈使句 (Imperative mood)：例如用 "add" 而非 "added"。
+- 使用祈使句 (Imperative mood)：例如用 `add` 而非 `added`。
+- **Subject 應優先描述本次提交帶來的具體變更結果，並使用與 Scope 抽象層級一致的精準動詞**。建議根據變更性質選用：
+  - `add`：新增能力、介面、元件、配置、支援或流程。
+  - `implement`：強調將既定設計、核心邏輯或演算法落地。
+  - `define`：用於需求、規格、契約或用例定義。
+  - `update`：用於既有內容調整。
+  - `refactor`：用於不改變外部行為的內部重構。
+  - `rename`、`remove`、`correct`：依實際變更選用更精準動詞。
+- **避免使用未定義的縮寫動詞**（如 `impl`）。正式提交應使用完整拼寫。
 - **動詞開頭小寫 (Lower case start)。**
 - **內文大小寫原則**：
   - 原則上採全小寫。
@@ -270,4 +278,5 @@ docs(project): update version control standards
 | 修改版本控制規範 | `docs: update git doc`（缺少 scope） | `docs(project): update version control standards`（scope 為 project） |
 | 修改架構設計總表 | 直接 Commit 到 develop（違反流程） | 建立 `feature/project/...` 分支並發起 PR（確保共識） |
 | 功能文件提交 | `docs(project): add user use-case`（Scope 混淆） | `docs(use-cases/gms/user/user-reg): define requirements`（Scope 對應完整路徑） |
-| 功能實作提交 | `feat(api): add login`（Scope 太籠統，無 Body） | `feat(gms/api/auth): add login endpoint`（Scope 精確，建議附 Body） |
+| 功能實作提交 (API 層) | `feat(api): add login`（Scope 太籠統，無 Body） | `feat(gms/api/auth): add login endpoint`（Scope 精確，動詞反映 API 層新增，建議附 Body） |
+| 功能實作提交 (邏輯層) | `feat(auth): implement login`（Scope 太籠統） | `feat(gms/service/auth): implement login authentication`（Scope 精確，動詞反映邏輯落地） |
