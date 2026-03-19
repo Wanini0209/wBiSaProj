@@ -1,4 +1,4 @@
-"""Implementation module for _future_thread.py."""
+"""Implementation module for FutureThread."""
 
 import sys
 import threading
