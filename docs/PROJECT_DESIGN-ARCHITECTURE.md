@@ -441,47 +441,53 @@ graph TD
 
 #### 範例 1：函式庫 (Library) 的 FU-Container
 
-(例如: `<fu_path>` = `core/config`)
+(例如: `<fu_path>` = `wutils/io`)
 
-此 Container 提供一個 Environment Management FU，包含了兩個公開函數 `get_env` 與 `set_env`。
+此 Container 包含兩個 Feature：`json-io` 與 `pickle-io`，各自擁有一個同名的 FU。每個 Feature 的私有實作檔案位於以 Feature name 命名的私有目錄中（參見 [§4.3 Feature 級私有實作隔離](#43-feature-級私有實作隔離)）。
 
 ```text
-core/config/
-├── __init__.py       # 公開介面：匯出 get_env, set_env
+wutils/io/
+├── __init__.py          # 公開介面：匯出 json_dump, json_load, pickle_dump, pickle_load
 │
-├── _environment.py   # Environment Management FU 的私有實作
-└── ...
+├── _json_io/            # json-io Feature 的私有實作空間
+│   └── _json.py         # json-io FU 的實作
+└── _pickle_io/          # pickle-io Feature 的私有實作空間
+    └── _pickle.py       # pickle-io FU 的實作
 ```
 
 #### 範例 2：業務系統 (Business System) 的 FU-Container
 
-(例如: `<fu_path>` = `gms/db/user/profile`)
+(例如: `<fu_path>` = `gms/db/market/stock`)
 
-此 Container **對外提供** Repository 操作介面與 Domain Schemas (Pydantic)；其**內部實作**則封裝了 ORM 模型、DTO 定義與具體的資料存取邏輯。
+此 Container 包含兩個 Feature：`stock-price-storage` 與 `stock-info-storage`。每個 Feature 的私有實作檔案（包含 ORM 模型、Schemas 與 Repository 邏輯）位於各自的 Feature 級私有目錄中。
 
 ```text
-gms/db/user/profile/
-├── __init__.py       # 公開介面：匯出 UserProfileRepository 與 UserProfileSchema
-├── _imports.py       # 此模組的統一依賴入口
-├── _common/          # 此模組內部共用的私有元件
-│   └── constants.py
-├── _schemas.py       # Pydantic Domain Schemas (公開契約，包含 Input/Output 定義)
-├── _models.py        # SQL ORM 模型定義 (Private implementation)
-├── _dtos.py          # FileSystem/NoSQL 資料傳輸物件定義 (Private implementation)
-├── _repository.py    # 負責協調 SQL 與 FS 的倉儲邏輯
-└── ...
+gms/db/market/stock/
+├── __init__.py                  # 公開介面：匯出所有 Feature 的 Components
+├── _imports.py                  # 此模組的統一依賴入口
+│
+├── _stock_price_storage/        # stock-price-storage Feature 的私有實作空間
+│   ├── _schemas.py              # Pydantic Domain Schemas
+│   ├── _models.py               # SQL ORM 模型定義
+│   └── _repository.py           # Repository 實作 (Hybrid Storage Facade)
+│
+└── _stock_info_storage/         # stock-info-storage Feature 的私有實作空間
+    ├── _schemas.py              # Pydantic Domain Schemas
+    ├── _models.py               # SQL ORM 模型定義
+    └── _repository.py           # Repository 實作
 ```
 
-> **關鍵理解：封裝、對應與實作**
+> **關鍵理解：封裝、歸屬與對應**
 >
 > 1. **封裝 (Encapsulation)**：
 >
->    - 上述所有 `_` 開頭的檔案或目錄（如 `_environment.py`、`_common/`、`_models.py`）均為**私有實作**。外部模組**嚴禁**直接導入它們。
+>    - 上述所有 `_` 開頭的檔案或目錄均為**私有實作**。外部模組**嚴禁**直接導入它們。
 >    - `__init__.py` 是唯一的公開入口。
 >
-> 2. **FU 實作 (FU Implementation)**：
+> 2. **Feature 級歸屬 (Feature-Scoped Ownership)**：
 >
->    - 一個 FU 可能分佈在多個私有檔案中；一個私有檔案也可能包含多個 FU 的實作。
+>    - 每個 Feature 的私有實作檔案被隔離在以該 Feature name 命名的私有目錄中（`_<feature_snake_name>/`），確保私有檔案與 Feature 之間有明確的結構性歸屬關係。
+>    - 詳見 [§4.3 Feature 級私有實作隔離](#43-feature-級私有實作隔離)。
 >
 > 3. **特殊機制 (註)**：
 >
@@ -491,7 +497,87 @@ gms/db/user/profile/
 > 4. **對應 (Correspondence)**：
 >
 >    - 此範例僅展示**功能實作**的結構。
->    - 相關的規格 (`docs/specs/.../<fu_path>/...`) 和測試 (`tests/.../<fu_path>/...`) 的具體位置，請**嚴格遵循 [Section 5.4 結構對應性原則](#54-結構對應性原則)** 的規範。
+>    - 相關的規格 (`docs/specs/.../<fu_path>/...`) 和測試 (`tests/.../<fu_path>/...`) 的具體位置，請**嚴格遵循 [Section 5.6 結構對應性原則](#56-結構對應性原則)** 的規範。
+
+-----
+
+### 4.3 Feature 級私有實作隔離
+
+在 §4.2 所述的 FU Container 結構基礎上，本節定義私有實作層的歸屬規範。此規範將公開介面層已建立的「Feature → FU → Component」歸屬鏈，延伸至私有實作層，使每個私有檔案都有明確的 Feature 歸屬。
+
+#### 4.3.1 規範一：Feature 級私有實作目錄 (Feature-Scoped Private Implementation Directory)
+
+在 FU Container 中，每個 Feature 的所有私有實作檔案**必須**放置在一個以 Feature name 命名的私有目錄中，位於 FU Container 根目錄下。
+
+**命名規則**：目錄名稱 = `_` 前綴 + Feature name 的 `kebab-case` 轉 `snake_case`
+
+| Feature Name | 私有目錄名稱 |
+|:-------------|:-------------|
+| `json-io` | `_json_io/` |
+| `excel-processing` | `_excel_processing/` |
+| `stock-price-storage` | `_stock_price_storage/` |
+
+**適用範圍**：
+
+本規範適用於專案中以下三大類型的系統：
+
+- **Library 型系統**：`wutils`、`core`、各系統的 System Core（`<system>/core`）
+- **業務系統**：各模組層（`db`、`service`、`api`、`etl`）的 FU Container
+- **資料源系統**：各模組層（`collector`、`service`）的 FU Container
+
+**排除**：`wsatools`（開發輔助工具，不被任何系統依賴）。
+
+**關鍵效果**：跨 Feature 共用同一個私有實作檔案在物理上變得不可能——每個 Feature 的檔案在各自的目錄中，不存在「同一個檔案被兩個 Feature 引用」的情況。
+
+#### 4.3.2 規範二：FU 間共用邏輯的處理策略
+
+當多個 FU 需要共用邏輯時，**無論這些 FU 是否屬於同一個 Feature**，都必須依據以下判斷標準選擇處理方式。
+
+**判斷標準（試金石）**：
+
+> 「當你想修改這段邏輯時，是否需要找出所有使用它的 FU 並評估影響？」
+
+| 判斷結果 | 策略 | 說明 |
+|:---------|:-----|:-----|
+| **是** — 修改時需追蹤所有使用者 | **提升為正式 FU** | 該邏輯具備獨立的邏輯身份，應被提升為一個正式的 FU，歸屬於自己的 Feature，擁有完整的 specs、tests、Components 匯出。 |
+| **否** — 修改的目標是某個特定 FU 的內部行為 | **各自維護副本** | 該邏輯只是「偶然相似」的內部實作細節，不具備獨立的邏輯身份。各 FU 在自己 Feature 的私有目錄內自行維護即可，將其視為偶然性的重複。 |
+
+**與規範一的關係**：規範一的物理隔離已經讓跨 Feature 的私有共用在物理上不可能發生。而同一 Feature 內的 FU 雖然物理上可以互相 import 同目錄內的檔案，但邏輯上仍應遵循上述試金石——若一段邏輯值得被提取為共用元件，它就值得成為正式 FU。
+
+**範例**：
+
+```text
+wutils/ms_office/
+├── __init__.py
+├── _excel_io/                # excel-io Feature 的私有實作空間
+│   ├── _reader.py            # excel-reader FU 的實作
+│   └── _writer.py            # excel-writer FU 的實作
+├── _excel_utils/             # excel-utils Feature 的私有實作空間（獨立 FU，非私有共用）
+│   └── _format.py            # excel-utils FU 的實作（Excel 格式解析邏輯）
+└── _pdf_processing/          # pdf-processing Feature 的私有實作空間
+    └── _parser.py            # pdf-parser FU 的實作
+```
+
+上例中，Excel 格式解析邏輯被 `excel-reader` 和 `excel-writer` 共同需要。依照試金石判斷，修改格式解析邏輯時需要追蹤所有使用者並評估影響，因此它被提升為正式 FU（`excel-utils`），歸屬於獨立的 Feature，透過 FU Container 的公開介面匯出，而非以 `_common.py` 形式藏在某個 Feature 的私有目錄內。
+
+#### 4.3.3 規範三：私有檔案歸屬粒度與 Feature 的關係
+
+私有實作檔案的歸屬粒度放在 **Feature 層級**（而非 FU 層級），意味著同一 Feature 下的多個 FU 的私有實作檔案共存於同一個 Feature 目錄中。
+
+**理論依據**：Feature 是專案中可發布的原子單位，同一 Feature 的所有 FU 永遠一起行動。FU 是「最小邏輯完整性單位」，但並非「最小可發布單位」。因此，以 Feature 為單位組織私有目錄，兼顧了架構清晰度（歸屬鏈完整）與開發靈活性（同 Feature 的 FU 檔案不必再分更細的子目錄）。
+
+**重要釐清**：「共存於同一目錄」是物理上的共存，不代表鼓勵 FU 之間建立有意的私有共用依賴。若存在需要被多個 FU 共同依賴的邏輯，仍應依據 §4.3.2 的試金石判斷是否提升為正式 FU。
+
+#### 4.3.4 歸屬鏈的完整性
+
+透過上述三條規範，歸屬鏈從公開介面層貫穿至私有實作層：
+
+```text
+Feature → FU → Component (公開介面)                          ✅
+Feature → _<feature_snake_name>/ → impl_file (私有實作)      ✅
+```
+
+當需要以 Feature 為單位進行結構調整時，該 Feature 的所有私有實作檔案可以透過目錄結構直接定位（`_<feature_snake_name>/`），不需要解析 design.md 或進行程式碼語義分析。
 
 -----
 
@@ -532,7 +618,7 @@ gms/db/user/profile/
 | **`<feature_name>`** | **業務價值或技術能力的交付單位名稱** (須涵蓋完整聚合能力) | `excel-processing`, `user-registration` |
 | **`<fu_path>`** | FU Container 相對於專案根目錄的完整路徑 | `wutils/io`, `gms/db/user` |
 | **`<fu_name>`** | 具體功能單元 (FU) 的邏輯名稱（目錄友善格式） | `pickle-io`, `date-parser` |
-| **`<impl_file>`** | 私有實作檔案的相對路徑與檔名（相對於 `<fu_path>`） | `_pickle.py`, `_impl/_parser.py` |
+| **`<impl_file>`** | 私有實作檔案的相對路徑與檔名（相對於 `<fu_path>`），必須位於 Feature 級私有目錄內 | `_json_io/_json.py`, `_stock_price_storage/_repository.py` |
 
 > **規範要點**（僅針對 §5.3 定義之專案核心變數）：
 > 1. **命名限制**：`<toolkit>` 必須反映具體技術領域，**禁止**使用 `common`, `general` 等模糊字眼。
@@ -566,7 +652,7 @@ gms/db/user/profile/
 > 2. **內部導入 (Internal Import)**：
 > - **適用變數**：`<impl_file>`（相對於 `<fu_path>` 的路徑）
 > - **規則**：移除 `.py` 副檔名，將 `/` 替換為 `.`，並加上相對導入前綴 `.`。
-> - **範例**：`from .<impl_file> import ...` → `from ._pickle import ...` 或 `from ._pandas._pickle import ...`
+> - **範例**：`from .<impl_file> import ...` → `from ._json_io._json import ...` 或 `from ._stock_price_storage._repository import ...`
 
 ### 5.6 結構對應性原則
 
@@ -588,8 +674,8 @@ gms/db/user/profile/
 
 **3. 功能實作 (Implementation)**
 
-- **路徑**：`<fu_path>/_*/...`
-- **角色**：功能實作被封裝在 `<fu_path>` 下的任意私有模組或套件中（以 `_` 開頭）。其命名和內部結構無需與 `<fu_name>` 強制對應，給予了開發最大的彈性。
+- **路徑**：`<fu_path>/_<feature_snake_name>/...`
+- **角色**：功能實作被封裝在 `<fu_path>` 下以 Feature name 命名的私有目錄中（參見 [§4.3 Feature 級私有實作隔離](#43-feature-級私有實作隔離)）。每個 Feature 的私有實作檔案必須位於其對應的 `_<feature_snake_name>/` 目錄內，確保私有檔案與 Feature 之間有明確的結構性歸屬關係。
 
 **4. 功能導入 (Usage)**
 
@@ -1019,29 +1105,31 @@ wBiSaProj/
 │   │   ├── user/              # Domain: user (FU Container)
 │   │   │   ├── __init__.py
 │   │   │   ├── _imports.py
-│   │   │   ├── _profile/      # "profile" FU 的私有實作
+│   │   │   ├── _user_profile/     # user-profile Feature 的私有實作空間
+│   │   │   │   └── _repository.py
 │   │   │   └── ...
 │   │   │
 │   │   └── market/            # Domain: market (FU Container)
 │   │       ├── __init__.py
-│   │       ├── stock/         # Sub-domain
-│   │       │   └── price/     # "price" FU (Hybrid Storage Container)
-│   │       │       ├── __init__.py      # 公開介面：匯出 Repository 與 Domain Schemas
-│   │       │       ├── _imports.py
-│   │       │       ├── _schemas.py      # Pydantic Domain Schemas (公開契約，包含 Input/Output 定義)
+│   │       ├── stock/         # Sub-domain (FU Container)
+│   │       │   ├── __init__.py      # 公開介面：匯出 Repository 與 Domain Schemas
+│   │       │   ├── _imports.py
+│   │       │   │
+│   │       │   └── _stock_price_storage/  # stock-price-storage Feature 的私有實作空間
+│   │       │       ├── _schemas.py      # Pydantic Domain Schemas
 │   │       │       ├── _repository.py   # Repository Impl: 協調 SQL/FS/NoSQL 的 Facade
 │   │       │       │
 │   │       │       ├── _sql/            # SQL 儲存實作 (Private)
-│   │       │       │   ├── _models.py   # ORM Models (定義 Table 結構與 Entity)
-│   │       │       │   └── _mappers.py  # Data Mappers (負責 SQL Entity <-> Domain Schema 的轉換)
+│   │       │       │   ├── _models.py   # ORM Models
+│   │       │       │   └── _mappers.py  # Data Mappers
 │   │       │       │
 │   │       │       ├── _fs/             # FileSystem 儲存實作 (Private)
-│   │       │       │   ├── _dtos.py     # DTOs (定義資料在記憶體中的 Python 物件結構)
-│   │       │       │   └── _schemas.py  # Physical Schemas (定義 Parquet/Arrow 檔案的物理型別結構)
+│   │       │       │   ├── _dtos.py     # DTOs
+│   │       │       │   └── _schemas.py  # Physical Schemas (Parquet/Arrow)
 │   │       │       │
 │   │       │       └── _nosql/          # NoSQL 儲存實作 (Private)
-│   │       │           ├── _documents.py # ODM Documents (定義 Document 結構，如 MongoDB Collection)
-│   │       │           └── _mappers.py   # Data Mappers (負責 NoSQL Document <-> Domain Schema 的轉換)
+│   │       │           ├── _documents.py # ODM Documents
+│   │       │           └── _mappers.py  # Data Mappers
 │   │       └── ...
 │   │
 │   ├── service/               # 業務 logic 層 (FU Container)

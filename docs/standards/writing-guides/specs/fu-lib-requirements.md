@@ -290,7 +290,7 @@ from <fu_path> import <ExportedClass>, <exported_function>
 > | ID | Constraint | Notes |
 > | :--- | :--- | :--- |
 > | **CONS-01** | **Isolation**: 禁止依賴 `businesssys` 或 `datasource` 層。 | 本工具為 Library 元件，嚴禁反向依賴業務邏輯 |
-> | **CONS-02** | **Encapsulation**: 實作檔必須為私有 (`<impl_file>`)。 | 強制透過 Container 匯出，避免直接依賴實作細節 |
+> | **CONS-02** | **Encapsulation**: 實作檔必須位於 Feature 級私有目錄 (`_<feature_snake_name>/`) 內。 | 強制透過 Container 匯出，避免直接依賴實作細節，並確保私有檔案與 Feature 的歸屬關係 |
 > | **CONS-03** | **Dependency**: 僅依賴標準庫。 | 本工具定位為底層 IO，禁止引入任何第三方依賴 |
 
 | ID | Constraint | Notes |

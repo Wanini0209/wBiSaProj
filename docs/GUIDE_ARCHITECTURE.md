@@ -106,10 +106,11 @@ from fastapi import APIRouter        # 第三方套件
 
 #### 原則二：FU Container 封裝性
 
-`_imports.py` 是依賴的「閘門」，而其他實作檔案（`_models.py`, `_repository.py` 等）是「受保護的實作」，它們必須遵循嚴格的單向依賴規則：
+`_imports.py` 是依賴的「閘門」，而 Feature 級私有目錄內的實作檔案（`_models.py`, `_repository.py` 等）是「受保護的實作」，它們必須遵循嚴格的單向依賴規則：
 
 - **實作檔案 (如 `_models.py`)**：
-    - **嚴禁**跳出所屬的 FU Container。所有外部依賴**必須**從同層的 `_imports.py` 取得。
+    - **嚴禁**跳出所屬的 FU Container。所有外部依賴**必須**從 FU Container 層級的 `_imports.py` 取得。
+    - 由於實作檔案位於 Feature 級私有目錄內，需使用 `..` 回到 FU Container 層級來存取 `_imports.py`。
     - `_imports.py` 未提供的依賴（如專案級 `core` 或第三方套件）應自行絕對導入（見原則一）。
 
 - **`_imports.py` 檔案**：
@@ -120,18 +121,18 @@ from fastapi import APIRouter        # 第三方套件
         - 導入兄弟模組（例如：`from ..trading_data import StockData`）
 
 ```python
-# === 在 _repository.py (實作檔案) 中 ===
+# === 在 _user_profile/_repository.py (Feature 級私有目錄內的實作檔案) 中 ===
 
-# ✅ 正確：從同層 _imports.py 取得所有依賴
-from ._imports import exceptions, UserRepository
+# ✅ 正確：從 FU Container 的 _imports.py 取得所有依賴（回上一層）
+from .._imports import exceptions, UserRepository
 
-# ✅ 正確：從同 FU Container 內的其他檔案導入
+# ✅ 正確：從同一 Feature 私有目錄內的其他檔案導入
 from ._models import UserModel
 
 # ❌ 錯誤：實作檔案嚴禁跳出 FU Container！
-from .._imports import something
-from .._common import something
-from ..dto.user import UserDTO
+from ..._imports import something
+from ..._common import something
+from ...dto.user import UserDTO
 ```
 
 ```python
@@ -145,9 +146,9 @@ from .._common.validators import validate_symbol  # 導入父層共用函式庫 
 
 #### 原則三：防止循環依賴
 
-`_imports.py` 檔案**嚴格禁止**從其同層級的實作檔案中導入任何內容（例如 `from ._models import UserProfile` 或 `from ._common import ...`）。
+`_imports.py` 檔案**嚴格禁止**從其同層級的 Feature 級私有目錄或實作檔案中導入任何內容。
 
-- **原因**：這會立即導致循環依賴（`_models.py` 依賴 `_imports.py`，而 `_imports.py` 反過來依賴 `_models.py`）。
+- **原因**：這會立即導致循環依賴（實作檔案依賴 `_imports.py`，而 `_imports.py` 反過來依賴實作檔案）。
 
 - **允許的導入規則**：`_imports.py` 只允許以下三種導入方式：
     1. `from .._imports import ...`（繼承父層 `_imports.py`）
@@ -166,12 +167,9 @@ from ..trading_data import StockData
 # ✅ 正確：導入父層共用函式庫 _common（相對路徑）
 from .._common.validators import validate_symbol
 
-# ❌ 錯誤：嚴禁導入同層實作檔案！
-from ._models import UserProfile
-from ._repository import UserRepository
-
-# ❌ 錯誤：嚴禁導入同層 _common
-from ._common import MyCommonUtil
+# ❌ 錯誤：嚴禁導入 Feature 級私有目錄內的實作檔案！
+from ._user_profile._models import UserProfile
+from ._user_profile._repository import UserRepository
 
 # ❌ 錯誤：嚴禁導入更上層檔案！
 from ..._imports import Base, BaseRepository
@@ -281,8 +279,9 @@ gms/db/
         │   │                #    -> 手動導入兄弟模組 trading_data
         │   │                #    例如：from ..trading_data import StockData
         │   │
-        │   ├── _models.py
-        │   └── _repository.py
+        │   └── _stock_profile/      # stock-profile Feature 的私有實作空間
+        │       ├── _models.py
+        │       └── _repository.py
         │
         └── trading_data/
             ├── __init__.py
@@ -292,8 +291,9 @@ gms/db/
             │                #    例如：from .._common.calculators import calculate_moving_average
             │                #          from .._common.validators import StockDataValidator
             │
-            ├── _models.py
-            └── _repository.py
+            └── _stock_trading_data/  # stock-trading-data Feature 的私有實作空間
+                ├── _models.py
+                └── _repository.py
 ```
 
 #### 協作說明
@@ -551,11 +551,11 @@ __all__ = [
 
 #### 1.5.4 FU Container 內部實作檔案範例
 
-此範例展示了實作檔案（`_models.py`）如何體現「依賴來源清晰性」原則。**`_imports.py` 體系的抽象，確保了此檔案無需關心依賴管理的具體模式。**
+此範例展示了 Feature 級私有目錄中的實作檔案（`_models.py`）如何體現「依賴來源清晰性」原則。**`_imports.py` 體系的抽象，確保了此檔案無需關心依賴管理的具體模式。**
 
 ```python
-# gms/db/market/stock/profile/_models.py
-"""Stock Profile FU 的 ORM 模型定義"""
+# gms/db/market/stock/profile/_stock_profile/_models.py
+"""Stock Profile FU 的 ORM 模型定義（位於 stock-profile Feature 的私有實作空間內）"""
 
 # 體現原則一：第三方套件（sqlalchemy）必須在此直接導入
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -565,8 +565,9 @@ from typing import List
 # 體現原則一：專案級依賴（core）也必須在此直接導入（如果需要的話）
 # from core.interfaces import ISomeInterface
 
-# 體現原則二：系統內部依賴全部來自 ._imports，來源清晰
-from ._imports import (
+# 體現原則二：系統內部依賴全部來自 FU Container 的 _imports，來源清晰
+# 注意：由於實作檔案位於 Feature 級私有目錄內，需使用 `..` 回到 FU Container 層級
+from .._imports import (
     Base,                 # 來自 db/_common（由繼承取得）
     TimestampMixin,       # 來自 db/_common（由繼承取得）
     is_market_open,       # 來自 market/_common（由繼承取得）
@@ -603,7 +604,7 @@ class StockProfile(Base, TimestampMixin):
 **關鍵理解**：
 
 - `_models.py` 檔案**完全不需要**知道 `_imports.py` 內部的依賴管理發生了多大的變化。
-- 它只需要 `from ._imports import ...` 就能獲取所需的一切。
+- 它只需要 `from .._imports import ...`（回到 FU Container 層級）就能獲取所需的一切。
 - 這體現了「封裝性」原則：實作檔案不會跳出 FU Container，`_imports.py` 成功地將架構的複雜性對內隱藏。
 
 -----
@@ -630,7 +631,7 @@ class StockProfile(Base, TimestampMixin):
     - **添加父層 `_common`**：僅需導入其直屬父層（`_common`）和兄弟模組（`trading_data`）的依賴。
 
 5. **實作檔案**（`_models.py`）：
-    - **保持不變**。繼續 `from ._imports import ...`，完全不受架構變革影響。
+    - **保持簡潔**。透過 `from .._imports import ...`（回到 FU Container 層級）取得所有依賴，完全不受架構變革影響。
 
 **這形成了一個更清晰、更健壯、無循環依賴的依賴管理體系**。它透過在中間層主動彙總 `_common`，換取了 FU Container 層依賴導入的極大簡潔性。
 
@@ -1345,9 +1346,10 @@ gms/db/
         └── price/              # FU Container (股價功能單元)
             ├── __init__.py     # 公開介面
             ├── _imports.py     # 內部依賴管理
-            ├── _interfaces.py  # 抽象介面定義 (新增!)
-            ├── _models.py      # ORM 定義 (私有)
-            └── _repository.py  # Repository 實作 (私有)
+            └── _stock_price_storage/  # Feature 級私有實作空間
+                ├── _interfaces.py  # 抽象介面定義
+                ├── _models.py      # ORM 定義 (私有)
+                └── _repository.py  # Repository 實作 (私有)
 ```
 
 -----
@@ -1356,14 +1358,14 @@ gms/db/
 
 這是在**系統內（Intra-system）**實現 DIP 的關鍵。Service 層將依賴此介面，而非具體的 Repository 類別。
 
-**檔案位置**：`gms/db/market/stock/price/_interfaces.py`
+**檔案位置**：`gms/db/market/stock/price/_stock_price_storage/_interfaces.py`
 
 ```python
 from abc import ABC, abstractmethod
 from typing import List, Optional, Dict, Any
 from datetime import date
 
-# 注意：介面可以依賴同層的 Model（它們在同一個 FU Container）
+# 注意：介面可以依賴同目錄的 Model（同屬一個 Feature 的私有實作空間）
 from ._models import StockPriceModel
 
 class IStockPriceRepository(ABC):
@@ -1426,7 +1428,7 @@ class IStockPriceRepository(ABC):
 
 **明確繼承 IStockPriceRepository 介面**，實現所有抽象方法。
 
-**檔案位置**：`gms/db/market/stock/price/_repository.py`
+**檔案位置**：`gms/db/market/stock/price/_stock_price_storage/_repository.py`
 
 ```python
 from typing import List, Optional, Dict, Any
@@ -1435,7 +1437,7 @@ from sqlalchemy import select, and_, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
 
-from ._imports import BaseRepository
+from .._imports import BaseRepository
 from ._models import StockPriceModel
 from ._interfaces import IStockPriceRepository
 
@@ -1547,14 +1549,14 @@ class StockPriceRepository(BaseRepository[StockPriceModel], IStockPriceRepositor
 提供股價的 ORM 模型、Repository 介面與實作
 """
 
-# 暴露模型
-from ._models import StockPriceModel
+# 暴露模型（透過 Feature 級私有目錄）
+from ._stock_price_storage._models import StockPriceModel
 
 # 暴露介面（重要！）
-from ._interfaces import IStockPriceRepository
+from ._stock_price_storage._interfaces import IStockPriceRepository
 
 # 暴露實作
-from ._repository import StockPriceRepository
+from ._stock_price_storage._repository import StockPriceRepository
 
 __all__ = [
     'StockPriceModel',
@@ -1592,8 +1594,9 @@ gms/service/
         └── analysis/           # FU Container: 股價分析服務
             ├── __init__.py
             ├── _imports.py     # 內部依賴
-            ├── _service.py     # 業務邏輯實作
-            └── _dto.py         # Service 層 DTO
+            └── _stock_analysis_api/  # Feature 級私有實作空間
+                ├── _service.py     # 業務邏輯實作
+                └── _dto.py         # Service 層 DTO
 ```
 
 -----
@@ -1643,7 +1646,7 @@ __all__ = [
 
 #### 業務服務實作
 
-**檔案位置**：`gms/service/market/stock/analysis/_service.py`
+**檔案位置**：`gms/service/market/stock/analysis/_stock_analysis_api/_service.py`
 
 ```python
 from decimal import Decimal
@@ -1651,8 +1654,8 @@ from datetime import date, timedelta
 from typing import Dict, List, Optional
 import logging
 
-# 從同層 _imports 取得介面（DIP）
-from ._imports import (
+# 從 FU Container 的 _imports 取得介面（DIP）
+from .._imports import (
     IStockPriceRepository,
     BusinessLogicError,
     DataValidationError,
@@ -1866,7 +1869,7 @@ class StockAnalysisService:
 
 Service 層可以定義自己的 DTO，用於複雜的業務結果。
 
-**檔案位置**：`gms/service/market/stock/analysis/_dto.py`
+**檔案位置**：`gms/service/market/stock/analysis/_stock_analysis_api/_dto.py`
 
 ```python
 from pydantic import BaseModel, Field
@@ -1927,9 +1930,10 @@ gms/etl/
         └── sync_job/           # FU Container: 每日同步作業
             ├── __init__.py
             ├── _imports.py
-            ├── _pipeline.py    # ETL 流程控制
-            ├── _extractor.py   # 抽取邏輯
-            └── _loader.py      # 載入邏輯
+            └── _daily_sync_job/    # Feature 級私有實作空間
+                ├── _pipeline.py    # ETL 流程控制
+                ├── _extractor.py   # 抽取邏輯
+                └── _loader.py      # 載入邏輯
 ```
 
 -----
@@ -1984,7 +1988,7 @@ __all__ = [
 
 #### Pipeline 主體
 
-**檔案位置**：`gms/etl/market/stock/sync_job/_pipeline.py`
+**檔案位置**：`gms/etl/market/stock/sync_job/_daily_sync_job/_pipeline.py`
 
 ```python
 from datetime import date, datetime
@@ -1992,8 +1996,8 @@ from typing import List, Dict, Optional
 import logging
 from dataclasses import dataclass
 
-# 從 _imports 取得兩個關鍵介面
-from ._imports import (
+# 從 FU Container 的 _imports 取得兩個關鍵介面
+from .._imports import (
     IStockPriceProvider,     # 來自 Core（代表 TEJ）
     IStockPriceRepository,   # 來自 DB（代表 GMS DB）
     StockPriceDTO,
@@ -2217,12 +2221,12 @@ class DailyStockSyncPipeline:
 
 #### 批次處理優化
 
-**檔案位置**：`gms/etl/market/stock/sync_job/_loader.py`
+**檔案位置**：`gms/etl/market/stock/sync_job/_daily_sync_job/_loader.py`
 
 ```python
 from typing import List, Dict, Any
 import asyncio
-from ._imports import IStockPriceRepository
+from .._imports import IStockPriceRepository
 
 class BatchLoader:
     """
@@ -2293,10 +2297,11 @@ gms/api/
 │
 └── market/                     # Domain 層
     ├── _imports.py             # 中間層依賴管理（在此導入 dependencies）
-    └── stock/                  # Sub-domain 層
+    └── stock/                  # Sub-domain 層 (FU Container)
         ├── _imports.py         # 末端依賴管理（自動繼承）
-        ├── _router.py          # Router 實作
-        └── _schemas.py         # API 請求/回應模型
+        └── _stock_analysis_api/  # Feature 級私有實作空間
+            ├── _router.py          # Router 實作
+            └── _schemas.py         # API 請求/回應模型
 ```
 
 -----
@@ -2579,12 +2584,9 @@ from .._imports import (
     get_tej_provider,
 )
 
-# 此層可選擇性地加入本地特有的元件
-from ._schemas import (
-    StockAnalysisRequest,
-    StockAnalysisResponse,
-    ErrorResponse
-)
+# （注意：_schemas.py 已移入 Feature 級私有目錄 _stock_analysis_api/ 中，
+#  依原則三，_imports.py 不從 Feature 目錄導入。
+#  _router.py 直接在 Feature 目錄內以 from ._schemas import ... 取得。）
 
 __all__ = [
     # === 繼承的元件 ===
@@ -2605,11 +2607,6 @@ __all__ = [
 
     'get_analysis_service',
     'get_tej_provider',
-
-    # === 本地元件 ===
-    'StockAnalysisRequest',
-    'StockAnalysisResponse',
-    'ErrorResponse',
 ]
 ```
 
@@ -2621,13 +2618,13 @@ Router 透過 `_imports.py` 取得所有依賴，保持程式碼簡潔且易於�
 
 #### 設計原則
 
-- **單一來源**：所有 import 都從 `._imports` 取得
+- **雙重來源**：外部依賴從 `._imports` 取得，同 Feature 的 Schemas 從 `._schemas` 取得
 - **依賴注入**：使用 FastAPI 的 Depends 機制
 - **錯誤處理**：將業務異常轉換為 HTTP 回應
 
 #### 實作範例：股票分析 Router
 
-**檔案位置**：`gms/api/market/stock/_router.py`
+**檔案位置**：`gms/api/market/stock/_stock_analysis_api/_router.py`
 
 ```python
 """
@@ -2639,8 +2636,8 @@ from datetime import date
 from typing import List, Optional
 import logging
 
-# 單一 import 來源：從 _imports 取得一切
-from ._imports import (
+# 單一 import 來源：從 FU Container 的 _imports 取得一切
+from .._imports import (
     # FastAPI 元件
     APIRouter,
     Depends,
@@ -2658,11 +2655,10 @@ from ._imports import (
     # 異常
     BusinessLogicError,
     DataValidationError,
-
-    # Schemas
-    StockAnalysisResponse,
-    ErrorResponse
 )
+
+# 同 Feature 目錄內的 Schemas（內部協作）
+from ._schemas import StockAnalysisResponse, ErrorResponse
 
 logger = logging.getLogger(__name__)
 
@@ -2800,7 +2796,7 @@ async def detect_golden_cross(
 
 #### API Schemas
 
-**檔案位置**：`gms/api/market/stock/_schemas.py`
+**檔案位置**：`gms/api/market/stock/_stock_analysis_api/_schemas.py`
 
 ```python
 """
@@ -2862,7 +2858,7 @@ dependencies.py（工廠定義）
 1. **避免循環依賴**：根層 `_imports.py` 故意不導入 `dependencies.py`
 2. **中層橋接**：在 Domain 層級（market）手動導入並加入傳播鏈
 3. **末端享用**：Router 所在的層級自動獲得所有依賴工廠
-4. **單一來源**：Router 只需要 `from ._imports import ...` 即可獲得一切
+4. **依賴來源明確**：Router 透過 `from .._imports import ...` 取得外部依賴，透過 `from ._schemas import ...` 取得同 Feature 的元件
 
 這個設計確保了：
 - 依賴管理的一致性

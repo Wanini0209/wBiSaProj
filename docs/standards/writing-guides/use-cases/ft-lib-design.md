@@ -139,14 +139,15 @@
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
 > 請展示 Library 與 Toolkit 層級的套件結構，以及公開介面 (`__init__.py`)。
-> **注意**：在此階段無需列出具體的私有實作檔案 (如 `_impl.py`)。
+> **注意**：在此階段無需列出具體的私有實作檔案，但應標示出 Feature 級私有目錄（`_<feature_snake_name>/`）。
 >
 > **💡 範例**：
 >
 > ```text
 > <library>/
 > └── <toolkit>/
->     └── __init__.py    # Public Interface
+>     ├── __init__.py         # Public Interface
+>     └── _<feature_name>/    # Feature 的私有實作空間
 > ```
 
 ```text
@@ -365,7 +366,7 @@
 > | :--- | :--- | :--- |
 > | **CONS-01** | 僅依賴標準庫 | 本 FU 僅使用 `pickle`, `pathlib` |
 > | **CONS-02** | 保持無狀態 | 所有函式皆為 Pure Function，無 Side Effect |
-> | **CONS-03** | 封裝私有實作 | 實作檔案命名為 `_pickle_io.py` |
+> | **CONS-03** | 封裝私有實作 | 實作檔案位於 Feature 級私有目錄 `_pickle_io/` 內 |
 
 | ID | Constraint | Compliance Note |
 | :--- | :--- | :--- |
@@ -412,7 +413,7 @@
 ### B. 技術架構與介面
 
 - [ ] ⚠️ **依賴合規性**：Dependency Matrix 是否僅包含 Std, 3rd-party 或 Local Library，嚴禁依賴 `businesssys` 或 `datasource` (對應 §3.1.2)？
-- [ ] **目錄結構**：是否使用 tree 風格展示實體路徑，且實作檔案名稱符合私有化規範（如 `_pickle.py`） (對應 §3.1.1)？
+- [ ] **目錄結構**：是否使用 tree 風格展示實體路徑，且已標示 Feature 級私有目錄（`_<feature_snake_name>/`）(對應 §3.1.1)？
 - [ ] **API 簽章**：公開介面是否包含完整 Type Hints、Docstring，且明確定義了 `__all__` 導出內容 (對應 §3.2)？
 - [ ] **需求覆蓋**：是否確保所有 `US-XXX` 都有對應的 API 進入點 (對應 §3.2.1)？
 
