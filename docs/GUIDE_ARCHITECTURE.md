@@ -963,19 +963,24 @@ class BusinessLogicError(CoreError):
 ```text
 tej/                        # Data Source System (Internal DB Adapter)
 ├── __init__.py
+├── core/                  # 系統級共用函式庫
+│   ├── __init__.py
+│   └── mapping/           # 欄位對應工具集
+│       ├── __init__.py
+│       └── _field_mapping/
+│           └── _mapping.py  # 欄位對應工具
+│
 ├── collector/             # 資料庫存取層
 │   ├── __init__.py
 │   ├── db_client.py      # 資料庫連線與 SQL 執行
 │   └── schema.py         # TEJ 資料表 Schema 定義
 │
-├── service/               # 服務實作層
-│   ├── __init__.py
-│   └── provider.py       # IStockPriceProvider 實作
-│
-└── utils/                 # 工具函數
+└── service/               # 服務實作層
     ├── __init__.py
-    └── mapping.py        # 欄位對應工具
+    └── provider.py       # IStockPriceProvider 實作
 ```
+
+> **結構說明**：原先放置在 `utils/` 的系統級共用能力（如欄位對應工具），應規劃至 `tej/core/` 中。`<system>/core` 是資料源系統承載系統內部共用基礎設施的正式結構，而非使用鬆散的 `utils/` 目錄。此原則適用於所有系統類型。
 
 -----
 

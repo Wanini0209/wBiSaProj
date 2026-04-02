@@ -26,7 +26,8 @@
 | 面向 | Data Source System | Business System |
 |:-----|:-------------------|:----------------|
 | **核心職責** | 封裝外部資料源，提供唯讀數據 | 實現業務邏輯，提供讀寫服務 |
-| **標準架構** | 兩層 (`collector`, `service`) | 五層 (`core`, `etl`, `db`, `service`, `api`) |
+| **主幹模組** | `collector`, `service` | `db`, `service`, `api`, `etl` |
+| **System Core** | `<system>/core`（system-local shared library） | `<system>/core`（system-local shared library） |
 | **資料流向** | 外部 → 內部 (單向) | 雙向 (讀寫) |
 | **介面實作** | 實作 `core/interfaces` 定義的抽象 | 消費 `core/interfaces` 定義的抽象 |
 
@@ -177,16 +178,18 @@
     - **Includes (包含)**: ...
     - **Excludes (排除)**: ...
 
-## 3. Two-Layer Architecture (標準兩層架構)
+## 3. Core Processing Architecture (主幹處理架構)
 
 > **📝 撰寫指引**（請勿保留本指引文字）：
-> 本節說明資料源系統的標準兩層架構。所有資料源系統都必須遵循此架構。
+> 本節說明資料源系統的主幹處理架構與系統結構。資料處理主幹以 `collector` / `service` 為核心；`<system>/core` 為 system-local shared library，承載跨模組共用的基礎能力。
 > *Ref: `docs/PROJECT_DESIGN-ARCHITECTURE.md` Section 1.2*
 
 ### 3.1 Architecture Overview (架構總覽)
 
 ```text
 <system>/
+├── core/          → System Core：system-local shared library
+│   └── <toolkit>/
 ├── collector/     → 資料收集層：處理原始資料的獲取
 │   └── <domain>/
 └── service/       → 服務層：實作標準化介面，提供對外服務
@@ -372,7 +375,7 @@
 
 ### C. 架構與介面
 
-- [ ] **兩層架構**：是否已說明 `collector` 與 `service` 層的具體職責？
+- [ ] **主幹架構**：是否已說明 `collector` 與 `service` 層的具體職責？
 - [ ] **介面實作**：是否已列出需實作的 `core/interfaces` 介面清單？
 - [ ] **資料流程**：是否已繪製從外部來源到對外服務的完整資料流程圖？
 
