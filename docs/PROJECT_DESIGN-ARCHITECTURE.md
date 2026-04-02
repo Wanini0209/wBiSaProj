@@ -131,14 +131,24 @@ wutils 的諸多 Toolkit 中，基礎建設類（I/O、Crypto、Network、System
 
 > 注意：此分類與系統是否在公司內部無關，而是取決於其存取協定
 
-#### 標準兩層架構
+#### 主幹處理架構 (Collector-Service Backbone)
 
-不論來源為何，所有資料源系統都採用標準的兩層架構進行封裝：
+不論來源為何，所有資料源系統的**資料處理主幹**皆採用 `collector -> service` 兩層架構進行封裝：
 
 | 層級 | 名稱 | 職責 | 內部資料源處理 | 外部資料源處理 |
 |:-----|:-----|:-----|:---------------|:---------------|
 | **第一層** | `<system>/collector` | 資料收集層 | 執行 SQL 查詢<br>回傳原始結果 | 處理 HTTP 請求<br>回傳原始響應 |
 | **第二層** | `<system>/service` | 服務層 | 格式標準化<br>資料驗證 | 資料解析（JSON/HTML）<br>格式標準化<br>快取處理 |
+
+#### 系統級共用函式庫 (System Core)
+
+與業務系統相同，資料源系統亦擁有 `<system>/core` 作為 system-local shared library，承載該系統內跨模組共用、但不屬於專案級 Library 的共用能力（例如：系統特有的解析工具、HTTP 客戶端封裝、快取策略等）。
+
+> **關鍵理解**
+>
+> - `<system>/core` 不屬於 `collector -> service` 資料處理主幹的兩層流程，而是作為系統內部的共用基礎設施存在。
+> - `<system>/core` 是所有 system 共通的合法結構概念。業務系統與資料源系統的差異僅體現在主幹模組（`db/service/api/etl` vs. `collector/service`），而非是否擁有 System Core。
+> - 關於 `<system>/core` 的私有實作規範、Feature 歸屬與路徑規則，請參閱 §4.3 及方法論篇。
 
 ### 1.3 業務/應用系統 (Business/Application Systems)
 
@@ -199,9 +209,12 @@ graph TD
 
     %% 資料源系統
     subgraph "資料源系統"
+        ds_core[core<br/>系統級核心]
         ds_collector[collector<br/>資料收集層]
         ds_service[service<br/>服務層]
         ds_service --> ds_collector
+        ds_collector --> ds_core
+        ds_service --> ds_core
         ds_service -.->|implements| core_interfaces
     end
 
@@ -239,7 +252,7 @@ graph TD
     classDef runtime fill:#eeeeee,stroke:#9e9e9e,stroke-width:2px,stroke-dasharray: 3
 
     class wutils,core,wsatools library
-    class ds_collector,ds_service datasource
+    class ds_core,ds_collector,ds_service datasource
     class bs_core,bs_etl,bs_db,bs_service,bs_api business
 ```
 
@@ -611,7 +624,7 @@ Feature → _<feature_snake_name>/ → impl_file (私有實作)      ✅
 | **`<system>`** | 業務系統或資料源系統的名稱 | `gms`, `tej` |
 | **`<business_system>`** | 專案內的業務系統 | `gms` |
 | **`<datasource_system>`** | 專案內的資料源系統 | `tej` |
-| **`<library>`** | 專案級共用函式庫或系統級內部核心模組 | `core`, `wutils`, `<system>/core` (e.g., `gms/core`) |
+| **`<library>`** | 專案級共用函式庫或系統級內部核心模組 | `core`, `wutils`, `<system>/core` (e.g., `gms/core`, `tej/core`) |
 | **`<toolkit>`** | 函式庫的功能分類（技術解決方案集合） | `io`, `security/crypto`, `time/ranger` |
 | **`<domain>`** | 系統的業務領域分類（業務範疇） | `user`, `market` |
 | **`<subdomain>`** | 隸屬於 Domain 之下的具體業務範疇 | `stock`, `profile` |
@@ -1085,6 +1098,7 @@ wBiSaProj/
 ├── wsatools/                  # 系統分析設計工具
 │
 ├── datasource/                # 資料源系統（實際會有多個）
+│   ├── core/                  # 系統級核心 (System Core)
 │   ├── collector/             # 資料收集層
 │   └── service/               # 服務層（實作 core/interfaces）
 │
@@ -1165,8 +1179,9 @@ wBiSaProj/
 | 項目 | 規範 | 範例 |
 |:-----|:-----|:-----|
 | **系統名稱** | 全小寫，不使用底線、連字號或駝峰式 | `gms`, `tej`, `yafin` |
-| **資料源系統結構** | 標準兩層結構 | `collector`, `service` |
-| **業務系統結構** | 五個標準子模組 | `core`, `etl`, `db`, `service`, `api` |
+| **System Core** | 各系統的 system-local shared library | `<system>/core` |
+| **資料源系統主幹模組** | Collector-Service 主幹架構 | `collector`, `service` |
+| **業務系統主幹模組** | 業務處理主幹架構 | `etl`, `db`, `service`, `api` |
 
 > 注意：上述 `datasource` 和 `businesssys` 僅為結構示意用的佔位符
 

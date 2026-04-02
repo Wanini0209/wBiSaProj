@@ -108,20 +108,23 @@
 
 #### 資料源系統 (Data Source Systems)
 
-此類型系統專責存取並封裝外部資料源，將其轉換為對內提供的標準化唯讀數據服務。其標準兩層架構為：
+此類型系統專責存取並封裝外部資料源，將其轉換為對內提供的標準化唯讀數據服務。其資料處理主幹為 `collector -> service` 兩層架構：
 
 - `[datasource]/collector` (資料收集層)：負責與外部資料源進行 I/O 操作，獲取最原始的資料。
 - `[datasource]/service` (服務層)：負責解析原始資料、進行格式標準化，並實作 `core` 中的統一介面，對外提供穩定的數據服務。
 
 #### 業務/應用系統 (Business/Application Systems)
 
-此類型系統負責實現具體業務功能，其內部由五個標準子模組構成：
+此類型系統負責實現具體業務功能，其主幹模組包含：
 
-- `[system]/core`：系統級核心，封裝該系統內部共用的元件。
 - `[system]/etl`：資料處理層，負責執行批次的資料抽取、轉換與載入。
 - `[system]/db`：資料存取層，封裝所有資料庫操作。
 - `[system]/service`：業務邏輯層，實作核心業務規則。
 - `[system]/api`：API 介面層，對外提供 RESTful API 接口。
+
+#### System Core（各系統共通）
+
+各 system（不分業務系統或資料源系統）均擁有 `[system]/core` 作為 system-local shared library，封裝該系統內跨模組共用、但不屬於專案級 Library 的共用元件。業務系統與資料源系統的差異僅體現在上述主幹模組的不同，而非是否擁有 System Core。
 
 ### 2.2 系統架構依賴關係圖
 
@@ -146,9 +149,12 @@ graph TD
 
     %% === 資料源系統 ===
     subgraph "資料源系統"
+        ds_core[core<br/>系統級核心]
         ds_collector[collector<br/>資料收集層]
         ds_service[service<br/>服務層]
         ds_service --> ds_collector
+        ds_collector --> ds_core
+        ds_service --> ds_core
         ds_service -.->|implements| core_interfaces
     end
 
@@ -189,7 +195,7 @@ graph TD
     classDef runtime fill:#eeeeee,stroke:#9e9e9e,stroke-width:2px,stroke-dasharray: 3
 
     class wutils,core,wsatools library
-    class ds_collector,ds_service datasource
+    class ds_core,ds_collector,ds_service datasource
     class bs_core,bs_etl,bs_db,bs_service,bs_api business
 ```
 
@@ -275,6 +281,7 @@ wBiSaProj/
 ├── wsatools/                  # 系統分析設計工具
 │
 ├── datasource/                # 資料源系統（實際會有多個）
+│   ├── core/                  # 系統級核心 (System Core)
 │   ├── collector/             # 資料收集層
 │   └── service/               # 服務層（實作 core/interfaces）
 │
@@ -291,8 +298,9 @@ wBiSaProj/
 #### 命名規範
 
 - 所有系統名稱採用全小寫命名，不使用底線、連字號或駝峰式命名。
-- 資料源系統採用標準兩層結構 (`collector`, `service`)。
-- 業務系統包含五個標準子模組 (`core`, `etl`, `db`, `service`, `api`)。
+- 各系統均擁有 `core` 作為 system-local shared library (System Core)。
+- 資料源系統的主幹模組為 `collector`, `service`。
+- 業務系統的主幹模組為 `etl`, `db`, `service`, `api`。
 - 上述 `datasource` 和 `businesssys` 僅為結構示意用的佔位符，實際系統命名範例如：`gms`、`tej`、`yafin` 等。
 
 #### 介面與實作的檔案位置
@@ -308,7 +316,7 @@ wBiSaProj/
 | 變數 | 定義 | 範例 |
 |:-----|:-----|:-----|
 | **`<system>`** | 業務系統或資料源系統的名稱 | `gms`, `tej` |
-| **`<library>`** | 專案級共用函式庫或系統級內部核心模組 | `core`, `wutils`, `gms/core` |
+| **`<library>`** | 專案級共用函式庫或系統級內部核心模組 | `core`, `wutils`, `gms/core`, `tej/core` |
 | **`<toolkit>`** | 函式庫的功能分類，代表技術解決方案集合 | `io`, `ds/tree` |
 | **`<domain>`** | 系統的業務領域分類，映射真實世界的業務範疇 | `user`, `market` |
 | **`<subdomain>`** | 隸屬於 Domain 之下的具體業務範疇 | `stock`, `profile` |
