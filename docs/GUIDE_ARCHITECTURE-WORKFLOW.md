@@ -86,6 +86,22 @@ GMS 的核心職責是匯聚全球市場數據並提供深度分析服務。在�
 
 ---
 
+### 補充範例：資料源系統的 System Core Feature (Library Feature)
+
+在實際開發中，資料源系統若有多個 Feature 共用的基礎能力（如欄位對應工具、HTTP 客戶端封裝、解析器等），應優先規劃為 `<system>/core` 中的 Library Feature，而非散落在各 Feature 的私有目錄中。
+
+以下是幾個 TEJ 資料源系統中可能出現的 System Core Feature 範例：
+
+| Feature 名稱 | Branch | 說明 |
+|:-------------|:-------|:-----|
+| `legacy-column-map` | `feature/tej/core/mapping/legacy-column-map` | 封裝 TEJ 舊欄位名稱的對應邏輯，供 collector / service 共用 |
+| `normalize-price-fields` | `feature/tej/core/parser/normalize-price-fields` | 標準化價格欄位的解析與轉換工具 |
+| `db-access-policy` | `feature/tej/core/db/access-policy` | 封裝 TEJ 資料庫連線與存取策略 |
+
+> **關鍵理解**：資料源系統的 `<system>/core` 不是抽象口號，而是可以實際被當成 Feature / Use Case / Specs 的承載位置。其路徑規則遵循方法論中的 Library Feature 路徑格式：`docs/use-cases/<system>/core/<toolkit>/<feature_name>/`。
+
+---
+
 ### FEATURE_3: GMS 股價資料存取層 (Technical Feature)
 
 - **類型**：Business Feature (Technical Value - DB Only)
