@@ -36,6 +36,7 @@ async def test_async_operation():
 | `@pytest.mark.unit` | 單元測試 | 執行速度快、無外部 I/O、邏輯驗證 |
 | `@pytest.mark.integration` | 整合測試 | 元件互動、使用 In-Memory DB |
 | `@pytest.mark.e2e` | 端到端測試 | 完整流程、真實外部連線 |
+| `@pytest.mark.llm` | LLM 測試 | 需要人工觸發 LLM 互動的測試，預設排除於一般自動化執行 |
 | `@pytest.mark.slow` | 慢速測試 | 執行時間 > 1秒 |
 | `@pytest.mark.fast` | 快速測試 | 執行時間極短的測試 |
 | `@pytest.mark.database` | 資料庫測試 | 需要 DB Session 的測試 |
@@ -44,6 +45,63 @@ async def test_async_operation():
 | `@pytest.mark.io` | I/O 測試 | 檔案讀寫、序列化操作 (如 pickle-io) |
 | `@pytest.mark.auth` | 認證測試 | 登入、權限驗證相關 |
 | `@pytest.mark.api` | API 測試 | 針對 Router Endpoint 的測試 |
+
+### 1.4 LLM 測試執行
+
+#### 1.4.1 分流機制
+
+LLM 測試（`@pytest.mark.llm`）與一般測試採用獨立的執行入口，確保一般自動化流程不受 LLM 測試的不確定性影響：
+
+| 指令 | 語意 | pytest 條件 |
+| :--- | :--- | :--- |
+| `inv test` | 執行一般測試 | `-m "not llm"` |
+| `inv test.llm` | 執行 LLM 測試 | `-m "llm"` |
+| `inv test.cov` | 測試覆蓋率 | `-m "not llm"` |
+
+`inv test` 與 `inv test.llm` 支援 `--path` 與 `--k` 參數以進行過濾（`--k` 參數會轉為 pytest 的 `-k` expression 傳入）。`inv test.cov` 為 coverage 專用入口，預設排除 LLM 測試，不提供 `--path` / `--k` 過濾介面。
+
+```bash
+# 一般測試
+inv test
+inv test --path tests/wsatools/llm/library/l3_entry/
+inv test --k test_workflow
+inv test --path tests/wsatools/llm/library/l3_entry/ --k test_add_qa
+
+# LLM 測試
+inv test.llm
+inv test.llm --k test_add_qa_llm
+inv test.llm --path tests/wsatools/llm/library/l3_entry/
+inv test.llm --path tests/wsatools/llm/library/l3_entry/ --k test_add_qa_llm
+
+# Coverage（全域檢查，不支援過濾）
+inv test.cov
+```
+
+#### 1.4.2 人工觸發原則
+
+LLM 測試**不納入** pre-commit hook 的固定執行範圍。由開發人員依據變更內容判斷何時需要手動執行 LLM 測試。
+
+**常見需要執行 LLM 測試的情境**：
+
+- prompt template 有實質變更
+- parse / schema 契約有變更
+- Quality Loop 流程重排
+- prompt tag 內容變更
+- workflow 改變了對 LLM 輸入 / 輸出的組裝方式
+
+#### 1.4.3 Module Docstring 慣例
+
+每個 LLM 測試檔案的 module docstring 應包含手動執行方式，方便開發人員快速找到執行指令：
+
+```python
+"""LLM tests for add-qa quality loop.
+
+Run manually::
+
+    inv test.llm --path tests/wsatools/llm/library/l3_entry/ --k test_add_qa_llm
+
+"""
+```
 
 ---
 
@@ -392,6 +450,18 @@ async def test_get_volume_analysis_endpoint():
 - **依賴處理**：視情況使用真實連線 (需標記 `@external`) 或 VCR (錄製回應)。
 - **標記**：`@pytest.mark.external`, `@pytest.mark.slow`
 
+### 4.6 Type VI: LLM 相關元件 (wsatools)
+
+wsatools 中的 LlmTask、QualityLoop 等元件涉及 LLM 互動，其測試分為兩類：
+
+#### 一般測試（自動化可執行）
+
+針對不需要 LLM 互動的邏輯，例如 prompt 組裝、parse 邏輯、pre/post processing、schema 驗證等。這些測試使用標準 `@pytest.mark.unit` 標記，納入 `inv test` 的執行範圍。
+
+#### LLM 測試（人工觸發）
+
+針對需要實際呼叫 LLM 的端到端驗證，例如確認 prompt 是否能產出預期格式的輸出、Quality Loop 的收斂行為等。這些測試使用 `@pytest.mark.llm` 標記，僅透過 `inv test.llm` 手動執行。
+
 ---
 
 ## 5. 通用最佳實踐
@@ -516,17 +586,42 @@ class TestStockPricing:
 
 ---
 
-## 6. 品質保證與自我檢查 (Quality Assurance & Self-Check)
+## 6. Framework-level 測試治理原則
+
+### 6.1 公開 framework 類別的測試判斷
+
+公開 framework 類別（如 base class、abstract class）的測試需求，取決於該類別是否承載具體可驗證的行為：
+
+> 公開 framework 類別若承載具體可驗證行為（如 template method 中的固定流程、預設行為、輸入驗證等），應提供 framework-level unit tests。
+>
+> 若公開 framework 類別僅提供極輕量抽象殼層（如純粹的方法簽章轉發、無邏輯的生命週期鉤子），且可驗證邏輯完全位於具體子類，則可不設 base test。
+
+### 6.2 判斷指引
+
+| 條件 | 判斷 | 範例 |
+| :--- | :--- | :--- |
+| 有 template method 中的固定編排邏輯 | 需要 base test | `LlmTask` 的 `run()` 編排 prompt → call → parse |
+| 有預設行為或輸入驗證 | 需要 base test | `LlmQualityLoop` 的迭代控制邏輯 |
+| 僅定義 abstract method 簽章，無具體邏輯 | 可不設 base test | 純 interface 定義 |
+| 極輕量殼層，僅轉發呼叫 | 可不設 base test | `Workflow` 僅提供極輕量的 public entry / template shell，實質可驗證邏輯位於具體子類的 `execute()` 編排中 |
+
+### 6.3 原則
+
+此判斷的核心不是類別在繼承層級中的位置，而是**該類別本身是否包含值得獨立驗證的邏輯**。若包含，就值得測試；若不包含，測試應聚焦於具體子類。
+
+---
+
+## 7. 品質保證與自我檢查 (Quality Assurance & Self-Check)
 
 在提交 Pull Request (PR) 之前，請務必對照以下清單進行自我審查。本專案強調「品質內建」，測試程式碼的品質直接影響系統的穩定性與可維護性。
 
-### 6.1 自動化檢查 (Automated Checks)
+### 7.1 自動化檢查 (Automated Checks)
 
-- [ ] **測試通過**: 已執行 `pytest` 並確認所有測試皆通過 (Green Light)。
+- [ ] **測試通過**: 已執行 `inv test` 並確認所有一般測試皆通過 (Green Light)。若涉及 LLM 相關變更，已透過 `inv test.llm` 確認 LLM 測試通過。
 - [ ] **風格合規**: 測試程式碼本身已通過 `inv style` (Black/Ruff) 檢查。
 - [ ] **Async 檢查**: 確認執行過程中無 `RuntimeWarning: coroutine ... was never awaited` 警告。
 
-### 6.2 架構合規性檢查 (Architectural Compliance) [CRITICAL]
+### 7.2 架構合規性檢查 (Architectural Compliance) [CRITICAL]
 
 - [ ] **路徑對應性**: 測試檔案路徑是否遵循 `tests/<fu_path>/<fu_name>/...` 的 FU 級目錄結構？
 - [ ] **私有路徑隔離**: 測試目錄是否避免鏡射 private implementation file（如 `_<feature_name>/`）？
@@ -540,10 +635,13 @@ class TestStockPricing:
     - [ ] **API Layer**: 是否 Mock 了 Service 層？確認 API 測試不依賴業務邏輯的實作細節。
 - [ ] **雙軌策略**:
     - [ ] 對於 Collector/Extractor (外部資料源)，是否採用「探索式驗證」思路而非僅 Mock 快樂路徑？
+- [ ] **LLM 標記**:
+    - [ ] 需要 LLM 互動的測試是否已標記 `@pytest.mark.llm`？
+    - [ ] LLM 測試檔案的 module docstring 是否包含手動執行方式？
 
-### 6.3 實作細節檢查 (Implementation Details)
+### 7.3 實作細節檢查 (Implementation Details)
 
-- [ ] **Markers 標記**: 是否已根據測試性質加上正確的 `@pytest.mark.xxx` (如 `unit`, `integration`, `asyncio`)？
+- [ ] **Markers 標記**: 是否已根據測試性質加上正確的 `@pytest.mark.xxx` (如 `unit`, `integration`, `asyncio`, `llm`)？
 - [ ] **頂層導入**: 確認沒有在測試函數內部進行 `import` (除了解決循環依賴的極少數特例外)。
 - [ ] **斷言使用**: 是否使用標準 `assert` 語句？
 - [ ] **非同步語法**: 涉及 I/O 的測試是否定義為 `async def` 並正確使用 `await`？
