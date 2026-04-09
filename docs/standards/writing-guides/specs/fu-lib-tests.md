@@ -19,13 +19,21 @@
 - **測試對象**：針對 FU Container 的 **公開介面 (Public Interface)** 進行黑箱測試。
 - **隔離性**：單元測試應獨立執行，不依賴外部環境（如真實資料庫、網路），必要時使用 Mock。
 - **覆蓋率**：Library 元件通常被廣泛引用，要求高覆蓋率（通常 > 90%）。
+- **測試模組主體**：測試模組命名應優先以公開元件名稱、FU 名稱或公開能力名稱為主體，不得預設使用 private python file 或 internal-only component 名稱。
+- **internal-only 預設處理**：FU 內部共用但未被提升為正式公開能力的 component，預設不作為獨立測試主體；其正確性應優先透過公開介面或整個 FU 的對外行為進行驗證。
+- **模組拆分原則**：當單一 FU 的測試內容過大時，應優先在 Test Module Plan 中將其拆分為多個 `test_<subject>__<aspect>.py` 模組，而非集中於單一巨型測試檔。拆分目的包含提升可讀性、降低 LLM 單次理解負擔、並強化測試責任邊界。
 
 ### 1.3 結構對應性原則
 
 測試規格書必須明確指引測試程式碼的實體位置，嚴格遵循專案的結構對應規則：
 
 - **Spec**: `docs/specs/<fu_path>/<fu_name>/tests.md`
-- **Test Code**: `tests/<fu_path>/<fu_name>/test_<name>.py`
+- **Test Code**:
+  - `tests/<fu_path>/<fu_name>/test_<fu_name>.py`
+  - `tests/<fu_path>/<fu_name>/test_<public_component>.py`
+  - `tests/<fu_path>/<fu_name>/test_<subject>__<aspect>.py`
+
+> 測試檔命名必須遵循專案正式測試命名規範（`testing.md` §2.4），不得以 private python file 或 internal-only component 名稱作為預設導航主體。
 
 ---
 
@@ -155,6 +163,26 @@
 - **工具**：`pytest` + `pytest-cov`
 - **Mock 策略**：<填入 Mock 策略>
 
+### 3.3 Test Module Plan
+
+> **📝 撰寫指引**（請勿保留本指引文字）：
+> 本節必須明確列出預計存在的測試模組、其命名主體、切分面向與命名理由。
+> 其目的是作為後續 `test_*.py` 實作的直接導航，並控制測試檔的責任邊界。
+> 若主體來源為公開 class 名稱，檔名中的 `<public_component>` 應使用 `snake_case` 形式。
+>
+> **💡 範例**：
+>
+> | File | Subject | Aspect | Purpose |
+> |------|---------|--------|---------|
+> | test_pickle_io.py | pickle_io | overall | 驗證整體序列化與反序列化能力 |
+> | test_pickle_dump__error_handling.py | pickle_dump | error_handling | 驗證序列化異常情境 |
+> | test_pickle_load__edge_cases.py | pickle_load | edge_cases | 驗證反序列化邊界案例 |
+
+| File | Subject | Aspect | Purpose |
+|------|---------|--------|---------|
+| test_<fu_name>.py | <fu_name> | overall | <填入整體驗證目的> |
+| test_<public_component>__<aspect>.py | <public_component> | <aspect> | <填入拆分理由> |
+
 ## 4. 測試環境與配置 (Test Environment)
 
 ### 4.1 測試標記 (Markers)
@@ -257,6 +285,9 @@
 | Component | Import Path | Description |
 | :--- | :--- | :--- |
 | <Component_1>, <Component_2>, ... | `from <fu_path> import ...` | <填入描述> |
+
+> 本節所列測試主體（SUT）應與 `3.3 Test Module Plan` 的測試主體規劃相互對應。
+> 若某測試模組以公開元件為主體，則該公開元件必須出現在本節；若某測試模組以 FU 名稱為主體，則其 `Purpose` 應能說明該模組驗證的是整個 FU 的整體行為。
 
 #### 4.3.2 專案內部輔助依賴 (Internal Dependencies) [Optional]
 
@@ -444,7 +475,16 @@
 >
 > * **Target File**: `tests/wutils/io/pickle-io/test_pickle_io.py`
 
-- **Target File**: `tests/<fu_path>/<fu_name>/test_<name>.py`
+- **Target File**:
+  - `tests/<fu_path>/<fu_name>/test_<fu_name>.py`
+  - `tests/<fu_path>/<fu_name>/test_<public_component>.py`
+  - `tests/<fu_path>/<fu_name>/test_<subject>__<aspect>.py`
+
+> **💡 範例**：
+>
+> - `tests/wutils/io/pickle-io/test_pickle_io.py`
+> - `tests/wutils/io/pickle-io/test_pickle_dump__error_handling.py`
+> - `tests/wutils/io/pickle-io/test_pickle_load__edge_cases.py`
 
 ### 7.2 測試程式骨架 (Skeleton)
 
@@ -552,11 +592,19 @@ class Test<class_name>:
 > 提供常用測試指令，包含執行單元測試和產生覆蓋率報告的範例。
 
 ```bash
-# 執行本 FU 的單元測試
-pytest tests/<fu_path>/<fu_name>/test_<name>.py -v -m unit
+# 執行本 FU 的單檔測試模組
+pytest tests/<fu_path>/<fu_name>/test_<fu_name>.py -v -m unit
+# 或
+pytest tests/<fu_path>/<fu_name>/test_<public_component>.py -v -m unit
+
+# 執行本 FU 的某個拆分測試模組
+pytest tests/<fu_path>/<fu_name>/test_<subject>__<aspect>.py -v -m unit
+
+# 執行本 FU 目錄下的所有測試
+pytest tests/<fu_path>/<fu_name>/ -v -m unit
 
 # 執行並產生覆蓋率報告
-pytest tests/<fu_path>/<fu_name>/test_<name>.py -v --cov=<fu_path> --cov-report=term-missing
+pytest tests/<fu_path>/<fu_name>/ -v --cov=<fu_path> --cov-report=term-missing
 ```
 
 ### 7.4 注意事項 (Implementation Notes)
@@ -580,6 +628,9 @@ pytest tests/<fu_path>/<fu_name>/test_<name>.py -v --cov=<fu_path> --cov-report=
     - [ ] **資源隔離**：檔案 I/O 必須使用 `tmp_path`，且測試後不留下任何殘留檔案。
     - [ ] **無副作用**：測試不依賴也不會修改全域狀態或外部環境。
 - [ ] **結構一致性**：測試檔案存放路徑嚴格遵循「結構對應性原則」(`tests/<fu_path>/<fu_name>/`)。
+- [ ] **Test Module Plan 完整性**：`tests.md` 是否已包含 Test Module Plan，並明確列出測試模組、命名主體、切分面向與目的？
+- [ ] **命名合規性**：測試模組命名是否符合 `test_<fu_name>.py`、`test_<public_component>.py` 或 `test_<subject>__<aspect>.py` 規則？
+- [ ] **黑箱主體原則**：是否避免預設以 private python file 或 internal-only component 作為測試模組主體？
 
 ````
 
@@ -613,6 +664,13 @@ pytest tests/<fu_path>/<fu_name>/test_<name>.py -v --cov=<fu_path> --cov-report=
 - [ ] **Ellipsis 使用**：所有函式實作部分是否皆使用 `...` (Ellipsis) 作為佔位符 (對應 §7.2)？
 - [ ] **Docstring 對齊**：骨架中的 Docstring 是否完整複製了 §5 的 ID 與測試目標 (對應 §7.2)？
 
-### E. 最終清理
+### E. 測試模組規劃
+
+- [ ] 是否已新增 `Test Module Plan` 並說明每個測試模組的命名依據？
+- [ ] 公開 class 主體是否已轉為 `snake_case` 檔名？
+- [ ] 是否避免使用 private file 名稱或 internal-only component 名稱作為預設模組主體？
+- [ ] 若測試檔拆分為多模組，是否已明確說明各 `aspect` 的責任邊界？
+
+### F. 最終清理
 
 - [ ] **指引文字清理**：是否已移除所有「📝 撰寫指引」與「💡 範例」區塊？
