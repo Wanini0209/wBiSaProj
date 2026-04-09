@@ -5,6 +5,6 @@ orchestrated workflows that compose LlmTasks, automation
 tools, and sub-workflows.
 """
 
-from wsatools.workflow._base import WorkflowBase
+from wsatools.workflow._base import Workflow
 
-__all__ = ["WorkflowBase"]
+__all__ = ["Workflow"]
