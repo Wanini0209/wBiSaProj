@@ -39,6 +39,14 @@
 - **工具**：`pytest` + `pytest-cov`。
 - **Mock 策略**：無需 Mock，使用 `tmp_path` 進行真實檔案 I/O 測試，以確保實際檔案操作行為符合預期。
 
+### 3.3 Test Module Plan
+
+| File | Subject | Aspect | Purpose |
+|------|---------|--------|---------|
+| test_json_io.py | json_io | overall | 驗證 json_dump / json_load 的完整功能，包含 UTF-8 編碼、路徑支援、參數透傳、異常透傳與讀寫循環 |
+
+> 本 FU 目前規模適中，以單一測試檔涵蓋所有案例。若未來案例顯著增長，應依 `test_json_io__<aspect>.py` 模式拆分。
+
 ## 4. 測試環境與配置 (Test Environment)
 
 ### 4.1 測試標記 (Markers)
@@ -66,6 +74,10 @@
 | Component | Import Path | Description |
 | :--- | :--- | :--- |
 | `json_dump`, `json_load` | `from wutils.io import json_dump, json_load` | 測試主體 (SUT) |
+
+
+> 本節所列測試主體（SUT）應與 `3.3 Test Module Plan` 的測試主體規劃相互對應。
+> 若某測試模組以公開元件為主體，則該公開元件必須出現在本節；若某測試模組以 FU 名稱為主體，則其 `Purpose` 應能說明該模組驗證的是整個 FU 的整體行為。
 
 #### 4.3.2 專案內部輔助依賴 (Internal Dependencies) [Optional]
 
@@ -214,7 +226,9 @@
 
 ### 7.1 檔案位置 (File Location)
 
-- **Target File**: `tests/wutils/io/json-io/test_json_io.py`
+- **Target File**:
+  - `tests/wutils/io/json-io/test_json_io.py`
+  - 若未來拆分：`tests/wutils/io/json-io/test_<subject>__<aspect>.py`
 
 ### 7.2 測試程式骨架 (Skeleton)
 
@@ -361,10 +375,10 @@ class TestJsonIO:
 
 ```bash
 # 執行本 FU 的單元測試
-pytest tests/wutils/io/json-io/test_json_io.py -v -m unit
+pytest tests/wutils/io/json-io/ -v -m unit
 
 # 執行並產生覆蓋率報告
-pytest tests/wutils/io/json-io/test_json_io.py -v --cov=wutils/io --cov-report=term-missing
+pytest tests/wutils/io/json-io/ -v --cov=wutils/io --cov-report=term-missing
 ```
 
 ### 7.4 注意事項 (Implementation Notes)
@@ -385,3 +399,6 @@ pytest tests/wutils/io/json-io/test_json_io.py -v --cov=wutils/io --cov-report=t
     - [ ] **資源隔離**：檔案 I/O 必須使用 `tmp_path`，且測試後不留下任何殘留檔案。
     - [ ] **無副作用**：測試不依賴也不會修改全域狀態或外部環境。
 - [ ] **結構一致性**：測試檔案存放路徑嚴格遵循「結構對應性原則」(`tests/wutils/io/json-io/`)。
+- [ ] **Test Module Plan 完整性**：`tests.md` 是否已包含 Test Module Plan，並明確列出測試模組、命名主體、切分面向與目的？
+- [ ] **命名合規性**：測試模組命名是否符合 `test_<fu_name>.py`、`test_<public_component>.py` 或 `test_<subject>__<aspect>.py` 規則？
+- [ ] **黑箱主體原則**：是否避免預設以 private python file 或 internal-only component 作為測試模組主體？

@@ -40,6 +40,14 @@
 - **Mock 策略**：
     - 不使用外部 Mock，直接定義簡單的 Helper Function (如加法運算、拋錯函數、睡眠函數) 作為 `target` 傳入 `FutureThread` 進行測試。
 
+### 3.3 Test Module Plan
+
+| File | Subject | Aspect | Purpose |
+|------|---------|--------|---------|
+| test_future_thread.py | future_thread | overall | 驗證 FutureThread 的執行控制、結果回傳、異常傳播、超時機制與狀態存取安全性 |
+
+> 本 FU 目前規模適中，以單一測試檔涵蓋所有案例。若未來案例顯著增長，應依 `test_future_thread__<aspect>.py` 模式拆分。
+
 ## 4. 測試環境與配置 (Test Environment)
 
 ### 4.1 測試標記 (Markers)
@@ -67,6 +75,10 @@
 | Component | Import Path | Description |
 | :--- | :--- | :--- |
 | `FutureThread` | `from wutils.wthread import FutureThread` | 測試主體 (SUT) |
+
+
+> 本節所列測試主體（SUT）應與 `3.3 Test Module Plan` 的測試主體規劃相互對應。
+> 若某測試模組以公開元件為主體，則該公開元件必須出現在本節；若某測試模組以 FU 名稱為主體，則其 `Purpose` 應能說明該模組驗證的是整個 FU 的整體行為。
 
 #### 4.3.2 專案內部輔助依賴 (Internal Dependencies) [Optional]
 
@@ -182,7 +194,9 @@
 
 ### 7.1 檔案位置 (File Location)
 
-- **Target File**: `tests/wutils/wthread/future-thread/test_future_thread.py`
+- **Target File**:
+  - `tests/wutils/wthread/future-thread/test_future_thread.py`
+  - 若未來拆分：`tests/wutils/wthread/future-thread/test_<subject>__<aspect>.py`
 
 ### 7.2 測試程式骨架 (Skeleton)
 
@@ -289,10 +303,10 @@ class TestFutureThread:
 
 ```bash
 # 執行本 FU 的單元測試
-pytest tests/wutils/wthread/future-thread/test_future_thread.py -v -m unit
+pytest tests/wutils/wthread/future-thread/ -v -m unit
 
 # 執行並產生覆蓋率報告
-pytest tests/wutils/wthread/future-thread/test_future_thread.py -v --cov=wutils/wthread --cov-report=term-missing
+pytest tests/wutils/wthread/future-thread/ -v --cov=wutils/wthread --cov-report=term-missing
 ```
 
 ### 7.4 注意事項 (Implementation Notes)
@@ -313,3 +327,6 @@ pytest tests/wutils/wthread/future-thread/test_future_thread.py -v --cov=wutils/
     - [ ] **資源隔離**：檔案 I/O 必須使用 `tmp_path`，且測試後不留下任何殘留檔案。
     - [ ] **無副作用**：測試不依賴也不會修改全域狀態或外部環境。
 - [ ] **結構一致性**：測試檔案存放路徑嚴格遵循「結構對應性原則」(`tests/<fu_path>/<fu_name>/`)。
+- [ ] **Test Module Plan 完整性**：`tests.md` 是否已包含 Test Module Plan，並明確列出測試模組、命名主體、切分面向與目的？
+- [ ] **命名合規性**：測試模組命名是否符合 `test_<fu_name>.py`、`test_<public_component>.py` 或 `test_<subject>__<aspect>.py` 規則？
+- [ ] **黑箱主體原則**：是否避免預設以 private python file 或 internal-only component 作為測試模組主體？
