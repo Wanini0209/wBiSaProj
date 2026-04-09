@@ -51,55 +51,177 @@ async def test_async_operation():
 
 ### 2.1 結構對應性原則 [CRITICAL]
 
-測試目錄結構必須嚴格遵循 **「結構對應性原則 (Structural Correspondence Principle)」**。測試檔案的路徑必須與其測試的 **功能單元容器 (FU Container)** 路徑完全對應。
+測試目錄結構必須嚴格遵循《架構篇》所定義的 **「結構對應性原則 (Structural Correspondence Principle)」**。對於每一個 FU，規格、測試與實作的對應關係如下：
 
-**路徑對應規則**：
-`src/<fu_path>/...` ⟷ `tests/<fu_path>/<fu_name>/...`
+- **規格**：`docs/specs/<fu_path>/<fu_name>/...`
+- **測試**：`tests/<fu_path>/<fu_name>/...`
+- **實作**：`<fu_path>/_<feature_snake_name>/...`
 
-> **注意**：`<fu_name>` 是該 FU 的具體名稱，這使得測試目錄能清晰指向具體的邏輯單元，而不僅僅是模組檔案。
+其中，測試的導航主體為 **FU（功能單元）** 與 **FU Container**，而非 private python file。測試路徑以 `<fu_name>` 作為目錄級定位依據，確保從邏輯單元到其驗證程式碼的直接可追溯性。
 
-### 2.2 範例結構
+### 2.2 測試路徑不得深入到 private python file [CRITICAL]
 
-#### 範例 A：Library 型 FU (簡單結構)
+測試結構的主要導航層級應停留在 FU Container 與 FU。測試目錄**不應**鏡射到 private implementation file。
 
-- **FU Container**: `core/config`
-- **實作**: `core/config/_environment.py`
+> `tests/<fu_path>/_<feature_name>/test_impl_file.py` **不是**本專案推薦模式。
+
+此原則與 import 規範一致：公開入口由 `__init__.py` 定義，外部與一般模組不得穿透 private path；真正穩定的存取點是 package / FU Container，不是 private python file。因此，測試文件也應反映相同哲學。
+
+### 2.3 範例結構
+
+#### 範例 A：Library 型 FU
+
+- **FU Container**：`testlib/text/normalize`
+- **Feature 私有目錄**：`testlib/text/normalize/_string_cleanup/`
+- **實作檔案**：`_normalizer.py`, `_rules.py`
 
 ```text
+testlib/
+└── text/
+    └── normalize/                      # FU Container
+        ├── __init__.py                 # 公開介面
+        └── _string_cleanup/            # Feature 私有目錄
+            ├── _normalizer.py
+            └── _rules.py
+
 tests/
-├── __init__.py
-└── core/
-    └── config/                    # 對應 FU Container 路徑
-        ├── __init__.py
-        └── environment/           # <fu_name>
+└── testlib/
+    └── text/
+        └── normalize/                  # 對應 FU Container
+            └── string_cleanup/         # <fu_name>
+                ├── __init__.py
+                ├── test_string_cleanup.py
+                ├── test_text_normalizer__basic_cases.py
+                └── test_text_normalizer__edge_cases.py
+```
+
+**說明**：測試目錄對應的是 `FU Container + FU 名稱`（`normalize/string_cleanup/`），而非鏡射到 `_string_cleanup/_normalizer.py`。同一個 FU 可依需要拆成多個小測試檔，利於 LLM 協作與維護。
+
+#### 範例 B：業務系統 FU
+
+- **FU Container**：`sampleapp/db/catalog/product`
+- **Feature 私有目錄**：`sampleapp/db/catalog/product/_product_inventory/`
+
+```text
+sampleapp/
+└── db/
+    └── catalog/
+        └── product/                    # FU Container
             ├── __init__.py
-            └── test_env_vars.py   # 測試檔案
+            ├── _imports.py
+            └── _product_inventory/     # Feature 私有目錄
+                ├── _schemas.py
+                ├── _models.py
+                └── _repository.py
+
+tests/
+└── sampleapp/
+    └── db/
+        └── catalog/
+            └── product/               # 對應 FU Container
+                └── inventory/          # <fu_name>
+                    ├── __init__.py
+                    ├── test_inventory.py
+                    └── test_inventory__error_handling.py
 ```
 
-#### 範例 B：業務系統 FU (深層結構)
+**說明**：測試導航主體為 FU 名稱 `inventory`，而非 private file `_repository.py` 或 `_schemas.py`。
 
-- **FU Container**: `gms/db/market/stock/price`
-- **實作**: `gms/db/market/stock/price/_repository.py`
+---
+
+## 2.4 測試檔命名規範
+
+### 2.4.1 命名主體的優先順序
+
+測試檔命名的主體，依下列優先順序選擇：
+
+1. **單一公開元件名稱**（如 `__init__.py` 匯出的 class 或 function）
+2. **FU 名稱**
+3. **公開能力 / 公開行為名稱**
+
+**格式規則**：若主體來源為公開 class 名稱，測試檔名中的 `<public_component>` 應使用其 `snake_case` 形式。例如 `StockProfileRepository` → `test_stock_profile_repository.py`。
+
+**禁止事項**：不得預設以下列名稱作為主要導航主體：private python file 名稱、internal-only component 名稱、單純描述 implementation 細節但不具公開意義的名稱。此方向與「公開入口由 `__init__.py` 定義、一般模組不得穿透 private path」相一致。
+
+### 2.4.2 單檔命名規則
+
+若某 FU 目前僅有一個主要測試檔，使用 `test_<fu_name>.py` 或 `test_<public_component>.py`。
 
 ```text
-tests/
-├── __init__.py
-└── gms/
-    └── db/
-        └── market/
-            └── stock/
-                └── price/         # 對應 FU Container 路徑
-                    ├── __init__.py
-                    └── repository/      # <fu_name>
-                        ├── __init__.py
-                        └── test_crud.py # 測試檔案
+test_string_cleanup.py
+test_text_normalizer.py
 ```
+
+### 2.4.3 多檔拆分命名規則
+
+當同一 FU 的測試需要拆分時，使用 `test_<subject>__<aspect>.py`：
+
+- `subject`：此測試檔主要驗證的公開主體（公開元件名稱或 FU 名稱）
+- `aspect`：此測試檔負責的驗證切片
+
+```text
+test_text_normalizer__basic_cases.py
+test_text_normalizer__unicode_cases.py
+test_string_cleanup__error_handling.py
+test_string_cleanup__edge_cases.py
+```
+
+### 2.4.4 internal-only component 的預設處理
+
+FU 內部共用但未被提升為正式公開能力的 component，預設不作為獨立測試主體；其正確性應主要透過所屬公開元件或整個 FU 的對外行為進行驗證。
+
+若某個內部 helper、builder、mapper 仍未被提升為正式共用結構，通常表示它在架構上仍屬於某個較大功能的一部分；此時測試應優先驗證整體行為，而不是把該 internal 名稱提升為測試導航主角。
+
+### 2.4.5 允許的例外
+
+若某 internal-only component 的演算法、規則或邊界條件極複雜，且透過公開入口驗證會造成測試失焦，則可為其安排更細的測試切片；但測試檔名仍應優先反映公開主體或 FU 能力，而非直接反映 private file 名稱。
+
+**不建議**：
+
+```text
+test_query_builder.py
+```
+
+**建議**：
+
+```text
+test_order_query_service__query_composition.py
+test_string_cleanup__rule_composition.py
+```
+
+---
+
+## 2.5 LLM 協作導向的測試拆分原則
+
+為配合本專案的人機協作模式，測試檔應維持適中的責任範圍。當單一 FU 的測試內容過大時，應優先採用 `test_<subject>__<aspect>.py` 的方式拆分，而非將所有案例集中於單一巨型檔案中。
+
+拆分的目的包含：提升人類可讀性、降低 LLM 單次理解負擔、讓責任邊界更清楚。測試檔不應無限制膨脹成單一巨型檔案。
+
+---
+
+## 2.6 Test Module Plan 要求
+
+每個 FU 的 `docs/specs/<fu_path>/<fu_name>/tests.md` 不僅需列出測試案例，也**必須**包含一個 **Test Module Plan**，明確列出預計存在的測試模組與命名理由。
+
+**建議格式**：
+
+```markdown
+## Test Module Plan
+
+| File | Subject | Aspect | Purpose |
+|------|---------|--------|---------|
+| test_string_cleanup.py | string_cleanup | overall | 驗證整體清理能力的主要行為 |
+| test_text_normalizer__basic_cases.py | text_normalizer | basic_cases | 驗證一般輸入情境 |
+| test_text_normalizer__unicode_cases.py | text_normalizer | unicode_cases | 驗證 Unicode 與特殊字元情境 |
+```
+
+此 Plan 說明了測試模組的切分方式與命名依據，確保測試與規格、實作之間的直接可追溯性。
 
 ---
 
 ## 3. 雙軌測試策略
 
-根據 **[方法論篇](https://www.google.com/search?q=PROJECT_DESIGN-METHODOLOGY.md)**，開發過程依據任務性質採用不同的測試策略。
+根據 **[方法論篇](PROJECT_DESIGN-METHODOLOGY.md)**，開發過程依據任務性質採用不同的測試策略。
 
 ### 3.1 標準 TDD (Standard TDD)
 
@@ -127,7 +249,7 @@ tests/
 - **測試策略**：標準單元測試。
 - **依賴處理**：無須 Mock。
 
-**範例 (core/utils/time.py)**：
+**範例 (FU Container: core/utils/time)**：
 
 ```python
 import pytest
@@ -156,7 +278,7 @@ def test_to_taipei_time_conversion():
     - **使用 SQLite In-Memory**：使用 `sqlite_session` fixture 進行快速、隔離的真實 DB 操作。
 - **標記**：`@pytest.mark.database`, `@pytest.mark.integration`
 
-**範例 (gms/db/market/stock/price)**：
+**範例 (FU Container: gms/db/market/stock/price)**：
 
 ```python
 import pytest
@@ -196,7 +318,7 @@ async def test_create_and_get_price(sqlite_session):
     - **依賴注入**：透過構造函數注入 Mock 物件。
 - **標記**：`@pytest.mark.unit`
 
-**範例 (gms/service/market/analysis)**：
+**範例 (FU Container: gms/service/market/analysis)**：
 
 ```python
 import pytest
@@ -233,7 +355,7 @@ async def test_analyze_abnormal_volume():
     - **使用 Dependency Overrides**：FastAPI 特有的測試機制。
 - **標記**：`@pytest.mark.api`, `@pytest.mark.unit`
 
-**範例 (gms/api/market/stock)**：
+**範例 (FU Container: gms/api/market/stock)**：
 
 ```python
 import pytest
@@ -406,7 +528,9 @@ class TestStockPricing:
 
 ### 6.2 架構合規性檢查 (Architectural Compliance) [CRITICAL]
 
-- [ ] **路徑對應性**: 測試檔案路徑是否嚴格對應 FU Container 路徑？(例如 `tests/gms/api/user` 對應 `gms/api/user`)。
+- [ ] **路徑對應性**: 測試檔案路徑是否遵循 `tests/<fu_path>/<fu_name>/...` 的 FU 級目錄結構？
+- [ ] **私有路徑隔離**: 測試目錄是否避免鏡射 private implementation file（如 `_<feature_name>/`）？
+- [ ] **命名合規性**: 測試檔名是否以公開主體或 FU 名稱為導航主體，而非 private file 名稱？
 - [ ] **跨平台相容性**:
     - [ ] 是否使用 `tmp_path` 而非硬編碼路徑 (`/root/`, `/tmp/`, `C:\`)？
     - [ ] Mock 檔案 I/O 時是否同時考慮 `builtins.open` 與 `Path.open`？
