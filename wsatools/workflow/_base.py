@@ -1,6 +1,6 @@
 """Workflow orchestration base framework.
 
-Provides the abstract base class ``WorkflowBase`` for building
+Provides the abstract base class ``Workflow`` for building
 multi-step orchestrated workflows that compose LlmTasks,
 automation tools, and sub-workflows.
 
@@ -15,7 +15,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 
-class WorkflowBase(ABC):
+class Workflow(ABC):
     """Abstract base class for multi-step orchestrated workflows.
 
     Subclasses implement ``execute()`` to define the actual
@@ -24,7 +24,7 @@ class WorkflowBase(ABC):
 
     Examples
     --------
-    >>> class MyWorkflow(WorkflowBase):
+    >>> class MyWorkflow(Workflow):
     ...     def execute(self):
     ...         # Step 1: LLM task
     ...         parsed = SomeLlmTask(model).run()
