@@ -1,21 +1,22 @@
 """Sample LLM task implementation for developer reference.
 
 This module provides a concrete example of how to subclass
-``LlmTaskBase``. It is intended as a reference only and is **not**
+``LlmTask``. It is intended as a reference only and is **not**
 exported from the ``wsatools.llm`` package.
 
 See Also
 --------
-wsatools.llm._base.LlmTaskBase : The abstract base class.
+wsatools.llm.LlmTask : The abstract base class.
+
 """
 
 import json
 from typing import Any
 
-from wsatools.llm._base import LlmModel, LlmTaskBase
+from wsatools.llm import LlmModel, LlmTask
 
 
-class SampleTask(LlmTaskBase):
+class SampleTask(LlmTask):
     """Sample task: analyse code quality of a target file.
 
     Demonstrates the standard subclass pattern including custom
@@ -82,7 +83,7 @@ class SampleTask(LlmTaskBase):
 
         Performs three-stage validation:
 
-        1. Strip Markdown code fences (````json`` / ````).
+        1. Strip Markdown code fences (````json`` / ````)`.
         2. Parse as JSON.
         3. Verify required keys (``score``, ``issues``, ``summary``)
            and value types.

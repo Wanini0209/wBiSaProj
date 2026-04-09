@@ -1,8 +1,17 @@
 """LLM task automation base framework.
 
-Provides the abstract base class ``LlmTaskBase``, the ``LlmModel`` enum,
-and the editor-driven human-in-the-loop workflow used across all
-LLM-assisted automation tasks in ``wsatools``.
+Provides the abstract base class ``LlmTask``, the ``LlmModel`` enum,
+the ``load_prompt_tags`` helper, and the editor-driven human-in-the-loop
+workflow used across all LLM-assisted automation tasks in ``wsatools``.
+
+Public API
+----------
+LlmTask
+    Abstract base class for LLM tasks.
+LlmModel
+    Enum of available LLM models.
+load_prompt_tags
+    Load prompt tag files from a directory.
 """
 
 import os
@@ -10,6 +19,7 @@ import re
 import subprocess
 from abc import ABC, abstractmethod
 from enum import StrEnum
+from pathlib import Path
 from typing import Any
 
 # ==========================================
@@ -20,6 +30,35 @@ LLM_REQUEST_TMP = "_llm_request.tmp"
 LLM_RESPONSE_TMP = "_llm_response.tmp"
 UPLOAD_BATCH_MAX_LEN = 240
 _HUMAN_ONLY_RE = re.compile(r"(`{3,})human-only[ \t]*\r?\n[\s\S]*?\1(?:\r?\n)?")
+_PROMPT_TAG_RE = re.compile(r"(`{3,})prompt-tag:(\S+)[ \t]*\r?\n\1(?:\r?\n)?")
+
+
+# ==========================================
+# Prompt Tag Loader
+# ==========================================
+def load_prompt_tags(tag_dir: str | Path) -> dict[str, str]:
+    """Load prompt tag content from a directory of Markdown files.
+
+    Each ``.md`` file in *tag_dir* becomes a prompt tag: the
+    filename (without extension) is the tag ID, and the file
+    content is the tag text that replaces the corresponding
+    ``prompt-tag`` fenced block in a prompt template.
+
+    Parameters
+    ----------
+    tag_dir : str | Path
+        Directory containing ``.md`` tag files.
+
+    Returns
+    -------
+    dict[str, str]
+        Mapping of tag ID to content.
+    """
+    tag_dir = Path(tag_dir)
+    tags: dict[str, str] = {}
+    for path in sorted(tag_dir.glob("*.md")):
+        tags[path.stem] = path.read_text(encoding="utf-8")
+    return tags
 
 
 # ==========================================
@@ -40,7 +79,7 @@ class LlmModel(StrEnum):
 # ==========================================
 # Abstract Base Class
 # ==========================================
-class LlmTaskBase(ABC):
+class LlmTask(ABC):
     """Abstract base class for all LLM-assisted automation tasks.
 
     Subclasses define a specific LLM task by providing a prompt template,
@@ -61,7 +100,7 @@ class LlmTaskBase(ABC):
 
     Examples
     --------
-    >>> class MyTask(LlmTaskBase):
+    >>> class MyTask(LlmTask):
     ...     PROMPT_TEMPLATE = "Summarize: {{content}}"
     ...
     ...     def __init__(self, model, content):
@@ -139,15 +178,42 @@ class LlmTaskBase(ABC):
         """
 
     # ------------------------------------------
+    # Optional overrides
+    # ------------------------------------------
+    def get_prompt_tags(self) -> dict[str, str]:
+        """Return prompt tag content for template injection.
+
+        Override this method to supply tag content that replaces
+        ``prompt-tag`` fenced blocks in the template.  Each key
+        corresponds to a ``TAG_ID`` in a block like::
+
+            ```prompt-tag:TAG_ID
+            ```
+
+        The entire fenced block is replaced with the value.
+
+        Returns
+        -------
+        dict[str, str]
+            Mapping of tag ID to content.  Empty by default.
+        """
+        return {}
+
+    # ------------------------------------------
     # Public methods
     # ------------------------------------------
     def build_prompt(self) -> str:
         """Build the final prompt by substituting template parameters.
 
-        Replaces all ``{{KEY}}`` placeholders in ``PROMPT_TEMPLATE``
-        with the corresponding values from ``get_prompt_params()``,
-        then strips all ``human-only`` fenced code blocks so that
-        human-only content never reaches the LLM.
+        Processing order:
+
+        1. Replace ``{{KEY}}`` placeholders with values from
+           ``get_prompt_params()``.
+        2. Replace ``prompt-tag`` fenced blocks with content from
+           ``get_prompt_tags()``.  Unrecognised tag IDs are silently
+           removed.
+        3. Strip ``human-only`` fenced blocks so that human-only
+           content never reaches the LLM.
 
         Returns
         -------
@@ -157,6 +223,11 @@ class LlmTaskBase(ABC):
         prompt = self.PROMPT_TEMPLATE
         for key, value in self.get_prompt_params().items():
             prompt = prompt.replace(f"{{{{{key}}}}}", str(value))
+        tags = self.get_prompt_tags()
+        prompt = _PROMPT_TAG_RE.sub(
+            lambda m: tags.get(m.group(2), ""),
+            prompt,
+        )
         prompt = _HUMAN_ONLY_RE.sub("", prompt)
         return prompt
 
