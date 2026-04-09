@@ -49,7 +49,7 @@
 `feature/<root>/<hierarchy>/<feature_name>`
 
 **命名規則**：
-分支路徑必須採用**階層式命名**，且其結構應與該 Feature 在 `docs/use-cases/` 中的相對路徑完全一致（不含 `docs/use-cases/` 前綴）。這確保了 Git 分支、文件目錄與程式碼架構三者的高度對應。
+對於一般功能開發分支，分支路徑必須採用**階層式命名**，且其結構應與該 Feature 在 `docs/use-cases/` 中的相對路徑完全一致（不含 `docs/use-cases/` 前綴）。這確保了 Git 分支、文件目錄與程式碼架構三者的高度對應。**但對於 Project Standards 或純文件性 propagation 修訂，若不存在對應的 `docs/use-cases/` 路徑，則可依其共同上層範圍採用更貼切的分支命名（詳見場景 B、場景 C）。**
 
 | Feature 類型 | 命名邏輯 | 分支命名範例 |
 |:-------------|:---------|:-------------|
@@ -66,6 +66,14 @@
 ## 3. 提交規範 (Commit Convention)
 
 本專案嚴格遵循 Conventional Commits 1.0.0 規範。
+
+> **注意：Type 與 Scope 是兩個不同維度的決策。**
+>
+> - **Type** 用於描述變更性質（如 `docs`, `feat`, `fix`, `refactor`）
+> - **Scope** 用於描述本次提交的影響範圍
+>
+> 因此，`docs` 類提交也可能使用路徑型 Scope（如 `use-cases/...`、`specs/...`）；
+> 而功能實作類提交則依最小共同實作範圍決定 Scope。
 
 ### 3.1 訊息結構
 
@@ -97,14 +105,34 @@ Header 總長度不得超過 72 字元。
 
 #### 2. Scope (範圍)
 
-Scope 必須精準反映變更的影響範圍。本專案採用三軌制 Scope：
+Scope 必須精準反映變更的影響範圍。本專案依提交情境區分為以下規則：
 
 | 提交情境 | 對象文件/代碼 | Scope 規則 | 範例 |
 |:---------|:--------------|:-----------|:-----|
-| 專案規範文件（獨立於功能外） | 1. `docs/` 根目錄文件<br>2. `docs/standards/` 下所有文件 | 固定使用 `project` | `docs(project): update vcs standards` |
-| 功能定義文件（Use Cases） | `docs/use-cases/...` | 對應 `use-cases` 的分類路徑 | `docs(use-cases/gms/user): define requirements` |
-| 功能實作（Code & Specs） | `<fu_path>` 下的程式碼、Specs 與測試 | 對應受影響的 FU Container 路徑 | `feat(gms/api/user/profile): add user profile endpoint` |
-| 專案級工具 | `wutils`, 根目錄設定檔 | 使用模組名稱 | `chore(build): update poetry.lock` |
+| 專案規範文件（Project-Level） | `docs/` 根目錄文件、`docs/standards/` 下所有文件 | 固定使用 `project` | `docs(project): update version control standards` |
+| 功能定義文件（Feature Use Cases） | `docs/use-cases/...`，且屬於 Feature 開發流程的一部分 | 使用完整 `use-cases` 路徑 | `docs(use-cases/gms/user/user-reg): define registration requirements` |
+| 純文件性 `use-cases` 修訂 | 僅修改 `docs/use-cases/...`，不伴隨功能與實作變更 | 使用 `docs/` 下共同上層路徑 | `docs(use-cases/gms/user): standardize requirements headings` |
+| 純文件性 `specs` 修訂 | 僅修改 `docs/specs/...`，不伴隨功能與實作變更 | 使用 `docs/` 下共同上層路徑 | `docs(specs/wutils): align library test specs with revised testing rules` |
+| 功能實作類提交（Code / Tests / Specs 一併提交） | `<fu_path>` 下的實作、測試與伴隨的 specs 修訂 | 使用能完整涵蓋本次所有受影響實作的最小共同容器路徑 | `feat(gms/api/user/profile): add user profile endpoint` |
+| 專案級工具 | 根目錄設定檔、建構工具 | 使用模組名稱 | `chore(build): update poetry.lock` |
+
+##### 純文件性 propagation 更新的 Scope 原則
+
+當一次提交同時修改多份 `docs/use-cases/**` 或 `docs/specs/**` 文件，且這些修改：
+
+- 不涉及功能與實作變更
+- 修改模式一致
+- 應共同審查與共同回滾
+
+則可將其視為單一批次文件修訂提交。
+
+此時 Scope 應使用該批文件在 `docs/` 下的共同上層路徑，
+而非強制拆分為每個單一路徑各自一個 Commit。
+
+例如：
+
+- `docs(specs/wutils): align library test specs with revised testing rules`
+- `docs(use-cases/gms/user): standardize section headings`
 
 #### 3. Subject (主旨)
 
@@ -256,13 +284,51 @@ docs(project): update version control standards
    - 審核通過後採用 Merge Commit 合併至 `develop`。
    - 例外：若僅為修正錯字 (Typo) 或格式 (Style)，允許使用 Squash Merge 以保持主線簡潔。
 
+### 場景 C：純文件性修訂（Use Cases / Specs Propagation）
+
+當需要批量修訂 `docs/use-cases/**` 或 `docs/specs/**` 文件，且這些修改：
+
+- 不涉及功能變更
+- 不伴隨 code / tests 實作變更
+- 屬於格式、模板、命名、欄位、追溯規則等同步更新
+
+則可視為單一批次文件修訂處理：
+
+1. **建立分支**
+   依修改範圍選擇合理的分支名稱。若修訂屬於 project-level 規範的全面同步，可使用 `feature/project/...`；若修訂明確侷限於某個較小的文件範圍，也可依共同上層路徑選擇更貼切的分支名稱。
+
+   ```bash
+   # 範例一：跨範圍的規範同步修訂
+   git checkout -b feature/project/revise-testing-standards
+
+   # 範例二：僅限於特定 specs 範圍的 propagation
+   git checkout -b feature/wutils/align-test-specs
+   ```
+
+2. **提交變更**
+   Scope 應使用該批文件在 `docs/` 下的共同上層路徑，例如：
+
+   ```bash
+   git add docs/specs/wutils/
+   git commit -m "docs(specs/wutils): align library test specs with revised testing rules"
+   ```
+
+3. **發起 Pull Request**
+
+   - 進行整批文件修訂的審核
+   - 確認其修改模式一致，且應共同回滾
+
+4. **合併**
+
+   - 採用 Merge Commit 合併至 `develop`
+
 ---
 
 ## 5. 品質閘道 (Quality Gates)
 
 在執行 `git commit` 前，應確認：
 
-1. **Scope 正確性**：修改 `docs/` 或 `docs/standards/` 下的文件時，Scope 是否為 `project`？
+1. **Scope 正確性**：修改 `docs/` 根目錄或 `docs/standards/` 下的文件時，Scope 是否為 `project`？純文件性 `use-cases/specs` 修訂時，Scope 是否使用了共同上層路徑？
 2. **流程合規**：是否已建立獨立分支？
 3. **格式檢查**：
    - Header 是否 < 72 字元？
@@ -277,6 +343,8 @@ docs(project): update version control standards
 |:-----|:-----------|:-----------|
 | 修改版本控制規範 | `docs: update git doc`（缺少 scope） | `docs(project): update version control standards`（scope 為 project） |
 | 修改架構設計總表 | 直接 Commit 到 develop（違反流程） | 建立 `feature/project/...` 分支並發起 PR（確保共識） |
-| 功能文件提交 | `docs(project): add user use-case`（Scope 混淆） | `docs(use-cases/gms/user/user-reg): define requirements`（Scope 對應完整路徑） |
+| Project-Level 規範修訂 | `docs(standards): update testing rules`（scope 不應使用子目錄名） | `docs(project): update testing rules`（project-level 文件統一使用 `project`） |
+| Feature Use Cases 定義 | `docs(project): add user use-case`（Scope 混淆） | `docs(use-cases/gms/user/user-reg): define registration requirements`（Scope 對應完整路徑） |
+| 純文件性 specs propagation | `docs(specs/wutils/io/json-io): align test spec wording`（若本次同時改了多份 specs，則過細） | `docs(specs/wutils): align library test specs with revised testing rules`（使用共同上層路徑） |
 | 功能實作提交 (API 層) | `feat(api): add login`（Scope 太籠統，無 Body） | `feat(gms/api/auth): add login endpoint`（Scope 精確，動詞反映 API 層新增，建議附 Body） |
 | 功能實作提交 (邏輯層) | `feat(auth): implement login`（Scope 太籠統） | `feat(gms/service/auth): implement login authentication`（Scope 精確，動詞反映邏輯落地） |
