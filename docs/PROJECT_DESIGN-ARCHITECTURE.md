@@ -49,7 +49,10 @@
 |:-------|:-----|:---------|
 | **`wutils`** | 提供通用的 Python 開發工具集，並作為基礎建設隔離層封裝具副作用的第三方套件 | 不依賴專案內其他任何套件 |
 | **`core`** | **專案級**核心套件，提供共用基礎元件與統一抽象介面 | 依賴 `wutils` |
-| **`wsatools`** | 系統分析與開發流程輔助工具 | 僅供開發時使用，不被任何系統依賴 |
+
+#### wsatools 的定位
+
+`wsatools` 為**開發輔助工具體系**，僅供開發時使用，不屬於 Project-Level Library，亦不屬於三大系統類型之一。其架構與治理方式為獨立體系，詳見 `docs/wsatools/architecture.md`。
 
 #### wutils 的設計理念
 
@@ -194,18 +197,20 @@ wutils 的諸多 Toolkit 中，基礎建設類（I/O、Crypto、Network、System
 
 ```mermaid
 graph TD
-    %% Library
-    subgraph "Library"
+    %% Project-Level Library
+    subgraph "Project-Level Library"
         wutils[wutils<br/>通用工具庫]
         core[core<br/>專案級核心]
-        wsatools[wsatools<br/>系統分析設計工具]
         core --> wutils
-        wsatools --> wutils
-        wsatools -.->|optional| core
 
         core_interfaces[core/interfaces<br/>抽象契約]:::abstract
         core_interfaces --> core
     end
+
+    %% 開發輔助工具
+    wsatools[wsatools<br/>開發輔助工具]
+    wsatools --> wutils
+    wsatools -.->|optional| core
 
     %% 資料源系統
     subgraph "資料源系統"
@@ -246,12 +251,14 @@ graph TD
 
     %% 樣式
     classDef library fill:#e1f5fe
+    classDef devtools fill:#e8f5e9,stroke:#66bb6a,stroke-width:1px,stroke-dasharray: 3
     classDef datasource fill:#fff3e0
     classDef business fill:#f3e5f5
     classDef abstract fill:#fffde7,stroke:#fbc02d,stroke-width:2px,stroke-dasharray: 5 5
     classDef runtime fill:#eeeeee,stroke:#9e9e9e,stroke-width:2px,stroke-dasharray: 3
 
-    class wutils,core,wsatools library
+    class wutils,core library
+    class wsatools devtools
     class ds_core,ds_collector,ds_service datasource
     class bs_core,bs_etl,bs_db,bs_service,bs_api business
 ```
@@ -638,7 +645,8 @@ Feature → _<feature_snake_name>/ → impl_file (私有實作)      ✅
 
 | 術語 | 定義 | 範例 |
 |:-----|:-----|:-----|
-| **Library** | 跨系統共用的函式庫 | `wutils`, `core`, `wsatools` |
+| **Project-Level Library** | 跨系統共用的函式庫 | `wutils`, `core` |
+| **Development Support Tools** | 開發輔助工具體系 | `wsatools` |
 | **Data Source System** | 封裝外部資料源的適配器系統 | `tej`, `yafin` |
 | **Business System** | 實現業務邏輯的應用系統 | `gms`, `tps` |
 

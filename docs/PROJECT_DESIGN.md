@@ -6,7 +6,7 @@
 
 此工作空間內可以包含多個遵循本設計文件規範的獨立元件，主要分為三大類型：
 
-1. **共用函式庫 (Libraries)**：如 `wutils`, `wsatools`, `core` 等，提供專案級 (Project-level) 的通用功能。
+1. **共用函式庫 (Project-Level Libraries)**：如 `wutils`, `core`，提供專案級 (Project-level) 的通用功能。
 2. **業務系統 (Business Systems)**：為特定業務目的所開發的獨立系統，例如 `gms`。
 3. **資料源系統 (Data Source Systems)**：為存取外部數據而建立的適配器系統，例如 `tej`。
 
@@ -104,7 +104,8 @@
 
 - `wutils`：提供通用的基礎開發工具集。
 - `core`：專案級核心套件，提供共用元件與作為系統間解耦契約的抽象介面。
-- `wsatools`：提供開發流程所需的輔助工具，不被任何系統依賴。
+
+> **備註**：`wsatools` 為開發輔助工具體系，僅供開發時使用，不屬於 Project-Level Library，亦不屬於三大系統類型之一。
 
 #### 資料源系統 (Data Source Systems)
 
@@ -135,17 +136,19 @@
 ```mermaid
 graph TD
     %% === Library ===
-    subgraph "Library"
+    subgraph "Project-Level Library"
         wutils[wutils<br/>通用工具庫]
         core[core<br/>專案級核心]
-        wsatools[wsatools<br/>系統分析設計工具]
         core --> wutils
-        wsatools --> wutils
-        wsatools -.->|optional| core
 
         core_interfaces[core/interfaces<br/>抽象契約]:::abstract
         core_interfaces --> core
     end
+
+    %% 開發輔助工具
+    wsatools[wsatools<br/>開發輔助工具]
+    wsatools --> wutils
+    wsatools -.->|optional| core
 
     %% === 資料源系統 ===
     subgraph "資料源系統"
@@ -189,12 +192,14 @@ graph TD
 
     %% 樣式
     classDef library fill:#e1f5fe
+    classDef devtools fill:#e8f5e9,stroke:#66bb6a,stroke-width:1px,stroke-dasharray: 3
     classDef datasource fill:#fff3e0
     classDef business fill:#f3e5f5
     classDef abstract fill:#fffde7,stroke:#fbc02d,stroke-width:2px,stroke-dasharray: 5 5
     classDef runtime fill:#eeeeee,stroke:#9e9e9e,stroke-width:2px,stroke-dasharray: 3
 
-    class wutils,core,wsatools library
+    class wutils,core library
+    class wsatools devtools
     class ds_core,ds_collector,ds_service datasource
     class bs_core,bs_etl,bs_db,bs_service,bs_api business
 ```
