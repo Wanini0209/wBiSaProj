@@ -166,7 +166,6 @@ sampleapp/
     └── catalog/
         └── product/                    # FU Container
             ├── __init__.py
-            ├── _imports.py
             └── _product_inventory/     # Feature 私有目錄
                 ├── _schemas.py
                 ├── _models.py

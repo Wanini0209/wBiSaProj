@@ -2,38 +2,36 @@
 
 本文件提供 wBiSaProj 專案**架構設計**的實作建議與範例，作為開發團隊的技術參考指南。
 
-## 1. 核心依賴管理：`_imports.py` 依賴閘門機制
+## 1. 核心依賴管理：統一 Import 原則
 
-本章節詳細說明專案中用以管理依賴、確保模組封裝的核心組織模式。本章節聚焦於 `_imports.py` 依賴閘門的運作機制，以及它如何與層級內的私有共用模組協作，確保依賴管理清晰且無循環。
+本章節說明專案中用以管理依賴、確保模組封裝的核心組織模式。所有模組類型（Library、Data Source、Business System）遵循同一套統一 import 原則。
 
-### 1.1 機制概述：`_imports.py` 依賴閘門
+### 1.1 統一 Import 原則概述
 
-`_imports.py` 是專案中管理**系統內部依賴**的核心模式，配合自動化工具實現依賴的向下傳播。這個機制確保：
+本專案的依賴管理建立在三條統一原則之上，不因模組類型不同而另設機制：
 
-- 每個 FU Container 是獨立封裝的單元
-- 依賴關係清晰且易於管理
-- 避免循環依賴和混亂的導入路徑
+| 情境 | 做法 | 說明 |
+|:-----|:-----|:-----|
+| **跨公開邊界** | 絕對 import | 從正式公開容器的 `__init__.py` 導入 |
+| **邊界內部** | 相對 import | 同一公開容器內的私有模組間互相引用 |
+| **依賴需要整理** | Facade-like private modules | 以具語義的私有模組集中整理依賴路徑 |
 
 #### 核心檔案職責
 
-`__init__.py` 與 `_imports.py` 是一對「鏡像概念」，它們共同定義了 FU Container 的存取邊界：
+`__init__.py` 是 FU Container 的唯一公開入口，定義了容器的對外存取邊界：
 
-| 檔案 | 職責 (存取方向) | 規範 |
+| 檔案 | 職責 | 規範 |
 |:-----|:-----|:-----|
-| `__init__.py` | **對外**：定義該容器的**公開介面 (Public API)** | **必須**定義 `__all__`，明確宣告所有對外暴露的元件 |
-| `_imports.py` | **對內**：作為該容器的**統一依賴入口** | **必須**定義 `__all__`，明確宣告此層級引入的所有依賴 |
+| `__init__.py` | 定義該容器的**公開介面 (Public API)**；亦可承擔 metadata 與輕量初始化 | 當承擔公開匯出角色時，**必須**定義 `__all__`；僅含 docstring / metadata / 輕量初始化時可省略。 |
 
-#### 管理範圍
+#### `__all__` 規範
 
-`_imports.py` 管理**同一系統內**的所有依賴，包括：
+`__init__.py` 承擔公開匯出角色時，必須定義 `__all__`。
 
-- **外部依賴**：同一系統內，標準模組間的依賴（如 `gms.core` 或跨層級依賴）
-- **內部依賴**：同一標準模組內，子模組間的相對導入
-
-`_imports.py` **不管理**：
-
-- 專案層級函式庫（如 `core`, `wutils`）
-- 第三方套件（如 `sqlalchemy`, `fastapi`）
+```python
+# __init__.py - 定義公開介面
+__all__ = ['UserProfile', 'UserProfileRepository']
+```
 
 -----
 
@@ -83,547 +81,185 @@
 
 ### 1.3 使用原則
 
-#### 原則一：管理範圍
+#### 原則一：封裝邊界與 Import 方向
 
-`_imports.py` **只管理**系統內部的依賴關係，**不管理**專案層級函式庫或第三方套件：
+所有模組類型遵循同一套封裝規則：
 
-```python
-# ✅ 應該管理的：系統內部依賴
-from gms.core import exceptions  # 同系統不同模組
-# (註：此行應在 _imports.py 中，而非實作檔案中)
+- **實作檔案**（如 `_models.py`、`_repository.py`）：
+    - 位於 Feature 級私有目錄內，**嚴禁**被外部直接導入
+    - 跨公開邊界的依賴，使用正式絕對 import 從目標公開容器的 `__init__.py` 取得
+    - 同一 Feature 私有目錄內的檔案間互相引用，使用相對 import
 
-# ❌ 不應該管理的：專案級或第三方套件
-# 這些應在各自需要的 .py 檔案中被「絕對導入」
-from core.constants import Language  # 專案級
-from sqlalchemy import select        # 第三方套件
-from fastapi import APIRouter        # 第三方套件
-```
-
-#### 原則二：FU Container 封裝性
-
-`_imports.py` 是依賴的「閘門」，而 Feature 級私有目錄內的實作檔案（`_models.py`, `_repository.py` 等）是「受保護的實作」，它們必須遵循嚴格的單向依賴規則：
-
-- **實作檔案 (如 `_models.py`)**：
-    - **嚴禁**跳出所屬的 FU Container。所有外部依賴**必須**從 FU Container 層級的 `_imports.py` 取得。
-    - 由於實作檔案位於 Feature 級私有目錄內，需使用 `..` 回到 FU Container 層級來存取 `_imports.py`。
-    - `_imports.py` 未提供的依賴（如專案級 `core` 或第三方套件）應自行絕對導入（見原則一）。
-
-- **`_imports.py` 檔案**：
-    - 是此規則的**唯一例外**。
-    - 其職責就是向外查找依賴：
-        - 繼承父層 `_imports.py`（`from .._imports import ...`）
-        - 導入父層私有共用模組（例如：`from .._validators import validate_symbol`）
-        - 導入兄弟模組（例如：`from ..trading_data import StockData`）
+- **`__init__.py`**：
+    - 是公開容器的唯一公開入口
+    - 可向內導入多層 private path 以組裝公開介面（參見 §4.4 邊界檔定位）
 
 ```python
-# === 在 _user_profile/_repository.py (Feature 級私有目錄內的實作檔案) 中 ===
+# === 在 _stock_profile/_repository.py (Feature 級私有目錄內的實作檔案) 中 ===
 
-# ✅ 正確：從 FU Container 的 _imports.py 取得所有依賴（回上一層）
-from .._imports import exceptions, UserRepository
+# ✅ 正確：跨公開邊界，使用正式絕對 import
+from gms.core.exceptions import DomainException
+from gms.db.market.stock.profile import StockProfileSchema
 
 # ✅ 正確：從同一 Feature 私有目錄內的其他檔案導入
-from ._models import UserModel
+from ._models import StockProfileModel
 
-# ❌ 錯誤：實作檔案嚴禁跳出 FU Container！
-from ..._imports import something
-from ...dto.user import UserDTO
+# ✅ 正確：專案級函式庫與第三方套件，直接絕對導入
+from core.constants import Language
+from sqlalchemy import select
+
+# ❌ 錯誤：實作檔案嚴禁被外部以絕對路徑穿透導入
+# from gms.service.market._stock_profile._service import StockService  # 禁止！
+```
+
+#### 原則二：Facade-like Private Modules
+
+當某個模組或 FU Container 的依賴較為複雜，直接在每個實作檔案中重複書寫多條絕對 import 會造成維護負擔時，可使用具語義的 facade-like private modules 集中整理依賴。
+
+**關鍵原則**：
+
+- Facade 是**可選的整理手段**，不是強制的制度性要求
+- 應以職責命名（`_repositories.py`、`_contracts.py`），不使用泛用名稱
+- 一個容器可以有多個 facade-like modules，按職責拆分
+- 當依賴關係足夠簡單時，直接使用絕對 import 即可，無需額外建立 facade
+
+```python
+# _contracts.py — facade-like private module，整理跨邊界的介面依賴
+from gms.core.exceptions import DomainException, ValidationError
+from gms.core.interfaces import IStockPriceProvider
+from gms.db.market.stock.profile import (
+    StockProfileRepository,
+    IStockProfileRepository,
+)
 ```
 
 ```python
-# === 在 _imports.py (閘門檔案) 中 ===
-
-# ✅ 正確：作為閘門，向外查找依賴
-from .._imports import BaseRepository  # 繼承父層 _imports.py
-from ..trading_data import StockData  # 導入兄弟模組
-from .._validators import validate_symbol  # 導入父層私有共用模組
+# _stock_analysis/_service.py — 實作檔案從 facade 取得已整理的依賴
+from .._contracts import (
+    IStockProfileRepository,
+    DomainException,
+)
 ```
 
 #### 原則三：防止循環依賴
 
-`_imports.py` 檔案**嚴格禁止**從其同層級的 Feature 級私有目錄或實作檔案中導入任何內容。
-
-- **原因**：這會立即導致循環依賴（實作檔案依賴 `_imports.py`，而 `_imports.py` 反過來依賴實作檔案）。
-
-- **允許的導入規則**：`_imports.py` 只允許以下三種導入方式：
-    1. `from .._imports import ...`（繼承父層 `_imports.py`）
-    2. `from .._<module> import ...`（導入父層私有共用模組，如 `_orm`、`_rules`）
-    3. `from [相對路徑] import ...`（導入兄弟模組）
+- **`__init__.py`**：嚴禁從 Feature 級私有目錄的實作檔案中導入再 re-export（會導致循環）
+- **Facade-like modules**：應只向外（跨公開邊界）或向上（父層私有共用模組）查找依賴，嚴禁向內導入同層的 Feature 私有實作
+- **層級私有共用模組**（如 `_orm/`、`_rules.py`）：僅對子層級可見，不被同層的其他模組直接導入
 
 ```python
-# === 在 _imports.py (閘門檔案) 中 ===
+# === 在 facade-like module 中 ===
 
-# ✅ 正確：繼承父層
-from .._imports import Base, BaseRepository
+# ✅ 正確：向外查找依賴
+from gms.core.exceptions import DomainException
+from gms.db.market.stock.profile import StockProfileRepository
 
-# ✅ 正確：導入兄弟模組（相對路徑）
-from ..trading_data import StockData
-
-# ✅ 正確：導入父層私有共用模組（相對路徑）
-from .._validators import validate_symbol
-
-# ❌ 錯誤：嚴禁導入 Feature 級私有目錄內的實作檔案！
-from ._user_profile._models import UserProfile
-from ._user_profile._repository import UserRepository
-
-# ❌ 錯誤：嚴禁導入更上層檔案！
-from ..._imports import Base, BaseRepository
-from ..._rules import is_market_open
-from ...user.profile import UserRepository
-```
-
-#### 原則四：`__all__` 規範
-
-**`__init__.py` 和 `_imports.py` 都必須定義 `__all__`**
-
-```python
-# __init__.py - 定義公開介面
-__all__ = ['UserProfile', 'UserProfileRepository']
-
-# _imports.py - 定義依賴清單
-__all__ = ['Base', 'exceptions', 'validators']
-```
-
-這確保了：
-
-- 自動化工具能正確識別和傳播依賴
-- 公開介面明確且可控
-- 避免意外暴露內部實作
-
-#### 原則五：自動化傳播機制
-
-自動化工具（`inv dev.imports-update`）會將上層 `_imports.py` 的所有導入**轉換為 `from .._imports import ...`** 形式：
-
-```python
-# db/_imports.py 定義：
-from gms.core import exceptions
-
-# 執行工具後，db/user/_imports.py 會包含：
-from .._imports import (  # 從父層導入
-    exceptions
-)
-# 加上 user 層級特定的依賴...
-```
-
-#### 原則六：手動維護與自動傳播的分工
-
-- **手動維護**：每層 `_imports.py` 負責手動導入所需的父層私有共用模組元件、兄弟模組。
-- **自動傳播**：工具會自動將父層 `_imports.py` 的依賴向下傳播至所有子容器。
-
------
-
-### 1.4 層級結構與協作範例
-
-本節透過完整的結構圖，展示 `_imports.py` 如何與層級私有共用模組協同運作：
-
-- **`_imports.py`**：負責**傳播依賴**（垂直繼承）
-- **層級私有共用模組**（如 `_orm/`、`_rules.py`）：提供**層級共用元件**
-- **協作關鍵**：`_imports.py` 與私有共用模組**完全解耦**。下游的 FU Container 在其 `_imports.py` 中，**按需**、**手動**、透過**相對路徑**導入這些模組的元件。
-
-#### 完整結構圖
-
-以 GMS 系統的 DB 層為例，展示 `_imports.py` 的依賴傳播與私有共用模組的協同運作：
-
-```text
-gms/db/
-├── _imports.py              # 1. DB Layer 層級（根）
-│                            #    -> 導入 gms.core（系統級跨Layer依賴）
-│
-├── _orm/                    #    (DB Layer 私有共用模組：ORM 基礎元件)
-│   ├── __init__.py
-│   ├── base.py              #    (Base, BaseRepository)
-│   └── mixins.py            #    (TimestampMixin, SoftDeleteMixin)
-│
-├── user/
-│   ├── _imports.py          # 2. User Domain 層級
-│   │                        #    -> 繼承 (1)：自動從父層傳播
-│   # (可視需求建立具語義的私有共用模組)
-│   └── profile/
-│       └── _imports.py      # 3. User-Profile FU Container 層級
-│                            #    -> 繼承 (2)：自動從父層傳播
-│                            #    -> (視需求)手動導入父層私有共用模組
-│                            #    例如：from .._orm.base import Base, BaseRepository
-│                            #          from .._orm.mixins import TimestampMixin, SoftDeleteMixin
-│
-└── market/
-    ├── _imports.py          # 4. Market Domain 層級
-    │                        #    -> 繼承 (1)：自動從父層傳播
-    │
-    ├── _rules.py            #    (Market Domain 私有共用模組：is_market_open)
-    │
-    └── stock/
-        ├── _imports.py      # 5. Stock Sub-domain 層級
-        │                    #    -> 繼承 (4)：自動從父層傳播
-        │                    #    -> (視需求)手動導入父層私有共用模組
-        │                    #    例如：from .._rules import is_market_open
-        │
-        ├── _calculators.py  #    (Stock Sub-domain 私有共用模組：calculate_moving_average)
-        │
-        ├── _validators.py   #    (Stock Sub-domain 私有共用模組：validate_symbol, StockDataValidator)
-        │
-        ├── profile/
-        │   ├── __init__.py
-        │   ├── _imports.py  # 6. Stock-Profile FU Container 層級
-        │   │                #    -> 繼承 (5)：自動從父層傳播
-        │   │                #    -> (視需求)手動導入父層私有共用模組
-        │   │                #    例如：from .._validators import validate_symbol
-        │   │                #    -> 手動導入兄弟模組 trading_data
-        │   │                #    例如：from ..trading_data import StockData
-        │   │
-        │   └── _stock_profile/      # stock-profile Feature 的私有實作空間
-        │       ├── _models.py
-        │       └── _repository.py
-        │
-        └── trading_data/
-            ├── __init__.py
-            ├── _imports.py  # 7. Stock-Trading-Data FU Container
-            │                #    -> 繼承 (5)：自動從父層傳播
-            │                #    -> (視需求)手動導入父層私有共用模組
-            │                #    例如：from .._calculators import calculate_moving_average
-            │                #          from .._validators import StockDataValidator
-            │
-            └── _stock_trading_data/  # stock-trading-data Feature 的私有實作空間
-                ├── _models.py
-                └── _repository.py
-```
-
-#### 協作說明
-
-從上述結構可以看到 `_imports.py` 的**累加傳播（Cumulative Propagation）協作模式**。此模式嚴格遵循 1.3 節所定義的導入原則（特別是原則三），確保 `_imports.py` 檔案的職責清晰且無循環依賴。
-
-**1. 依賴傳播鏈的累加機制**
-
-`_imports.py` 傳播鏈的內容**不是固定的**，而是**由上到下動態累加**的。在每一個層級，它會彙總三種來源的依賴：
-
-1. **繼承父層依賴**：透過 `from .._imports import ...`（規則 1）繼承其父層 `_imports.py` 的所有依賴
-2. **添加父層私有共用模組**：透過 `from .._<module> import ...`（規則 2）導入其直屬父層中具語義命名的私有共用元件
-3. **添加兄弟模組**：透過 `from ..[sibling] import ...`（規則 3）導入其兄弟模組的公開介面
-
-然後，它會將這三部分**合併**到自己的 `__all__` 中，再傳遞給下一層。
-
-**2. 層級私有共用模組**
-
-層級私有共用模組（如 `db/_orm/`）是層級私有的。它**不會**被其同層的 `_imports.py`（`db/_imports.py`）導入（因為這違反原則三），而是等待其**子層級**的 `_imports.py`（`market/_imports.py` 或 `user/_imports.py`）透過規則 2 來導入。
-
-**3. 依賴彙總的完整流程（以檔案 6 為例）**
-
-- **`db/_imports.py`（檔案 1 - 根）**
-    - 職責：啟動傳播鏈。
-    - 導入：`from gms.core import ...`（假設導入 `exceptions`，遵循原則一）。
-    - `__all__ = ['exceptions']`
-    - （它**不能**導入同層的 `db/_orm/`，遵循原則三）。
-
-- **`market/_imports.py`（檔案 4 - Domain 層）**
-    - **繼承父層依賴**：`from .._imports import exceptions`（來自檔案 1）。
-    - **添加父層私有共用模組**：`from .._orm.base import Base`（來自 `db/_orm/`）。
-    - `__all__ = ['exceptions', 'Base']`（內容累加了）。
-
-- **`stock/_imports.py`（檔案 5 - Sub-domain 層）**
-    - **繼承父層依賴**：`from .._imports import exceptions, Base`（來自檔案 4）。
-    - **添加父層私有共用模組**：`from .._rules import is_market_open`（來自 `market/_rules.py`）。
-    - `__all__ = ['exceptions', 'Base', 'is_market_open']`（內容再次累加）。
-
-- **`profile/_imports.py`（檔案 6 - FU Container）**
-    - **繼承父層依賴**：`from .._imports import exceptions, Base, is_market_open`（來自檔案 5）。
-    - **添加父層私有共用模組**：`from .._validators import validate_symbol`（來自 `stock/_validators.py`）。
-    - **添加兄弟模組**：`from ..trading_data import StockData`（來自 `stock/trading_data`）。
-    - `__all__` 彙總了所有依賴，供 `_repository.py` 等實作檔案使用。
-
-**關鍵理解**
-
-`_imports.py` 傳播鏈**並非**只傳遞頂層的 `gms.core`，而是像一個滾雪球，**在每一層都會累加**來自「父層私有共用模組」和「兄弟模組」的依賴，使其內容越來越豐富，最終在 FU Container 層級提供所有需要的依賴。
-
-此機制完美地遵守了「原則三」（沒有任何檔案導入同層的私有共用模組），同時實現了強大且清晰的依賴傳播，完全避免了循環依賴。
-
------
-
-### 1.5 實際範例
-
-以下範例展示了在 1.4 節的結構圖與「累加傳播」模式下，各層級 `_imports.py` 的實際內容。
-
-#### 1.5.1 DB 層的 `_imports.py`（Layer 根）
-
-此檔案是 DB 層依賴傳播的「根源」，它**僅**導入 `[system]/core` 的依賴並向下傳播。
-
-```python
-# gms/db/_imports.py (對應結構圖檔案 1)
-"""
-DB 層的統一依賴管理（根）
-職責：導入「系統級外部依賴」並向下傳播
-"""
-# 外部依賴：從系統級 core 導入
-from gms.core import (
-    constants,
-    exceptions,
-    utils,
-    validators
-)
-
-# 嚴禁導入同層私有共用模組（違反原則三）
-# from ._orm.base import Base  # ❌ 錯誤！
-
-# 必須定義 __all__ 供自動化工具使用
-__all__ = [
-    # 從 gms.core 導入的
-    'constants',
-    'exceptions',
-    'utils',
-    'validators',
-]
-```
-
-**關鍵理解**：
-
-- `db/_imports.py` 作為根，啟動了依賴傳播鏈。
-- 它**不能**導入其同層的 `db/_orm/`（違反原則三）。
-
------
-
-#### 1.5.2 Domain / Sub-domain 層的 `_imports.py`（累加層）
-
-這些中間層的 `_imports.py` 是「累加傳播」的核心。它們繼承上層依賴，並**主動**導入其**直屬父層**的私有共用模組元件，使其內容「滾雪球」式地增長。
-
-##### Market Domain 層級
-
-```python
-# gms/db/market/_imports.py (對應結構圖檔案 4)
-"""Market Domain 的依賴管理（累加傳播）"""
-
-# === (繼承) 自動化工具從 db/_imports.py (檔案 1) 傳播而來 ===
-from .._imports import (
-    constants,
-    exceptions,
-    utils,
-    validators
-)
-# === 自動傳播內容結束 ===
-
-# === (擴展) 手動導入「父層私有共用模組」的依賴（規則 2） ===
-# 導入 db/_orm/ 內的元件
+# ✅ 正確：從父層私有共用模組導入
 from .._orm.base import Base, BaseRepository
-from .._orm.mixins import TimestampMixin, SoftDeleteMixin
 
-# 必須定義 __all__（彙總 繼承 + 擴展）
-__all__ = [
-    # 1. 從父層傳播的 (gms.core)
-    'constants',
-    'exceptions',
-    'utils',
-    'validators',
-
-    # 2. 本層加入的 (db/_orm)
-    'Base',
-    'BaseRepository',
-    'TimestampMixin',
-    'SoftDeleteMixin',
-]
+# ❌ 錯誤：嚴禁導入同層 Feature 私有目錄內的實作檔案
+from ._stock_profile._models import StockProfileModel
 ```
-
-##### Stock Sub-domain 層級
-
-```python
-# gms/db/market/stock/_imports.py (對應結構圖檔案 5)
-"""Stock Sub-domain 的依賴管理（累加傳播）"""
-
-# === (繼承) 自動化工具從 market/_imports.py (檔案 4) 傳播而來 ===
-from .._imports import (
-    # 來自 gms.core
-    constants,
-    exceptions,
-    utils,
-    validators,
-
-    # 來自 db/_orm（由檔案 4 累加而來）
-    Base,
-    BaseRepository,
-    TimestampMixin,
-    SoftDeleteMixin,
-)
-# === 自動傳播內容結束 ===
-
-# === (擴展) 手動導入「父層私有共用模組」的依賴（規則 2） ===
-# 導入 market/_rules.py 的元件
-from .._rules import is_market_open
-
-# 必須定義 __all__（彙總 繼承 + 擴展）
-__all__ = [
-    # 1. 從父層傳播的 (gms.core + db/_orm)
-    'constants',
-    'exceptions',
-    'utils',
-    'validators',
-    'Base',
-    'BaseRepository',
-    'TimestampMixin',
-    'SoftDeleteMixin',
-
-    # 2. 本層加入的 (market/_rules)
-    'is_market_open',
-]
-```
-
-**關鍵理解**：
-
-- `stock/_imports.py`（檔案 5）的 `__all__` 中，自動包含了來自 `gms.core` 和 `db/_orm/` 的所有依賴。
-- 依賴鏈的內容在每一層都變得更豐富。
 
 -----
 
-#### 1.5.3 FU Container 的 `_imports.py`（最終彙總）
+### 1.4 Business Backbone 實務範例
 
-由於依賴鏈（檔案 5）已經攜帶了大部分的上層依賴，FU Container（檔案 6）的職責**大幅簡化**了。
+以下範例展示 Business System 的各層級如何在統一 import 原則下管理依賴。
 
-```python
-# gms/db/market/stock/profile/_imports.py (對應結構圖檔案 6)
-"""Stock Profile FU 的依賴管理（最終彙總）"""
+#### 1.4.1 DB 層 FU Container 的實作檔案
 
-# === (繼承) 自動化工具從 stock/_imports.py (檔案 5) 傳播而來 ===
-from .._imports import (
-    # 來自 gms.core
-    constants,
-    exceptions,
-    utils,
-    validators,
-
-    # 來自 db/_orm
-    Base,
-    BaseRepository,
-    TimestampMixin,
-    SoftDeleteMixin,
-
-    # 來自 market/_rules
-    is_market_open,
-)
-# === 自動傳播內容結束 ===
-
-# === (擴展) 手動導入「父層私有共用模組」的依賴（規則 2） ===
-# 導入 stock 層級的私有共用模組
-from .._calculators import calculate_moving_average
-from .._validators import (
-    validate_symbol,
-    StockDataValidator,
-)
-
-# === (擴展) 手動導入「兄弟模組」依賴（規則 3） ===
-# 導入兄弟模組 trading_data
-from ..trading_data import StockTradingData
-
-# 必須定義 __all__（彙總 繼承 + 擴展）
-__all__ = [
-    # 1. 從父層傳播的 (gms.core + db/_orm + market/_rules)
-    'constants',
-    'exceptions',
-    'utils',
-    'validators',
-    'Base',
-    'BaseRepository',
-    'TimestampMixin',
-    'SoftDeleteMixin',
-    'is_market_open',
-
-    # 2. 本層加入的 (stock/_calculators + stock/_validators)
-    'calculate_moving_average',
-    'validate_symbol',
-    'StockDataValidator',
-
-    # 3. 本層加入的 (兄弟模組)
-    'StockTradingData'
-]
-```
-
-**關鍵理解**：
-
-- `profile/_imports.py` 成為依賴彙總點。
-- 它繼承了 `gms.core`、`db/_orm/`、`market/_rules.py` 的所有依賴。
-- 它**僅需**手動導入其**直屬父層**的私有共用模組（`stock/_calculators.py`、`stock/_validators.py`）和**兄弟模組** `trading_data`。
-- 導入路徑變得非常簡潔，不再有 `....` 或 `...` 的複雜相對路徑。
-
------
-
-#### 1.5.4 FU Container 內部實作檔案範例
-
-此範例展示了 Feature 級私有目錄中的實作檔案（`_models.py`）如何體現「依賴來源清晰性」原則。**`_imports.py` 體系的抽象，確保了此檔案無需關心依賴管理的具體模式。**
+實作檔案直接使用絕對 import 取得所需的外部依賴，使用相對 import 取得同 Feature 目錄內的協作檔案。
 
 ```python
 # gms/db/market/stock/profile/_stock_profile/_models.py
-"""Stock Profile FU 的 ORM 模型定義（位於 stock-profile Feature 的私有實作空間內）"""
+"""Stock Profile FU 的 ORM 模型定義"""
 
-# 體現原則一：第三方套件（sqlalchemy）必須在此直接導入
+# 第三方套件：直接絕對導入
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Date
-from typing import List
 
-# 體現原則一：專案級依賴（core）也必須在此直接導入（如果需要的話）
-# from core.interfaces import ISomeInterface
-
-# 體現原則二：系統內部依賴全部來自 FU Container 的 _imports，來源清晰
-# 注意：由於實作檔案位於 Feature 級私有目錄內，需使用 `..` 回到 FU Container 層級
-from .._imports import (
-    Base,                 # 來自 db/_orm（由繼承取得）
-    TimestampMixin,       # 來自 db/_orm（由繼承取得）
-    is_market_open,       # 來自 market/_rules（由繼承取得）
-    validate_symbol,      # 來自 stock/_validators（由本層 _imports 導入）
-    StockTradingData,     # 來自兄弟模組（由本層 _imports 導入）
-)
+# 父層私有共用模組：相對 import
+from ..._orm.base import Base
+from ..._orm.mixins import TimestampMixin
 
 class StockProfile(Base, TimestampMixin):
-    """股票基本資料模型"""
+    """股票基本資料模型."""
     __tablename__ = "stock_profiles"
-
     symbol: Mapped[str] = mapped_column(String(10), primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
-    market: Mapped[str] = mapped_column(String(10), nullable=False)
-    listing_date: Mapped[Date] = mapped_column(Date)
+```
 
-    # 關聯：一對多關係
-    trading_data: Mapped[List["StockTradingData"]] = relationship(
-        back_populates="stock"
-    )
+#### 1.4.2 Service 層依賴 DB 層
 
-    def __post_init__(self):
-        """初始化後驗證"""
-        # 驗證 symbol
-        if not validate_symbol(self.symbol):
-            raise ValueError(f"Invalid stock symbol: {self.symbol}")
+Service 層跨公開邊界取用 DB 層的公開介面，使用正式絕對 import。
 
-        # 驗證市場狀態（範例）
-        if self.market == 'TWSE' and not is_market_open(self.listing_date):
-            # 處理邏輯
-            pass
+```python
+# gms/service/market/stock/analysis/_stock_analysis/_service.py
+"""Stock Analysis Service 實作"""
+
+# 跨公開邊界：正式絕對 import
+from gms.db.market.stock.profile import (
+    IStockProfileRepository,
+    StockProfileSchema,
+)
+from gms.core.exceptions import DomainException
+
+class StockAnalysisService:
+    """股票分析服務."""
+
+    def __init__(self, repo: IStockProfileRepository) -> None:
+        self._repo = repo
+
+    def get_analysis(self, symbol: str) -> StockProfileSchema:
+        """Retrieve and analyze stock profile."""
+        profile = self._repo.find_by_symbol(symbol)
+        if not profile:
+            raise DomainException(f"Stock {symbol} not found")
+        return profile
+```
+
+#### 1.4.3 使用 Facade 整理複雜依賴
+
+當 FU Container 需要從多個外部來源取得依賴，且多個實作檔案都需要同一組依賴時，可建立 facade-like private module 集中整理。
+
+```text
+gms/service/market/stock/analysis/
+├── __init__.py
+├── _contracts.py              # Facade：整理跨邊界的介面依賴
+└── _stock_analysis/
+    ├── _service.py
+    └── _dto.py
+```
+
+```python
+# _contracts.py — 集中整理本 FU Container 的外部依賴
+from gms.db.market.stock.profile import (
+    IStockProfileRepository,
+    StockProfileSchema,
+)
+from gms.db.market.stock.trading_data import (
+    IStockTradingDataRepository,
+    StockTradingDataSchema,
+)
+from gms.core.exceptions import DomainException, ValidationError
+```
+
+```python
+# _stock_analysis/_service.py — 從 facade 取得已整理的依賴
+from .._contracts import (
+    IStockProfileRepository,
+    IStockTradingDataRepository,
+    DomainException,
+)
 ```
 
 **關鍵理解**：
 
-- `_models.py` 檔案**完全不需要**知道 `_imports.py` 內部的依賴管理發生了多大的變化。
-- 它只需要 `from .._imports import ...`（回到 FU Container 層級）就能獲取所需的一切。
-- 這體現了「封裝性」原則：實作檔案不會跳出 FU Container，`_imports.py` 成功地將架構的複雜性對內隱藏。
+- 實作檔案（`_service.py`）不需要知道各個 Repository 的實際來源路徑
+- 當 DB 層的公開容器路徑變更時，只需修改 `_contracts.py` 一處
+- 但如果 FU Container 只有少量依賴，直接在實作檔案中絕對 import 即可，不必強制建立 facade
 
------
-
-#### 1.5.5 協作模式小結
-
-透過上述範例，我們可以看到**「累加傳播」**協作流程：
-
-1. **`_imports.py` 傳播鏈（檔案 1）**：
-    - `db/_imports.py` 作為根，僅導入 `gms.core` 並啟動傳播鏈。
-
-2. **層級私有共用模組**：
-    - 以具語義名稱命名（如 `_orm/`、`_rules.py`），作為獨立的、**層級私有**的元件庫存在。
-
-3. **`_imports.py` 累加層（檔案 4, 5）**：
-    - 中間層（Domain, Sub-domain）的 `_imports.py` 成為「累加器」。
-    - 它們**繼承父層依賴**：`from .._imports import ...` 來獲取已有的依賴。
-    - 它們**添加父層私有共用模組**：透過 `from .._<module> import ...` 來主動導入其直屬父層的私有共用元件。
-    - 它們將兩者彙總到 `__all__` 中，使依賴鏈「滾雪球」式地增長。
-
-4. **FU Container 的 `_imports.py`（檔案 6）**：
-    - 作為**最終的依賴消費者**。
-    - **繼承父層依賴**：透過 `from .._imports import ...` 獲取包含 `gms.core` 和所有父層私有共用模組元件的豐富依賴。
-    - **添加父層私有共用模組**：僅需導入其直屬父層的私有共用模組和兄弟模組（`trading_data`）的依賴。
-
-5. **實作檔案**（`_models.py`）：
-    - **保持簡潔**。透過 `from .._imports import ...`（回到 FU Container 層級）取得所有依賴，完全不受架構變革影響。
-
-**這形成了一個更清晰、更健壯、無循環依賴的依賴管理體系**。它透過在中間層主動彙總私有共用模組的元件，換取了 FU Container 層依賴導入的極大簡潔性。
 
 -----
 
@@ -1330,7 +966,6 @@ DB 層使用 Repository Pattern 配合抽象介面，提供以下優勢：
 
 ```text
 gms/db/
-├── _imports.py                 # 根依賴管理
 ├── _orm/                       # DB 層私有共用模組（ORM 基礎元件）
 │   ├── base.py                 # Base, BaseRepository
 │   └── mixins.py               # TimestampMixin
@@ -1338,7 +973,6 @@ gms/db/
     └── stock/                  # Sub-domain
         └── price/              # FU Container (股價功能單元)
             ├── __init__.py     # 公開介面
-            ├── _imports.py     # 內部依賴管理
             └── _stock_price_storage/  # Feature 級私有實作空間
                 ├── _interfaces.py  # 抽象介面定義
                 ├── _models.py      # ORM 定義 (私有)
@@ -1430,7 +1064,7 @@ from sqlalchemy import select, and_, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
 
-from .._imports import BaseRepository
+from gms.db.market.stock.profile import BaseRepository  # 跨公開邊界，絕對 import
 from ._models import StockPriceModel
 from ._interfaces import IStockPriceRepository
 
@@ -1577,7 +1211,6 @@ Service 層的核心特性：
 
 ```text
 gms/service/
-├── _imports.py                 # 根依賴管理 (統一導入 DB 介面)
 ├── _validators.py              # 業務驗證器
 ├── _calculators.py              # 業務計算器
 │
@@ -1585,7 +1218,6 @@ gms/service/
     └── stock/
         └── analysis/           # FU Container: 股價分析服務
             ├── __init__.py
-            ├── _imports.py     # 內部依賴
             └── _stock_analysis_api/  # Feature 級私有實作空間
                 ├── _service.py     # 業務邏輯實作
                 └── _dto.py         # Service 層 DTO
@@ -1595,9 +1227,7 @@ gms/service/
 
 ### 5.2 Service 層依賴管理
 
-Service 層的 `_imports.py` 統一管理對外部層級的依賴。
-
-**檔案位置**：`gms/service/_imports.py`
+Service 層跨公開邊界取用 DB 層與 System Core 的公開介面，使用正式絕對 import。依賴較複雜時，可使用 facade-like private modules 整理。
 
 ```python
 """
@@ -1646,13 +1276,12 @@ from datetime import date, timedelta
 from typing import Dict, List, Optional
 import logging
 
-# 從 FU Container 的 _imports 取得介面（DIP）
-from .._imports import (
+# 跨公開邊界：正式絕對 import（DIP）
+from gms.db.market.stock.price import (
     IStockPriceRepository,
-    BusinessLogicError,
-    DataValidationError,
-    StockPriceDTO
+    StockPriceDTO,
 )
+from gms.core.exceptions import BusinessLogicError, DataValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -1912,7 +1541,6 @@ ETL Pipeline 的設計精髓：
 
 ```text
 gms/etl/
-├── _imports.py                 # 根依賴管理
 ├── _validators.py              # 資料驗證器
 ├── _transformers.py             # 資料轉換器
 │
@@ -1920,7 +1548,6 @@ gms/etl/
     └── stock/
         └── sync_job/           # FU Container: 每日同步作業
             ├── __init__.py
-            ├── _imports.py
             └── _daily_sync_job/    # Feature 級私有實作空間
                 ├── _pipeline.py    # ETL 流程控制
                 ├── _extractor.py   # 抽取邏輯
@@ -1933,7 +1560,7 @@ gms/etl/
 
 ETL 層需要同時依賴資料源介面與資料庫介面。
 
-**檔案位置**：`gms/etl/_imports.py`
+ETL 層跨公開邊界取用 DB 層介面與 Core 介面，使用正式絕對 import。
 
 ```python
 """
@@ -1987,14 +1614,13 @@ from typing import List, Dict, Optional
 import logging
 from dataclasses import dataclass
 
-# 從 FU Container 的 _imports 取得兩個關鍵介面
-from .._imports import (
-    IStockPriceProvider,     # 來自 Core（代表 TEJ）
+# 跨公開邊界：正式絕對 import
+from core.interfaces import IStockPriceProvider     # 來自 Core（代表 TEJ）
+from gms.db.market.stock.price import (
     IStockPriceRepository,   # 來自 DB（代表 GMS DB）
     StockPriceDTO,
-    DataSourceError,
-    BusinessLogicError
 )
+from gms.core.exceptions import DataSourceError, BusinessLogicError
 
 logger = logging.getLogger(__name__)
 
@@ -2217,7 +1843,7 @@ class DailyStockSyncPipeline:
 ```python
 from typing import List, Dict, Any
 import asyncio
-from .._imports import IStockPriceRepository
+from gms.db.market.stock.price import IStockPriceRepository
 
 class BatchLoader:
     """
@@ -2263,7 +1889,7 @@ class BatchLoader:
 
 ## 7. 業務系統實作 IV：介面層 (API Layer)
 
-本章節展示如何建立 RESTful API 層，並正確運用 `_imports.py` 機制管理依賴。
+本章節展示如何建立 RESTful API 層，並運用統一 import 原則與 facade 管理依賴。
 
 ### 7.1 架構定位：HTTP Interface Adapter
 
@@ -2274,22 +1900,19 @@ API 層的核心職責：
 - **錯誤轉換**：將業務異常轉為適當的 HTTP 狀態碼
 - **依賴注入**：透過 FastAPI 的 Depends 機制注入服務
 
-> **實作重點**：利用 `dependencies.py` 定義依賴注入工廠，並透過 `_imports.py` 的傳播鏈將其傳遞給 Router 使用。
+> **實作重點**：利用 `dependencies.py` 定義依賴注入工廠，Router 透過絕對 import 或 facade-like private module 取得依賴。
 
 #### 目錄結構
 
-展示 API 層如何組織，特別注意 `dependencies.py` 與 `_imports.py` 的配置。
+展示 API 層如何組織，特別注意 `dependencies.py` 的配置與依賴管理方式。
 
 ```text
 gms/api/
-├── _imports.py                 # API 層根依賴管理（不含 dependencies）
 ├── dependencies.py             # 依賴注入工廠（Composition Root）
 ├── middleware.py               # 中間件配置
 │
 └── market/                     # Domain 層
-    ├── _imports.py             # 中間層依賴管理（在此導入 dependencies）
     └── stock/                  # Sub-domain 層 (FU Container)
-        ├── _imports.py         # 末端依賴管理（自動繼承）
         └── _stock_analysis_api/  # Feature 級私有實作空間
             ├── _router.py          # Router 實作
             └── _schemas.py         # API 請求/回應模型
@@ -2395,258 +2018,90 @@ def get_tej_provider() -> IStockPriceProvider:
 
 -----
 
-### 7.3 依賴管理傳播鏈
+### 7.3 API 層依賴管理
 
-為了避免循環依賴，我們採用「根層忽略、中層導入、末端繼承」的策略來傳遞 dependencies。
+API 層的依賴管理遵循統一 import 原則，不另設分層傳播機制。
 
-#### 傳播策略說明
+#### 依賴來源
 
-| 層級 | 策略 | 說明 |
-|:-----|:-----|:-----|
-| **根層** | 忽略 dependencies | 避免 `_imports.py` 與 `dependencies.py` 循環依賴 |
-| **中層** | 手動導入 | 使用相對路徑 `..dependencies` 導入 |
-| **末端** | 自動繼承 | 從父層 `_imports.py` 獲得所有依賴 |
+Router 實作檔案直接從各來源取得所需依賴：
 
-#### 層級 1：根層依賴管理
+| 依賴類型 | 來源 | Import 方式 |
+|:---------|:-----|:------------|
+| FastAPI 元件 | `fastapi`, `starlette` | 直接絕對 import（第三方套件） |
+| Service 層型別 | `gms.service.*` | 正式絕對 import（跨公開邊界） |
+| Core 異常 | `gms.core.exceptions` | 正式絕對 import（跨公開邊界） |
+| DI 工廠函式 | `dependencies.py` | 相對 import（同層 API 模組內） |
+| 同 Feature Schemas | `_schemas.py` | 相對 import（同 Feature 私有目錄內） |
 
-**檔案位置**：`gms/api/_imports.py`
+#### `dependencies.py` 的定位
 
-```python
-"""
-API 層根依賴管理
+`dependencies.py` 是 API 層的**依賴注入工廠 (DI Factory)**，負責組裝具體的 Service / Repository 實例並透過 FastAPI 的 `Depends` 機制提供給 Router。
 
-關鍵設計：
-- 不導入同層的 dependencies.py（避免循環依賴）
-- 只導入 FastAPI 元件與 Service 型別
-- dependencies 將在下一層被導入
-"""
-
-# FastAPI 核心元件
-from fastapi import APIRouter, Depends, HTTPException, Query, Body
-from fastapi.responses import JSONResponse
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-
-# HTTP 狀態碼
-from starlette import status
-
-# Service 層型別（供 Type Hint 使用）
-from gms.service.market.stock.analysis import (
-    StockAnalysisService,
-    VolumeAnalysisResult,
-    TechnicalIndicators
-)
-
-# Core 異常
-from core.exceptions import (
-    BusinessLogicError,
-    DataValidationError
-)
-
-__all__ = [
-    # FastAPI 元件
-    'APIRouter',
-    'Depends',
-    'HTTPException',
-    'Query',
-    'Body',
-    'JSONResponse',
-    'HTTPBearer',
-    'HTTPAuthorizationCredentials',
-
-    # HTTP 狀態
-    'status',
-
-    # Service 型別
-    'StockAnalysisService',
-    'VolumeAnalysisResult',
-    'TechnicalIndicators',
-
-    # 異常
-    'BusinessLogicError',
-    'DataValidationError',
-]
-```
-
-#### 層級 2：中間層依賴管理
-
-**檔案位置**：`gms/api/market/_imports.py`
+它**不是**依賴傳播骨幹或分層中介，而是一個普通的模組，Router 直接從中 import 所需的工廠函式即可。
 
 ```python
-"""
-Market Domain API 的依賴管理
+# gms/api/dependencies.py
+"""API 層的依賴注入工廠."""
 
-關鍵設計：
-- 繼承父層所有依賴
-- 手動導入 dependencies（關鍵步驟！）
-- 將 dependencies 加入傳播鏈
-"""
+from sqlalchemy.ext.asyncio import AsyncSession
+from gms.db.market.stock.price import StockPriceRepository
+from gms.service.market.stock.analysis import StockAnalysisService
 
-# === 自動繼承：從父層 _imports.py 獲得 ===
-from .._imports import (
-    # FastAPI 元件
-    APIRouter,
-    Depends,
-    HTTPException,
-    Query,
-    Body,
-    JSONResponse,
-    status,
+async def get_db_session() -> AsyncSession:
+    """Provide database session."""
+    ...
 
-    # Service 型別
-    StockAnalysisService,
-    VolumeAnalysisResult,
-    TechnicalIndicators,
+def get_stock_price_repository(
+    session: AsyncSession = Depends(get_db_session),
+) -> StockPriceRepository:
+    """Provide stock price repository."""
+    return StockPriceRepository(session)
 
-    # 異常
-    BusinessLogicError,
-    DataValidationError,
-)
-
-# === 手動導入：父層的 dependencies.py ===
-# 關鍵！在中間層導入 dependencies
-from ..dependencies import (
-    get_db_session,
-    get_stock_price_repository,
-    get_analysis_service,
-    get_tej_provider,
-)
-
-__all__ = [
-    # === 繼承的元件 ===
-    'APIRouter',
-    'Depends',
-    'HTTPException',
-    'Query',
-    'Body',
-    'JSONResponse',
-    'status',
-
-    'StockAnalysisService',
-    'VolumeAnalysisResult',
-    'TechnicalIndicators',
-
-    'BusinessLogicError',
-    'DataValidationError',
-
-    # === 新增的依賴工廠（關鍵！）===
-    'get_db_session',
-    'get_stock_price_repository',
-    'get_analysis_service',
-    'get_tej_provider',
-]
-```
-
-#### 層級 3：末端依賴管理
-
-**檔案位置**：`gms/api/market/stock/_imports.py`
-
-```python
-"""
-Stock API 的依賴管理
-
-關鍵設計：
-- 完全繼承父層
-- 不需要額外導入
-- 已包含所有需要的依賴工廠
-"""
-
-# === 完整繼承：包含 dependencies ===
-from .._imports import (
-    # FastAPI 元件
-    APIRouter,
-    Depends,
-    HTTPException,
-    Query,
-    Body,
-    JSONResponse,
-    status,
-
-    # Service 型別
-    StockAnalysisService,
-    VolumeAnalysisResult,
-    TechnicalIndicators,
-
-    # 異常
-    BusinessLogicError,
-    DataValidationError,
-
-    # 依賴工廠（從中間層傳播而來）
-    get_analysis_service,
-    get_tej_provider,
-)
-
-# （注意：_schemas.py 已移入 Feature 級私有目錄 _stock_analysis_api/ 中，
-#  依原則三，_imports.py 不從 Feature 目錄導入。
-#  _router.py 直接在 Feature 目錄內以 from ._schemas import ... 取得。）
-
-__all__ = [
-    # === 繼承的元件 ===
-    'APIRouter',
-    'Depends',
-    'HTTPException',
-    'Query',
-    'Body',
-    'JSONResponse',
-    'status',
-
-    'StockAnalysisService',
-    'VolumeAnalysisResult',
-    'TechnicalIndicators',
-
-    'BusinessLogicError',
-    'DataValidationError',
-
-    'get_analysis_service',
-    'get_tej_provider',
-]
+def get_analysis_service(
+    repo: StockPriceRepository = Depends(get_stock_price_repository),
+) -> StockAnalysisService:
+    """Provide stock analysis service."""
+    return StockAnalysisService(repo)
 ```
 
 -----
 
 ### 7.4 Router 實作
 
-Router 透過 `_imports.py` 取得所有依賴，保持程式碼簡潔且易於維護。
+Router 直接使用絕對 import 取得外部依賴，使用相對 import 取得同模組的 DI 工廠與同 Feature 的 Schemas。
 
 #### 設計原則
 
-- **雙重來源**：外部依賴從 `._imports` 取得，同 Feature 的 Schemas 從 `._schemas` 取得
-- **依賴注入**：使用 FastAPI 的 Depends 機制
-- **錯誤處理**：將業務異常轉換為 HTTP 回應
+- **外部依賴**：FastAPI 元件、Service 型別、Core 異常，直接絕對 import
+- **DI 工廠**：從同層 `dependencies.py` 以相對 import 取得
+- **同 Feature Schemas**：從同 Feature 目錄內以相對 import 取得
+- **依賴注入**：使用 FastAPI 的 `Depends` 機制
 
 #### 實作範例：股票分析 Router
 
 **檔案位置**：`gms/api/market/stock/_stock_analysis_api/_router.py`
 
 ```python
-"""
-股票市場 API Router
-透過 _imports.py 取得所有依賴
-"""
+"""股票市場 API Router."""
 
 from datetime import date
 from typing import List, Optional
 import logging
 
-# 單一 import 來源：從 FU Container 的 _imports 取得一切
-from .._imports import (
-    # FastAPI 元件
-    APIRouter,
-    Depends,
-    HTTPException,
-    Query,
-    status,
+# 第三方套件：直接絕對 import
+from fastapi import APIRouter, Depends, HTTPException, Query
+from starlette import status
 
-    # Service 與型別
+# 跨公開邊界：正式絕對 import
+from gms.service.market.stock.analysis import (
     StockAnalysisService,
     VolumeAnalysisResult,
-
-    # 依賴工廠（關鍵！）
-    get_analysis_service,
-
-    # 異常
-    BusinessLogicError,
-    DataValidationError,
 )
+from gms.core.exceptions import BusinessLogicError, DataValidationError
+
+# 同層 API 模組：DI 工廠
+from ...dependencies import get_analysis_service
 
 # 同 Feature 目錄內的 Schemas（內部協作）
 from ._schemas import StockAnalysisResponse, ErrorResponse
@@ -2667,123 +2122,29 @@ router = APIRouter(
     "/{symbol}/volume-analysis",
     response_model=VolumeAnalysisResult,
     summary="成交量異常分析",
-    description="分析指定股票的成交量是否出現異常（暴量或縮量）"
 )
 async def analyze_stock_volume(
     symbol: str,
     check_date: date = Query(..., description="分析日期"),
-    service: StockAnalysisService = Depends(get_analysis_service)
+    service: StockAnalysisService = Depends(get_analysis_service),
 ):
-    """
-    成交量異常分析端點
-
-    透過 Depends(get_analysis_service) 注入服務，
-    get_analysis_service 是從 _imports.py 傳播而來
-    """
+    """Analyze stock volume anomalies."""
     try:
-        # 呼叫 Service 層邏輯
-        result = await service.check_abnormal_volume(symbol, check_date)
-        return result
-
+        return await service.check_abnormal_volume(symbol, check_date)
     except DataValidationError as e:
-        # 資料驗證錯誤 -> 400 Bad Request
-        logger.warning(f"Validation error for {symbol}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e.message)
-        )
-
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e.message))
     except BusinessLogicError as e:
-        # 業務邏輯錯誤 -> 404 Not Found
-        logger.warning(f"Business logic error for {symbol}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e.message)
-        )
-
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e.message))
     except Exception as e:
-        # 未預期錯誤 -> 500 Internal Server Error
         logger.error(f"Unexpected error analyzing {symbol}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error occurred"
-        )
-
-@router.get(
-    "/{symbol}/moving-averages",
-    summary="計算移動平均線",
-    description="計算指定股票的多期移動平均線"
-)
-async def calculate_moving_averages(
-    symbol: str,
-    end_date: date = Query(..., description="計算截止日期"),
-    periods: List[int] = Query(
-        default=[5, 10, 20, 60],
-        description="MA 期間列表"
-    ),
-    service: StockAnalysisService = Depends(get_analysis_service)
-):
-    """
-    移動平均線計算端點
-
-    展示如何處理複雜參數與回應
-    """
-    try:
-        ma_values = await service.calculate_moving_averages(
-            symbol=symbol,
-            end_date=end_date,
-            periods=periods
-        )
-
-        return {
-            "symbol": symbol,
-            "date": end_date,
-            "moving_averages": ma_values,
-            "periods": periods
-        }
-
-    except Exception as e:
-        logger.error(f"Error calculating MA for {symbol}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to calculate moving averages"
-        )
-
-@router.get(
-    "/{symbol}/golden-cross",
-    summary="黃金交叉檢測",
-    description="檢測股票是否出現黃金交叉訊號"
-)
-async def detect_golden_cross(
-    symbol: str,
-    check_date: date = Query(..., description="檢測日期"),
-    service: StockAnalysisService = Depends(get_analysis_service)
-) -> dict:
-    """
-    黃金交叉檢測端點
-
-    黃金交叉：短期均線向上突破長期均線
-    """
-    try:
-        has_golden_cross = await service.detect_golden_cross(
-            symbol=symbol,
-            check_date=check_date
-        )
-
-        return {
-            "symbol": symbol,
-            "date": check_date,
-            "has_golden_cross": has_golden_cross,
-            "signal": "bullish" if has_golden_cross else "neutral"
-        }
-
-    except Exception as e:
-        logger.error(f"Error detecting golden cross for {symbol}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to detect golden cross"
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
 ```
+
+**關鍵理解**：
+
+- Router 不經過任何中介層，直接從各來源取得依賴
+- `dependencies.py` 只是提供 DI 工廠函式的普通模組，不是傳播骨幹
+- 依賴方向清晰：`dependencies.py` → Service/Repository，Router → `dependencies.py`
 
 #### API Schemas
 
@@ -2823,39 +2184,6 @@ class ErrorResponse(BaseModel):
     message: str
     detail: Optional[Dict] = None
 ```
-
------
-
-### 7.5 依賴傳播機制總結
-
-本節總結 API 層如何透過 `_imports.py` 機制管理依賴注入。
-
-#### 傳播流程圖
-
-```text
-dependencies.py（工廠定義）
-        ↓
-    [被忽略]        # 根層 api/_imports.py 不導入
-        ↓
-  手動導入         # 中層 api/market/_imports.py
-        ↓
-  自動繼承         # 末層 api/market/stock/_imports.py
-        ↓
-   使用注入        # _router.py 透過 Depends() 使用
-```
-
-#### 關鍵理解
-
-1. **避免循環依賴**：根層 `_imports.py` 故意不導入 `dependencies.py`
-2. **中層橋接**：在 Domain 層級（market）手動導入並加入傳播鏈
-3. **末端享用**：Router 所在的層級自動獲得所有依賴工廠
-4. **依賴來源明確**：Router 透過 `from .._imports import ...` 取得外部依賴，透過 `from ._schemas import ...` 取得同 Feature 的元件
-
-這個設計確保了：
-- 依賴管理的一致性
-- 避免循環依賴問題
-- 保持程式碼的簡潔性
-- 支援依賴注入的靈活性
 
 -----
 

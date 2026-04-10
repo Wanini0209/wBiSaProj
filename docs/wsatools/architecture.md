@@ -15,7 +15,7 @@ wsatools 是協助專案設計、管理、開發、LLM 協作的**工具庫**。
 | 組織驅動力 | 業務領域 (Domain) 或技術功能 (Toolkit) | 工具操作對象的專案架構位置 |
 | 最小邏輯單元 | FU (Functional Unit) | 組織單元（toolkit / task category / workflow） |
 | 封裝規範 | FU Container + Feature 級私有目錄 | 組織單元 + private sub-package |
-| 依賴管理 | `_imports.py` 機制 | 不適用 |
+| 依賴管理 | 統一 import 原則 + facade | wsatools 專屬治理模型 |
 | 文件結構 | `docs/specs/<fu_path>/<fu_name>/` | `docs/wsatools/<package>/<system>/<unit>/` |
 
 ### 0.3 工具操作對象的定義

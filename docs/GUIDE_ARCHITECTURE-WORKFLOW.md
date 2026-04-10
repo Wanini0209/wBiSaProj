@@ -112,10 +112,10 @@ GMS 的核心職責是匯聚全球市場數據並提供深度分析服務。在�
 
 - **FU**: `StockPriceRepo`
 - **Container**: `gms/db/market/stock/price/`
-- **對應檔案**: `_imports.py`, `_stock_price_storage/_models.py`, `_stock_price_storage/_interfaces.py`, `_stock_price_storage/_repository.py`。
+- **對應檔案**: `_stock_price_storage/_models.py`, `_stock_price_storage/_interfaces.py`, `_stock_price_storage/_repository.py`。
 - **實作重點**:
     - 嚴格遵循 DIP，透過 `__init__.py` 僅暴露介面與 Repository。
-    - 使用 `_imports.py` 管理依賴。
+    - 跨公開邊界的依賴使用正式絕對 import，邊界內部使用相對 import。
 
 ---
 
@@ -154,9 +154,9 @@ GMS 的核心職責是匯聚全球市場數據並提供深度分析服務。在�
 
 - **FU**: `DailyStockSyncJob`
 - **Container**: `gms/etl/market/stock/sync_job/`
-- **對應檔案**: `_imports.py`, `_daily_sync_job/_pipeline.py`, `_daily_sync_job/_loader.py`。
+- **對應檔案**: `_daily_sync_job/_pipeline.py`, `_daily_sync_job/_loader.py`。
 - **實作重點**:
-    - 在 `_imports.py` 中同時引入 Source 介面與 Target 介面。
+    - 透過正式絕對 import 取得 Source 介面（`core.interfaces`）與 Target 介面（`gms.db` 公開容器）。
     - 實作 Extract -> Transform -> Load 流程。
 
 #### Task 5.2: 更新系統組裝 (Register ETL Trigger)
