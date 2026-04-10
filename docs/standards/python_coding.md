@@ -113,31 +113,33 @@ def __init__(  # noqa: PLR0913
 - **分組順序**: 依序為 (1) 標準函式庫, (2) 第三方套件, (3) 本地專案模組。
 - **封裝性**: 嚴禁跨越容器直接導入其內部的私有檔案 (例如: 禁止 `from other_pkg._models import Model`)。
 
-### 2.2 業務系統專用機制 (`_imports.py` Pattern)
+### 2.2 統一 Import 原則 (適用於所有系統)
 
-**適用範圍**: 僅限於 **Business Systems** (如 `gms`) 內部的 `api`, `service`, `db`, `etl` 四大模組層級。
+所有模組類型（Library、Data Source、Business System）遵循同一套 import 原則，不因系統類型而另設機制。
 
-**不適用**: Library (`core`, `wutils`) 或 Data Source Systems (`tej`)。
+| 情境 | 做法 |
+|:-----|:-----|
+| **跨公開邊界** | 使用正式絕對 import，從目標公開容器的 `__init__.py` 導入 |
+| **邊界內部** | 優先使用相對 import |
+| **依賴需要整理** | 使用具語義的 facade-like private modules（如 `_repositories.py`、`_contracts.py`） |
 
-在適用範圍內，需遵守以下依賴管理規則：
-
-1. **依賴閘門**: 每個 FU Container (如 `gms/service/user`) 的 `_imports.py` 負責管理該層級的所有外部依賴。
-2. **實作檔案限制**: Feature 級私有目錄內的實作檔案 (如 `_user_registration/_service.py`) **嚴禁**跳出 FU Container 去 import 父層或兄弟層的內容，必須統一從 FU Container 的 `_imports.py` 取得依賴（由於實作檔案位於 Feature 目錄內，需使用 `from .._imports` 回上一層）。
-3. **Feature 內部協作**: 同一 Feature 私有目錄內的檔案（如 `_user_registration/_x.py` 導入 `_user_registration/_y.py`）屬於內部協作，**允許**直接使用相對導入。
-4. **禁止跨 Feature 私有共用**: 同一個 FU Container 內，不同 Feature 的私有目錄之間**嚴禁**互相導入（例如 `_feature_a/_utils.py` 不可被 `_feature_b/_service.py` 導入）。若需共用，應提升為獨立 FU 或各自維護副本。
+**Feature 隔離紅線**：同一 FU Container 內，不同 Feature 的私有目錄之間**嚴禁**互相導入。若需共用，應提升為獨立 FU 或各自維護副本。
 
 ```python
 # ✅ 正確 (在 gms/service/user/_user_registration/_service.py 中)
-# 透過 FU Container 的 _imports 取得所有外部依賴（回上一層）
-from .._imports import IUserRepository, BusinessLogicError
+# 跨公開邊界：正式絕對 import
+from gms.db.user.profile import IUserRepository
+from gms.core.exceptions import BusinessLogicError
 
 # ✅ 正確 (在同一 Feature 目錄內)
-# 從同 Feature 私有目錄內的私有檔案導入 (內部協作)
+# 邊界內部：相對 import
 from ._utils import validate_email
 
+# ✅ 正確 (使用 facade 整理依賴)
+from .._contracts import IUserRepository, BusinessLogicError
+
 # ❌ 錯誤 (違反架構封裝)
-from ....db.user import IUserRepository  # 禁止跳出容器
-from core.exceptions import BusinessLogicError  # 禁止繞過 _imports
+from gms.db.user.profile._user_profile._repository import UserRepository  # 禁止穿透私有實作
 
 # ❌ 錯誤 (違反跨 Feature 私有共用禁令)
 from .._other_feature._helpers import some_util  # 禁止跨 Feature 導入
@@ -216,7 +218,6 @@ class FutureThread(threading.Thread, Generic[T]):
 **必須定義 `__all__` 的情境**：
 
 1. **任何承擔公開匯出或合法存取入口角色的 `__init__.py`**，必須定義 `__all__`，明確宣告對外暴露的元件。無論是 public package 對外定義 Public API，或是 private sub-package 作為同 parent 內部的合法取用入口，本質相同——只要有元件需要被控制匯出範圍，就必須以 `__all__` 明確界定。
-2. **`_imports.py`**：定義該容器向下傳播的依賴清單。
 
 **可省略 `__all__` 的情境**：
 
@@ -346,11 +347,11 @@ inv style  # 執行格式化與檢查
 
 針對 **Business Systems** (如 `gms`) 的開發者，請嚴格檢查以下架構紅線：
 
-**依賴管理 (`_imports.py` 機制)**
+**依賴管理（統一 Import 原則）**
 
 - [ ] **無越級導入**：確認沒有任何程式碼跳過容器邊界去 import 私有實作 (例如：沒有出現 `from ..other_pkg._models import ...`)。
-- [ ] **單一入口 (外部依賴)**：確認所有**來自容器外部**的依賴 (如父層、兄弟層、System Core)，是否統一從 FU Container 的 `_imports.py` 取得？(同一 Feature 私有目錄內的檔案互調不在此限，如 `from ._models import ...` 是允許的)。
-- [ ] **無循環依賴**：確認 `_imports.py` 沒有反向導入 Feature 級私有目錄內的實作檔案 (這會導致 Circular Import)。
+- [ ] **跨邊界使用正式路徑**：確認跨公開邊界的依賴，使用的是目標公開容器的正式絕對 import 路徑（或透過 facade-like private module 整理後取得）。
+- [ ] **無循環依賴**：確認 facade-like modules 沒有反向導入同層 Feature 級私有目錄內的實作檔案。
 - [ ] **Feature 隔離**：確認所有實作檔案均放置於對應的 `_<feature_name>/` 私有目錄中，且無跨 Feature 私有目錄互相導入的情形。
 
 **依賴反轉 (DIP)**
