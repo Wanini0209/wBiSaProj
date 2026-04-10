@@ -484,8 +484,6 @@ wutils/io/
 ```text
 gms/db/market/stock/
 ├── __init__.py                  # 公開介面：匯出所有 Feature 的 Components
-├── _imports.py                  # 此模組的統一依賴入口
-│
 ├── _stock_price_storage/        # stock-price-storage Feature 的私有實作空間
 │   ├── _schemas.py              # Pydantic Domain Schemas
 │   ├── _models.py               # SQL ORM 模型定義
@@ -512,7 +510,7 @@ gms/db/market/stock/
 > 3. **特殊機制 (註)**：
 >
 >    - **函式庫 (Library)** 通常結構較為單純。
->    - **業務系統**則會根據其所在的層級，引入 `_imports.py` 等特定的組織模式，請參考 [Section 6.3 `_imports.py` 混合依賴管理機制](#63-_importspy-混合依賴管理機制)。
+>    - **業務系統**的依賴管理遵循全專案統一的 import 原則（跨公開邊界使用絕對 import、邊界內使用相對 import），並可視需要使用具語義的 facade-like private modules 整理依賴。
 >
 > 4. **對應 (Correspondence)**：
 >
@@ -867,117 +865,58 @@ graph LR
 >
 > 關於依賴反轉原則在 Python 專案中的具體實踐，包括使用 FastAPI 框架實現 Composition Root、依賴注入容器的設計，以及跨系統介面的實作範例，請參閱 [架構實作指引](GUIDE_ARCHITECTURE.md)。
 
-### 6.3 `_imports.py` 混合依賴管理機制
+### 6.3 Business Backbone 的依賴管理原則
 
-「業務/應用系統」相較於「資料源系統」或「函式庫」有更為複雜的路徑結構與依賴關係，為解決 Python 中因目錄結構變更而導致的 `import` 路徑脆弱問題（例如 `from ....module import ...`），並嚴格管理**業務/應用系統**內部的複雜依賴，本專案導入一套混合依賴管理機制。
+「業務/應用系統」相較於「資料源系統」或「函式庫」有更為複雜的路徑結構與依賴關係。為管理此複雜度，Business Backbone 的四大主幹模組（`api`, `service`, `db`, `etl`）遵循與全專案一致的統一 import 原則，並搭配 facade-like private modules 作為依賴整理手段。
 
-#### 核心目的：統一依賴入口
+#### 統一 Import 原則
 
-此機制的**核心目的**是，為業務/應用系統」的四大標準模組（`api`, `service`, `db`, `etl`）各自建立一個**統一的依賴管理入口**。
+Business Backbone 遵循三條統一原則，不另設專屬機制：
 
-這套機制旨在解決**兩種**維護性難題：
-
-1. **管理內部依賴（相對導入）**：
-
-   - **問題**：模組內部（例如 `api` 模組）的子模組間使用相對導入（`from .. import ...`），當 `api` 模組*內部*結構重構時，這些相對路徑需要大量修改。
-   - **解決**：`_imports.py` 統一管理這些內部的相對導入。
-
-2. **管理外部依賴（絕對導入）**：
-
-   - **問題**：模組（例如 `service` 模組）的多處程式碼都依賴*外部*模組（例如 `<system>/core`）。當 `core` 模組的結構發生變化時，`service` 模組內所有引用到該依賴的地方都需要修改。
-   - **解決**：由 `service` 模組的根 `_imports.py` 統一負責導入 `core` 的依賴，`service` 內部的程式碼再從 `_imports.py` 獲取此依賴。
-
-透過此機制，四大模組各自的 `_imports.py` 成為了該模組的「依賴抽象層」，極大地降低了因結構變動帶來的維護成本。
-
-#### 適用範圍與邊界
-
-`_imports.py` 機制的適用範圍有嚴格的邊界：
-
-1. **適用範圍 (In Scope)**：
-
-   - `<system>/api`, `<system>/service`, `<system>/db`, `<system>/etl` 這四大模組。
-   - 用於管理這四大模組的**內部依賴**（相對導入）和**外部依賴**（絕對導入）。
-
-2. **不適用範圍 (Out of Scope)**：
-
-   - **系統核心庫**：`<system>/core` 模組本身性質屬於 library，其結構相對單純，**不導入** `_imports.py` 機制。
-   - **專案級函式庫**：`core`, `wutils` 等專案級函式庫**不使用**此機制。
-
-#### 機制起點
-
-`_imports.py` 的繼承與傳播機制**起點**，位於四大模組的根目錄：
-
-- `<system>/api/_imports.py`
-- `<system>/service/_imports.py`
-- `<system>/db/_imports.py`
-- `<system>/etl/_imports.py`
-
-這些**根檔案**的核心職責是**統一管理所有「外部依賴」**（例如，`service` 模組對 `core` 或 `db` 模組的依賴）。
-
-它們會透過自動化工具，將這些已導入的「外部依賴」向下傳播至所有子容器 (FU Container)。
-
-而模組內的 **「內部的依賴」**(子模組間的依賴)，則由各**子容器**的 `_imports.py` 檔案（例如 `<system>/service/a/_imports.py`）自行定義和管理。
-
-> **關鍵規範**：`_imports.py` 檔案只允許被建立在 FU Container (公開容器) 之中。
-
-#### 核心檔案職責
-
-`__init__.py` 與 `_imports.py` 是一對「鏡像概念」，它們共同定義了 FU Container 的存取邊界。為確保介面與依賴的明確性，並簡化自動化工具的實現，兩者均需遵循 `__all__` 規範：
-
-| 檔案 | 位置 | 職責 (存取方向) | 規範 |
-|:-----|:-----|:-----|:-----|
-| `__init__.py` | 每個 FU Container 的根目錄 | **對外**：定義該容器的**公開介面 (Public API)**；亦可承擔 metadata 與輕量初始化（參見 §4.4） | 當承擔公開匯出角色時，**必須**定義 `__all__`；若僅含 docstring / metadata / 輕量初始化，則可省略。 |
-| `_imports.py` | 每個 FU Container 的根目錄 | **對內**：作為該容器的**統一依賴入口** | **必須**定義 `__all__`，明確宣告此層級引入的所有依賴，以便自動化工具向下傳播。 |
-
-> **關鍵範圍定義**
->
-> `_imports.py` 是作為該容器的統一依賴入口，其管理的範圍是**同一系統內**的所有依賴。
->
-> 這同時包含了 6.3 節中定義的兩種類型：
-> - **外部依賴** (同一系統內，標準模組間的依賴，如 `<system>/core` 或 `db` 層)。
-> - **內部依賴** (同一標準模組內，子模組間的相對導入)。
->
-> 它**不管理**對「專案層級函式庫」（如 `core`, `wutils`）或「第三方套件」的依賴。
-
-#### 運作模式
-
-此機制透過以下兩種模式的協同運作來達成目標：
-
-| 模式 | 類型 | 說明 |
+| 情境 | 做法 | 範例 |
 |:-----|:-----|:-----|
-| **手動維護** | 水平導入 | 手動在 `_imports.py` 中聲明所有依賴（包括相對路徑和絕對路徑） |
-| **自動傳播** | 垂直繼承 | 工具自動將父容器的 `_imports.py` 內容向下傳播至所有子容器 |
+| **跨公開邊界** | 使用正式絕對 import | `from gms.db.market.stock.profile import StockProfileRepository` |
+| **邊界內部** | 優先使用相對 import | `from ._models import StockPriceModel` |
+| **依賴需要整理** | 使用具語義的 facade-like private modules | `from ._repositories import StockProfileRepository` |
 
-#### 擴展後的依賴規則
+#### 層級依賴方向
 
-為適應業務系統的五層結構，`_imports.py` 檔案管理的**外部依賴**規則擴展如下：
+業務系統的層級依賴方向仍受架構規範約束：
 
-| 層級 (Layer) | 可依賴的層級 (架構規範) | `_imports.py` 導入來源 (機制實踐) |
-|:-----|:-----|:-----|
-| `<system>/api` | `service`, `<system>/core` | `service` 層的公開介面、`<system>/core` 的公開介面 |
-| `<system>/service` | `db`, `<system>/core` | `db` 層的公開介面、`<system>/core` 的公開介面 |
-| `<system>/etl` | `db`, `<system>/core` | `db` 層的公開介面、`<system>/core` 的公開介面 |
-| `<system>/db` | `<system>/core` | `<system>/core` 的公開介面 |
-| `<system>/core` | (無系統內依賴) | (不適用) |
-
-#### 自動化工具支援
-
-專案在 `wsatools` 中提供自動化工具來簡化此機制的維護，並支援 `invoke` 命令列呼叫：
-
-| 命令 | 用途 |
+| 層級 (Layer) | 可依賴的層級 |
 |:-----|:-----|
-| `inv dev.imports-create` | 為新 FU Container 初始化 `_imports.py` 模板 |
-| `inv dev.imports-update` | 從父 FU Container 向下更新所有子 FU Container 的 `_imports.py` |
-| `inv dev.imports-check` | 檢查 `_imports.py` 是否正確繼承父 FU Container 的內容 |
+| `<system>/api` | `service`, `<system>/core` |
+| `<system>/service` | `db`, `<system>/core` |
+| `<system>/etl` | `db`, `<system>/core` |
+| `<system>/db` | `<system>/core` |
+| `<system>/core` | (無系統內依賴) |
+
+> **關鍵理解**
+>
+> 此表定義的是**架構層面的合法依賴方向**，而非特定的 import 機制。實際導入方式應遵循上述統一 import 原則。
+
+#### Facade-like Private Modules 的使用方式
+
+當某個層級或 FU Container 的依賴較為複雜，直接在每個實作檔案中重複書寫多條絕對 import 會造成維護負擔時，可使用具語義的 facade-like private modules 集中整理依賴。
+
+**命名原則**：facade-like private modules 應以其職責命名，而非使用泛用名稱。
+
+| 適合的命名 | 不適合的命名 | 原因 |
+|:-----------|:-------------|:-----|
+| `_repositories.py` | `_deps.py` | 應反映整理的內容語義 |
+| `_contracts.py` | `_deps.py` | 應具備自解釋性 |
+| `_exceptions.py` | `_common.py` | 避免泛用名稱 |
+
+**使用時機**：facade-like private modules 是**可選的整理手段**，不是強制的制度性要求。當依賴關係足夠簡單時，直接使用絕對 import 即可，無需額外建立 facade。
 
 #### 與依賴反轉原則 (DIP) 的關係
 
 > **關鍵理解：兩個概念的層次差異**
 >
 > - **依賴反轉原則 (DIP)**：高層次的架構設計指導原則，決定了**應該依賴什麼**（抽象介面）。
-> - **`_imports.py` 機制**：具體的程式碼組織與路徑管理機制，解決了**如何去依賴**（路徑管理）。
+> - **Import 原則**：具體的程式碼組織方式，決定了**如何書寫依賴路徑**。
 >
-> DIP 告訴我們**應該依賴什麼**，而 `_imports.py` 機制則提供了一個**如何去依賴**的健壯方案。
+> DIP 告訴我們**應該依賴什麼**，而統一 import 原則與 facade 機制則提供了**如何組織依賴路徑**的實務指引。
 
 ### 6.4 實作參考指引
 
@@ -1144,11 +1083,8 @@ wBiSaProj/
 │   ├── etl/
 │   ├── db/                    # 資料存取層 (FU Container)
 │   │   ├── __init__.py        # 暴露 db 層的公開介面 (如 Repository)
-│   │   ├── _imports.py        # 管理 db 層的內部依賴
-│   │   │
 │   │   ├── user/              # Domain: user (FU Container)
 │   │   │   ├── __init__.py
-│   │   │   ├── _imports.py
 │   │   │   ├── _user_profile/     # user-profile Feature 的私有實作空間
 │   │   │   │   └── _repository.py
 │   │   │   └── ...
@@ -1157,7 +1093,6 @@ wBiSaProj/
 │   │       ├── __init__.py
 │   │       ├── stock/         # Sub-domain (FU Container)
 │   │       │   ├── __init__.py      # 公開介面：匯出 Repository 與 Domain Schemas
-│   │       │   ├── _imports.py
 │   │       │   │
 │   │       │   └── _stock_price_storage/  # stock-price-storage Feature 的私有實作空間
 │   │       │       ├── _schemas.py      # Pydantic Domain Schemas
