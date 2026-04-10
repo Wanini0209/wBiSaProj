@@ -142,6 +142,10 @@ Header 總長度不得超過 72 字元。
 
 #### 1. Type (類型)
 
+> **核心原則**：Commit type 反映的是單一提交的**主要意圖**。一個 commit 可以附帶少量其他性質的變更（例如 `fix` commit 附帶少量文件修正），但應以該次提交最核心的目的選擇 type。若提交內容同時包含多種大型變更，應優先考慮拆分 commit，而非勉強以單一 type 包裝過多不相關內容。
+
+##### 快速參照表
+
 | Type | 說明 | 觸發版本號更新 (SemVer) |
 |:-----|:-----|:------------------------|
 | `feat` | 新增功能 (Feature) | MINOR |
@@ -151,6 +155,74 @@ Header 總長度不得超過 72 字元。
 | `refactor` | 程式碼重構 (既非新增功能也非修復錯誤) | PATCH |
 | `test` | 新增或修正測試 | PATCH (通常不觸發) |
 | `chore` | 建構過程或輔助工具的變動 (如 dependencies) | PATCH (通常不觸發) |
+
+> **注意**：`hotfix` 與 `experiment` 是 **branch type**，不是 commit type。`hotfix/*` 分支上的 commit 通常使用 `fix` 作為 commit type；`experiment/*` 分支上的 commit 依實際變更性質選用適當的 commit type。
+
+##### 各 Type 的詳細使用指引
+
+**`feat` — 新增功能**
+
+- **定位**：新增功能、新能力、對外可感知的行為增量
+- **適用情境**：新功能開發、新模組能力、新 API / 新工具能力、`wsatools` 的功能性增修
+- **不適用**：單純修錯 → `fix`；單純結構重整 → `refactor`；純工具 / 配置 / 依賴維護 → `chore`
+- **專案示例**：`feat(wsatools/llm): implement prompt quality loop`
+
+**`fix` — 修復錯誤**
+
+- **定位**：錯誤修正、缺陷修補
+- **適用情境**：bug fix、合規性錯誤修正、merge 後 follow-up 小修補
+- **不適用**：新功能 → `feat`；結構重整 → `refactor`；純文件工作 → `docs`
+- **專案示例**：`fix(wsatools): use relative import for private modules in __init__.py`
+
+**`docs` — 文件變更**
+
+- **定位**：文件內容修訂（包含排版與結構調整）
+- **適用情境**：standards / architecture / use-cases / specs / guides 的文字與結構修訂
+- **不適用**：真正程式碼功能改動 → `feat` 或 `fix`
+- **注意**：`docs/*` 是 branch type（分支工作性質），`docs(...)` 是 commit type（單一提交性質），兩者相關但不相同
+- **專案示例**：`docs(project): revise branch type definitions`
+
+**`style` — 格式調整**
+
+- **定位**：不影響語義與行為的格式 / 風格調整
+- **適用情境**：排版、空白 / 換行 / 格式化、無語義變更的樣式整理
+- **不適用**：結構重整 → `refactor`；文件內容修訂 → `docs`
+- **專案示例**：`style(wutils/io): apply black formatting`
+
+**`refactor` — 程式碼重構**
+
+- **定位**：不改外部行為的程式碼結構重整
+- **適用情境**：模組拆分、命名重整、內部實作重構
+- **不適用**：修正錯誤行為 → `fix`；新增能力 → `feat`
+- **專案示例**：`refactor(core/validator): split format rules into dedicated module`
+
+**`test` — 測試變更**
+
+- **定位**：測試新增或測試修訂
+- **適用情境**：新增測試、調整測試案例、改善測試覆蓋
+- **不適用**：若同一提交的主要意圖是修錯或加功能，而只是附帶更新測試，則不必強行改用 `test`，仍以主要意圖為準
+- **專案示例**：`test(wutils/io/pickle-io): add invalid payload edge cases`
+
+**`chore` — 專案維運**
+
+- **定位**：非功能性的專案維運與開發基礎設施調整
+- **適用情境**：invoke tasks、pre-commit hooks、requirements / lockfile、tooling / CI / build / pyproject
+- **不適用**：真正功能行為增修 → `feat`；真正錯誤修正 → `fix`
+- **專案示例**：`chore(devtools): update pre-commit hooks`
+
+##### 容易混淆的 Commit Types 對照
+
+| 情境 | 正確選擇 | 原因 |
+|:-----|:---------|:-----|
+| 新增一個全新的 API 端點 | `feat` | 對外可感知的新功能 |
+| 修正現有 API 端點的計算錯誤 | `fix` | 修正既有錯誤行為 |
+| 將 service 模組拆分為更小的子模組 | `refactor` | 不改外部行為，只調整內部結構 |
+| 修正 import 路徑以符合新規範 | `fix` | 修正合規性錯誤 |
+| 更新 `pyproject.toml` 中的依賴版本 | `chore` | 工具 / 配置 / 依賴維護 |
+| 修訂架構設計文件的章節結構 | `docs` | 文件本身的修訂 |
+| 對程式碼做 Black 格式化 | `style` | 純格式調整，不影響語義 |
+| 修錯順便補了對應的測試 | `fix` | 主意圖是修錯，測試是附帶 |
+| 純粹為既有功能補充測試覆蓋 | `test` | 主意圖是補測試 |
 
 #### 2. Scope (範圍)
 
