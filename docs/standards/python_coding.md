@@ -186,22 +186,66 @@ class FutureThread(threading.Thread, Generic[T]):
 
 ---
 
-## 4. `__all__` 聲明規範
+## 4. Package 邊界檔 (`__init__.py`) 使用規範
 
-為確保封裝邊界清晰，以下檔案 **必須** 定義 `__all__`：
+`__init__.py` 是 package / container 的**邊界檔 (Boundary File)**，可承擔公開匯出、alias、metadata、輕量初始化，但**嚴禁**承擔實作元件定義與實質功能邏輯。完整的角色定位請參閱《架構篇》§4.4。
 
-1. **`__init__.py`**: 定義該模組/容器對外暴露的 Public API。
-2. **`_imports.py`**: 定義該容器向下傳播的依賴清單。
+### 4.1 允許的內容
 
-**注意**: 一般內部的私有實作檔案 (如 `_models.py`) **不需要** 定義 `__all__`，除非有特殊的 Meta-programming 需求。
+| 類型 | 範例 |
+|:-----|:-----|
+| Re-export（從私有模組轉發） | `from ._json_io._json import json_dump` |
+| Alias | `from ._impl import _InternalFoo as Foo` |
+| `__all__` 宣告 | `__all__ = ["json_dump", "json_load"]` |
+| Metadata | `__version__ = "1.2.0"` |
+| 輕量、可預測、無 I/O 的初始化 | package-level logger name、lazy import、compatibility alias |
+| Docstring | `"""Tools for input/output operations."""` |
+
+### 4.2 禁止的內容
+
+| 類型 | 說明 |
+|:-----|:-----|
+| 實作 class / function / constant 定義 | 應放在私有模組中，`__init__.py` 僅轉發 |
+| 業務邏輯或複雜控制流程 | 違反邊界檔定位 |
+| 重量級初始化（DB 連線、檔案讀取、網路請求） | import-time 副作用會造成不可預測行為 |
+
+### 4.3 `__all__` 聲明規範
+
+`__all__` 的定義義務取決於檔案的角色：
+
+**必須定義 `__all__` 的情境**：
+
+1. **任何承擔公開匯出或合法存取入口角色的 `__init__.py`**，必須定義 `__all__`，明確宣告對外暴露的元件。無論是 public package 對外定義 Public API，或是 private sub-package 作為同 parent 內部的合法取用入口，本質相同——只要有元件需要被控制匯出範圍，就必須以 `__all__` 明確界定。
+2. **`_imports.py`**：定義該容器向下傳播的依賴清單。
+
+**可省略 `__all__` 的情境**：
+
+- `__init__.py` 僅包含空檔、docstring、metadata、或極輕量初始化時，不強制要求。
+
+**注意**：一般內部的私有實作檔案 (如 `_models.py`) **不需要** 定義 `__all__`，除非有特殊的 Meta-programming 需求。
 
 ```python
-# __init__.py 範例
+# __init__.py 範例（承擔公開匯出角色 → 必須有 __all__）
 __all__ = [
-    'StockAnalysisService',  # 僅暴露需要的類別
-    'analyze_volume',        # 僅暴露需要的函數
+    'StockAnalysisService',
+    'analyze_volume',
 ]
 ```
+
+```python
+# __init__.py 範例（僅含 metadata → 可省略 __all__）
+"""wutils: General-purpose Python development toolkit."""
+
+__version__ = "1.2.0"
+```
+
+### 4.4 Code Review 檢查要點
+
+在審查 `__init__.py` 時，reviewer 應關注以下信號：
+
+- **出現 `class` / `def` / 大段邏輯**：幾乎確定是違規，實作應搬移至私有模組。
+- **出現 import-time 副作用**（資料庫連線、檔案 I/O、網路請求）：應檢查是否過重，考慮延遲初始化。
+- **有 re-export 但缺少 `__all__`**：應補上 `__all__` 以明確公開介面範圍。
 
 ---
 
@@ -318,6 +362,10 @@ inv style  # 執行格式化與檢查
 
 - [ ] **檔案命名**：私有實作檔案是否已加上底線前綴，且位於 Feature 級私有目錄內 (如 `_json_io/_json.py`)。
 - [ ] **公開介面**：若新增了對外公開的元件，是否已在 `__init__.py` 的 `__all__` 中註冊？
+- [ ] **`__init__.py` 邊界檔合規**：
+  - [ ] 是否有 `class` / `def` / 大段邏輯出現在 `__init__.py` 中？若有，應搬移至私有模組。
+  - [ ] 是否有 import-time 的重量級副作用（DB 連線、檔案 I/O、網路請求）？若有，應改為延遲初始化或搬移。
+  - [ ] 若有 re-export，是否已定義 `__all__`？
 - [ ] **類型提示**：是否使用了現代語法 (如 `list[str]`, `str | None`) 以及 **3.12+ 泛型語法**？
 - [ ] **函數引數**：`__init__` 以外的函數是否保持在 5 個參數以內？
 - [ ] **文件語言**：
