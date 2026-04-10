@@ -2,9 +2,9 @@
 
 本文件提供 wBiSaProj 專案**架構設計**的實作建議與範例，作為開發團隊的技術參考指南。
 
-## 1. 核心依賴管理：`_imports.py` 與 `_common` 協同模式
+## 1. 核心依賴管理：`_imports.py` 依賴閘門機制
 
-本章節詳細說明專案中用以管理依賴、確保模組封裝的核心組織模式。此模式由 `_imports.py`（依賴閘門）與 `_common`（層級共用元件）兩個核心概念協同運作構成。
+本章節詳細說明專案中用以管理依賴、確保模組封裝的核心組織模式。本章節聚焦於 `_imports.py` 依賴閘門的運作機制，以及它如何與層級內的私有共用模組協作，確保依賴管理清晰且無循環。
 
 ### 1.1 機制概述：`_imports.py` 依賴閘門
 
@@ -37,52 +37,47 @@
 
 -----
 
-### 1.2 協同機制：`_common` 模式（層級共用元件）
+### 1.2 層級私有共用模組的角色
 
 #### 設計理念
 
-專案採用 `_common` 目錄來存放「模組層級的共用元件」。這些元件具有以下特性：
+在業務系統的多層級結構中，各層級（Layer / Domain / Sub-domain）可能存在層級內共用的私有元件。這些元件具有以下特性：
 
-- **非系統級共用**：不適用於整個系統（否則應放在 `[system]/core`）
+- **非系統級共用**：不適用於整個系統（否則應放在 `<system>/core`）
 - **層級內共用**：在特定層級（Layer）或領域（Domain）內部被廣泛共用
-- **私有實作**：`_common` 被視為其所屬模組的私有實作細節，對外部層級完全不可見
+- **私有實作**：這些模組以底線前綴命名（如 `_orm/`、`_rules.py`），對外部層級完全不可見
 
 #### 層級應用
 
-`_common` 模式可遞迴應用於所有需要內部共用元件的模組層級：
+層級私有共用模組可存在於各個需要內部共用元件的層級，並以具語義的名稱命名：
 
 ```text
 [system]/
 ├── [layer]/
-│   ├── _common/            # Layer 層級共用（如 db/_common/orm/）
-│   │   └── ...
+│   ├── _orm/               # Layer 層級共用（如 db/_orm/）
 │   └── [domain]/
-│       ├── _common/        # Domain 層級共用（如 market/_common/rules.py）
-│       │   └── ...
+│       ├── _rules.py       # Domain 層級共用（如 market/_rules.py）
 │       └── [subdomain]/
-│           ├── _common/    # Sub-domain 層級共用
-│           │   └── ...
+│           ├── _validators.py  # Sub-domain 層級共用
 │           └── [fu-container]/
-│               └── ...     # FU 內部元件（較少使用 _common）
+│               └── ...     # FU 內部元件
 ```
 
 #### 封裝邊界與使用頻率
 
-`_common` 在不同層級的使用頻率與必要性各有不同：
+層級私有共用模組在不同層級的使用頻率與必要性各有不同：
 
 | 層級 | 使用頻率 | 說明 |
 |:-----|:---------|:-----|
-| **Layer** | 幾乎必然存在 | 如 `db/_common/orm/` 提供整個 DB 層的 ORM 基礎元件 |
-| **Domain / Sub-domain** | 經常存在 | 如 `market/_common/rules` 提供領域特有的共用規則 |
-| **FU Container** | 較為少見 | 當 FU Container 內部有多個子 FU Container 時可能需要 |
+| **Layer** | 幾乎必然存在 | 如 `db/_orm/` 提供整個 DB 層的 ORM 基礎元件 |
+| **Domain / Sub-domain** | 經常存在 | 如 `market/_rules.py` 提供領域特有的共用規則 |
+| **FU Container** | 較為少見 | FU Container 本身已可建立各種私有實作檔案 |
 
 **關鍵理解**：
 
-- `_common` 技術上允許存在於任何層級，包括 FU Container
-- FU Container 層級較少使用 `_common` 的原因：
-    - FU Container 本身就可以建立各種私有實作檔案（如 `_models.py`、`_utils.py`）
-    - 只有當 FU Container 內部存在**多個子 FU Container**且需要共用元件時，才會使用 `_common`
-- **可見範圍**：`_common` 僅對其所屬層級及子層級可見，對外部層級完全封閉
+- 層級私有共用模組應以具語義的名稱命名（如 `_orm/`、`_rules.py`、`_validators.py`），而非使用泛用名稱
+- FU Container 層級較少需要額外的私有共用模組，因為 FU Container 本身就可以建立各種私有實作檔案（如 `_models.py`、`_utils.py`）
+- **可見範圍**：這些私有共用模組僅對其所屬層級及子層級可見，對外部層級完全封閉
 
 -----
 
@@ -117,7 +112,7 @@ from fastapi import APIRouter        # 第三方套件
     - 是此規則的**唯一例外**。
     - 其職責就是向外查找依賴：
         - 繼承父層 `_imports.py`（`from .._imports import ...`）
-        - 導入父層共用函式庫 `_common`（例如：`from .._common.validators import validate_symbol`）
+        - 導入父層私有共用模組（例如：`from .._validators import validate_symbol`）
         - 導入兄弟模組（例如：`from ..trading_data import StockData`）
 
 ```python
@@ -131,7 +126,6 @@ from ._models import UserModel
 
 # ❌ 錯誤：實作檔案嚴禁跳出 FU Container！
 from ..._imports import something
-from ..._common import something
 from ...dto.user import UserDTO
 ```
 
@@ -141,7 +135,7 @@ from ...dto.user import UserDTO
 # ✅ 正確：作為閘門，向外查找依賴
 from .._imports import BaseRepository  # 繼承父層 _imports.py
 from ..trading_data import StockData  # 導入兄弟模組
-from .._common.validators import validate_symbol  # 導入父層共用函式庫 _common
+from .._validators import validate_symbol  # 導入父層私有共用模組
 ```
 
 #### 原則三：防止循環依賴
@@ -152,7 +146,7 @@ from .._common.validators import validate_symbol  # 導入父層共用函式庫 
 
 - **允許的導入規則**：`_imports.py` 只允許以下三種導入方式：
     1. `from .._imports import ...`（繼承父層 `_imports.py`）
-    2. `from .._common import ...`（導入父層共用函式庫 `_common`）
+    2. `from .._<module> import ...`（導入父層私有共用模組，如 `_orm`、`_rules`）
     3. `from [相對路徑] import ...`（導入兄弟模組）
 
 ```python
@@ -164,8 +158,8 @@ from .._imports import Base, BaseRepository
 # ✅ 正確：導入兄弟模組（相對路徑）
 from ..trading_data import StockData
 
-# ✅ 正確：導入父層共用函式庫 _common（相對路徑）
-from .._common.validators import validate_symbol
+# ✅ 正確：導入父層私有共用模組（相對路徑）
+from .._validators import validate_symbol
 
 # ❌ 錯誤：嚴禁導入 Feature 級私有目錄內的實作檔案！
 from ._user_profile._models import UserProfile
@@ -173,7 +167,7 @@ from ._user_profile._repository import UserRepository
 
 # ❌ 錯誤：嚴禁導入更上層檔案！
 from ..._imports import Base, BaseRepository
-from ..._common.rules import is_market_open
+from ..._rules import is_market_open
 from ...user.profile import UserRepository
 ```
 
@@ -212,70 +206,66 @@ from .._imports import (  # 從父層導入
 
 #### 原則六：手動維護與自動傳播的分工
 
-- **手動維護**：每層 `_imports.py` 負責手動導入所需的父層共用函式庫（`_common`）元件、兄弟模組。
+- **手動維護**：每層 `_imports.py` 負責手動導入所需的父層私有共用模組元件、兄弟模組。
 - **自動傳播**：工具會自動將父層 `_imports.py` 的依賴向下傳播至所有子容器。
 
 -----
 
 ### 1.4 層級結構與協作範例
 
-本節透過完整的結構圖，展示 `_imports.py` 與 `_common` 如何在多層級架構中協同運作：
+本節透過完整的結構圖，展示 `_imports.py` 如何與層級私有共用模組協同運作：
 
 - **`_imports.py`**：負責**傳播依賴**（垂直繼承）
-- **`_common`**：提供**層級共用元件**（作為可導入的函式庫）
-- **協作關鍵**：`_imports.py` 與 `_common` **完全解耦**。下游的 FU Container 在其 `_imports.py` 中，**按需**、**手動**、透過**相對路徑**導入 `_common` 元件。
+- **層級私有共用模組**（如 `_orm/`、`_rules.py`）：提供**層級共用元件**
+- **協作關鍵**：`_imports.py` 與私有共用模組**完全解耦**。下游的 FU Container 在其 `_imports.py` 中，**按需**、**手動**、透過**相對路徑**導入這些模組的元件。
 
 #### 完整結構圖
 
-以 GMS 系統的 DB 層為例，展示 `_imports.py` 的依賴傳播與 `_common` 的協同運作：
+以 GMS 系統的 DB 層為例，展示 `_imports.py` 的依賴傳播與私有共用模組的協同運作：
 
 ```text
 gms/db/
 ├── _imports.py              # 1. DB Layer 層級（根）
 │                            #    -> 導入 gms.core（系統級跨Layer依賴）
 │
-├── _common/                 #    (DB Layer 層級共用函式庫)
+├── _orm/                    #    (DB Layer 私有共用模組：ORM 基礎元件)
 │   ├── __init__.py
-│   ├── constants.py         #    (DB Layer 共用常數)
-│   └── orm/
-│       ├── base.py          #    (Base, BaseRepository)
-│       └── mixins.py        #    (TimestampMixin, SoftDeleteMixin)
+│   ├── base.py              #    (Base, BaseRepository)
+│   └── mixins.py            #    (TimestampMixin, SoftDeleteMixin)
 │
 ├── user/
 │   ├── _imports.py          # 2. User Domain 層級
 │   │                        #    -> 繼承 (1)：自動從父層傳播
-│   ├── _common/             #    (可選：User Domain 層級共用函式庫)
+│   # (可視需求建立具語義的私有共用模組)
 │   └── profile/
 │       └── _imports.py      # 3. User-Profile FU Container 層級
 │                            #    -> 繼承 (2)：自動從父層傳播
-│                            #    -> (視需求)手動導入父層共用函式庫(_common)
-│                            #    例如：from .._common.orm.base import Base, BaseRepository
-│                            #          from .._common.orm.mixins import TimestampMixin, SoftDeleteMixin
+│                            #    -> (視需求)手動導入父層私有共用模組
+│                            #    例如：from .._orm.base import Base, BaseRepository
+│                            #          from .._orm.mixins import TimestampMixin, SoftDeleteMixin
 │
 └── market/
     ├── _imports.py          # 4. Market Domain 層級
     │                        #    -> 繼承 (1)：自動從父層傳播
     │
-    ├── _common/             #    (Market Domain 層級共用函式庫)
-    │   └── rules.py         #    (is_market_open)
+    ├── _rules.py            #    (Market Domain 私有共用模組：is_market_open)
     │
     └── stock/
         ├── _imports.py      # 5. Stock Sub-domain 層級
         │                    #    -> 繼承 (4)：自動從父層傳播
-        │                    #    -> (視需求)手動導入父層共用函式庫(_common)
-        │                    #    例如：from .._common.rules import is_market_open
+        │                    #    -> (視需求)手動導入父層私有共用模組
+        │                    #    例如：from .._rules import is_market_open
         │
-        ├── _common/         #    (Stock Sub-domain 層級共用函式庫)
-        │   ├── __init__.py
-        │   ├── calculators.py   #    (calculate_moving_average)
-        │   └── validators.py    #    (validate_symbol, StockDataValidator)
+        ├── _calculators.py  #    (Stock Sub-domain 私有共用模組：calculate_moving_average)
+        │
+        ├── _validators.py   #    (Stock Sub-domain 私有共用模組：validate_symbol, StockDataValidator)
         │
         ├── profile/
         │   ├── __init__.py
         │   ├── _imports.py  # 6. Stock-Profile FU Container 層級
         │   │                #    -> 繼承 (5)：自動從父層傳播
-        │   │                #    -> (視需求)手動導入父層共用函式庫(_common)
-        │   │                #    例如：from .._common.validators import validate_symbol
+        │   │                #    -> (視需求)手動導入父層私有共用模組
+        │   │                #    例如：from .._validators import validate_symbol
         │   │                #    -> 手動導入兄弟模組 trading_data
         │   │                #    例如：from ..trading_data import StockData
         │   │
@@ -287,9 +277,9 @@ gms/db/
             ├── __init__.py
             ├── _imports.py  # 7. Stock-Trading-Data FU Container
             │                #    -> 繼承 (5)：自動從父層傳播
-            │                #    -> (視需求)手動導入父層共用函式庫(_common)
-            │                #    例如：from .._common.calculators import calculate_moving_average
-            │                #          from .._common.validators import StockDataValidator
+            │                #    -> (視需求)手動導入父層私有共用模組
+            │                #    例如：from .._calculators import calculate_moving_average
+            │                #          from .._validators import StockDataValidator
             │
             └── _stock_trading_data/  # stock-trading-data Feature 的私有實作空間
                 ├── _models.py
@@ -298,21 +288,21 @@ gms/db/
 
 #### 協作說明
 
-從上述結構可以看到 `_imports.py` 與 `_common` 的**累加傳播（Cumulative Propagation）協作模式**。此模式嚴格遵循 1.3 節所定義的導入原則（特別是原則三），確保 `_imports.py` 檔案的職責清晰且無循環依賴。
+從上述結構可以看到 `_imports.py` 的**累加傳播（Cumulative Propagation）協作模式**。此模式嚴格遵循 1.3 節所定義的導入原則（特別是原則三），確保 `_imports.py` 檔案的職責清晰且無循環依賴。
 
 **1. 依賴傳播鏈的累加機制**
 
 `_imports.py` 傳播鏈的內容**不是固定的**，而是**由上到下動態累加**的。在每一個層級，它會彙總三種來源的依賴：
 
 1. **繼承父層依賴**：透過 `from .._imports import ...`（規則 1）繼承其父層 `_imports.py` 的所有依賴
-2. **添加父層 `_common`**：透過 `from .._common import ...`（規則 2）導入其直屬父層 `_common` 中的私有元件
+2. **添加父層私有共用模組**：透過 `from .._<module> import ...`（規則 2）導入其直屬父層中具語義命名的私有共用元件
 3. **添加兄弟模組**：透過 `from ..[sibling] import ...`（規則 3）導入其兄弟模組的公開介面
 
 然後，它會將這三部分**合併**到自己的 `__all__` 中，再傳遞給下一層。
 
-**2. `_common` 函式庫（層級私有）**
+**2. 層級私有共用模組**
 
-`_common` 模組（如 `db/_common`）是層級私有的。它**不會**被其同層的 `_imports.py`（`db/_imports.py`）導入（因為這違反原則三），而是等待其**子層級**的 `_imports.py`（`market/_imports.py` 或 `user/_imports.py`）透過規則 2 來導入。
+層級私有共用模組（如 `db/_orm/`）是層級私有的。它**不會**被其同層的 `_imports.py`（`db/_imports.py`）導入（因為這違反原則三），而是等待其**子層級**的 `_imports.py`（`market/_imports.py` 或 `user/_imports.py`）透過規則 2 來導入。
 
 **3. 依賴彙總的完整流程（以檔案 6 為例）**
 
@@ -320,29 +310,29 @@ gms/db/
     - 職責：啟動傳播鏈。
     - 導入：`from gms.core import ...`（假設導入 `exceptions`，遵循原則一）。
     - `__all__ = ['exceptions']`
-    - （它**不能**導入 `db/_common`，遵循原則三）。
+    - （它**不能**導入同層的 `db/_orm/`，遵循原則三）。
 
 - **`market/_imports.py`（檔案 4 - Domain 層）**
     - **繼承父層依賴**：`from .._imports import exceptions`（來自檔案 1）。
-    - **添加父層 `_common`**：`from .._common.orm.base import Base`（來自 `db/_common`）。
+    - **添加父層私有共用模組**：`from .._orm.base import Base`（來自 `db/_orm/`）。
     - `__all__ = ['exceptions', 'Base']`（內容累加了）。
 
 - **`stock/_imports.py`（檔案 5 - Sub-domain 層）**
     - **繼承父層依賴**：`from .._imports import exceptions, Base`（來自檔案 4）。
-    - **添加父層 `_common`**：`from .._common.rules import is_market_open`（來自 `market/_common`）。
+    - **添加父層私有共用模組**：`from .._rules import is_market_open`（來自 `market/_rules.py`）。
     - `__all__ = ['exceptions', 'Base', 'is_market_open']`（內容再次累加）。
 
 - **`profile/_imports.py`（檔案 6 - FU Container）**
     - **繼承父層依賴**：`from .._imports import exceptions, Base, is_market_open`（來自檔案 5）。
-    - **添加父層 `_common`**：`from .._common.validators import validate_symbol`（來自 `stock/_common`）。
+    - **添加父層私有共用模組**：`from .._validators import validate_symbol`（來自 `stock/_validators.py`）。
     - **添加兄弟模組**：`from ..trading_data import StockData`（來自 `stock/trading_data`）。
     - `__all__` 彙總了所有依賴，供 `_repository.py` 等實作檔案使用。
 
 **關鍵理解**
 
-`_imports.py` 傳播鏈**並非**只傳遞頂層的 `gms.core`，而是像一個滾雪球，**在每一層都會累加**來自「父層 `_common`」和「兄弟模組」的依賴，使其內容越來越豐富，最終在 FU Container 層級提供所有需要的依賴。
+`_imports.py` 傳播鏈**並非**只傳遞頂層的 `gms.core`，而是像一個滾雪球，**在每一層都會累加**來自「父層私有共用模組」和「兄弟模組」的依賴，使其內容越來越豐富，最終在 FU Container 層級提供所有需要的依賴。
 
-此機制完美地遵守了「原則三」（沒有任何檔案使用 `from ._common`），同時實現了強大且清晰的依賴傳播，完全避免了循環依賴。
+此機制完美地遵守了「原則三」（沒有任何檔案導入同層的私有共用模組），同時實現了強大且清晰的依賴傳播，完全避免了循環依賴。
 
 -----
 
@@ -368,8 +358,8 @@ from gms.core import (
     validators
 )
 
-# 嚴禁導入同層 _common（違反原則三）
-# from ._common.orm.base import Base  # ❌ 錯誤！
+# 嚴禁導入同層私有共用模組（違反原則三）
+# from ._orm.base import Base  # ❌ 錯誤！
 
 # 必須定義 __all__ 供自動化工具使用
 __all__ = [
@@ -384,13 +374,13 @@ __all__ = [
 **關鍵理解**：
 
 - `db/_imports.py` 作為根，啟動了依賴傳播鏈。
-- 它**不能**導入其同層的 `db/_common`（違反原則三）。
+- 它**不能**導入其同層的 `db/_orm/`（違反原則三）。
 
 -----
 
 #### 1.5.2 Domain / Sub-domain 層的 `_imports.py`（累加層）
 
-這些中間層的 `_imports.py` 是「累加傳播」的核心。它們繼承上層依賴，並**主動**導入其**直屬父層**的 `_common` 元件，使其內容「滾雪球」式地增長。
+這些中間層的 `_imports.py` 是「累加傳播」的核心。它們繼承上層依賴，並**主動**導入其**直屬父層**的私有共用模組元件，使其內容「滾雪球」式地增長。
 
 ##### Market Domain 層級
 
@@ -407,10 +397,10 @@ from .._imports import (
 )
 # === 自動傳播內容結束 ===
 
-# === (擴展) 手動導入「父層 _common」的依賴（規則 2） ===
-# 導入 db/_common 內的元件
-from .._common.orm.base import Base, BaseRepository
-from .._common.orm.mixins import TimestampMixin, SoftDeleteMixin
+# === (擴展) 手動導入「父層私有共用模組」的依賴（規則 2） ===
+# 導入 db/_orm/ 內的元件
+from .._orm.base import Base, BaseRepository
+from .._orm.mixins import TimestampMixin, SoftDeleteMixin
 
 # 必須定義 __all__（彙總 繼承 + 擴展）
 __all__ = [
@@ -420,7 +410,7 @@ __all__ = [
     'utils',
     'validators',
 
-    # 2. 本層加入的 (db/_common)
+    # 2. 本層加入的 (db/_orm)
     'Base',
     'BaseRepository',
     'TimestampMixin',
@@ -442,7 +432,7 @@ from .._imports import (
     utils,
     validators,
 
-    # 來自 db/_common（由檔案 4 累加而來）
+    # 來自 db/_orm（由檔案 4 累加而來）
     Base,
     BaseRepository,
     TimestampMixin,
@@ -450,13 +440,13 @@ from .._imports import (
 )
 # === 自動傳播內容結束 ===
 
-# === (擴展) 手動導入「父層 _common」的依賴（規則 2） ===
-# 導入 market/_common 內的元件
-from .._common.rules import is_market_open
+# === (擴展) 手動導入「父層私有共用模組」的依賴（規則 2） ===
+# 導入 market/_rules.py 的元件
+from .._rules import is_market_open
 
 # 必須定義 __all__（彙總 繼承 + 擴展）
 __all__ = [
-    # 1. 從父層傳播的 (gms.core + db/_common)
+    # 1. 從父層傳播的 (gms.core + db/_orm)
     'constants',
     'exceptions',
     'utils',
@@ -466,14 +456,14 @@ __all__ = [
     'TimestampMixin',
     'SoftDeleteMixin',
 
-    # 2. 本層加入的 (market/_common)
+    # 2. 本層加入的 (market/_rules)
     'is_market_open',
 ]
 ```
 
 **關鍵理解**：
 
-- `stock/_imports.py`（檔案 5）的 `__all__` 中，自動包含了來自 `gms.core` 和 `db/_common` 的所有依賴。
+- `stock/_imports.py`（檔案 5）的 `__all__` 中，自動包含了來自 `gms.core` 和 `db/_orm/` 的所有依賴。
 - 依賴鏈的內容在每一層都變得更豐富。
 
 -----
@@ -494,23 +484,23 @@ from .._imports import (
     utils,
     validators,
 
-    # 來自 db/_common
+    # 來自 db/_orm
     Base,
     BaseRepository,
     TimestampMixin,
     SoftDeleteMixin,
 
-    # 來自 market/_common
+    # 來自 market/_rules
     is_market_open,
 )
 # === 自動傳播內容結束 ===
 
-# === (擴展) 手動導入「父層 _common」的依賴（規則 2） ===
-# 導入 stock/_common 內的元件
-from .._common import (
-    calculate_moving_average,
+# === (擴展) 手動導入「父層私有共用模組」的依賴（規則 2） ===
+# 導入 stock 層級的私有共用模組
+from .._calculators import calculate_moving_average
+from .._validators import (
     validate_symbol,
-    StockDataValidator
+    StockDataValidator,
 )
 
 # === (擴展) 手動導入「兄弟模組」依賴（規則 3） ===
@@ -519,7 +509,7 @@ from ..trading_data import StockTradingData
 
 # 必須定義 __all__（彙總 繼承 + 擴展）
 __all__ = [
-    # 1. 從父層傳播的 (gms.core + db/_common + market/_common)
+    # 1. 從父層傳播的 (gms.core + db/_orm + market/_rules)
     'constants',
     'exceptions',
     'utils',
@@ -530,7 +520,7 @@ __all__ = [
     'SoftDeleteMixin',
     'is_market_open',
 
-    # 2. 本層加入的 (stock/_common)
+    # 2. 本層加入的 (stock/_calculators + stock/_validators)
     'calculate_moving_average',
     'validate_symbol',
     'StockDataValidator',
@@ -543,8 +533,8 @@ __all__ = [
 **關鍵理解**：
 
 - `profile/_imports.py` 成為依賴彙總點。
-- 它繼承了 `gms.core`、`db/_common`、`market/_common` 的所有依賴。
-- 它**僅需**手動導入其**直屬父層** `_common`（`stock/_common`）和**兄弟模組** `trading_data`。
+- 它繼承了 `gms.core`、`db/_orm/`、`market/_rules.py` 的所有依賴。
+- 它**僅需**手動導入其**直屬父層**的私有共用模組（`stock/_calculators.py`、`stock/_validators.py`）和**兄弟模組** `trading_data`。
 - 導入路徑變得非常簡潔，不再有 `....` 或 `...` 的複雜相對路徑。
 
 -----
@@ -568,10 +558,10 @@ from typing import List
 # 體現原則二：系統內部依賴全部來自 FU Container 的 _imports，來源清晰
 # 注意：由於實作檔案位於 Feature 級私有目錄內，需使用 `..` 回到 FU Container 層級
 from .._imports import (
-    Base,                 # 來自 db/_common（由繼承取得）
-    TimestampMixin,       # 來自 db/_common（由繼承取得）
-    is_market_open,       # 來自 market/_common（由繼承取得）
-    validate_symbol,      # 來自 stock/_common（由本層 _imports 導入）
+    Base,                 # 來自 db/_orm（由繼承取得）
+    TimestampMixin,       # 來自 db/_orm（由繼承取得）
+    is_market_open,       # 來自 market/_rules（由繼承取得）
+    validate_symbol,      # 來自 stock/_validators（由本層 _imports 導入）
     StockTradingData,     # 來自兄弟模組（由本層 _imports 導入）
 )
 
@@ -616,24 +606,24 @@ class StockProfile(Base, TimestampMixin):
 1. **`_imports.py` 傳播鏈（檔案 1）**：
     - `db/_imports.py` 作為根，僅導入 `gms.core` 並啟動傳播鏈。
 
-2. **`_common` 函式庫**：
-    - 作為獨立的、**層級私有**的元件庫存在。
+2. **層級私有共用模組**：
+    - 以具語義名稱命名（如 `_orm/`、`_rules.py`），作為獨立的、**層級私有**的元件庫存在。
 
 3. **`_imports.py` 累加層（檔案 4, 5）**：
     - 中間層（Domain, Sub-domain）的 `_imports.py` 成為「累加器」。
     - 它們**繼承父層依賴**：`from .._imports import ...` 來獲取已有的依賴。
-    - 它們**添加父層 `_common`**：透過 `from .._common import ...` 來主動導入其直屬父層的 `_common` 元件。
+    - 它們**添加父層私有共用模組**：透過 `from .._<module> import ...` 來主動導入其直屬父層的私有共用元件。
     - 它們將兩者彙總到 `__all__` 中，使依賴鏈「滾雪球」式地增長。
 
 4. **FU Container 的 `_imports.py`（檔案 6）**：
     - 作為**最終的依賴消費者**。
-    - **繼承父層依賴**：透過 `from .._imports import ...` 獲取包含 `gms.core` 和所有父層 `_common` 元件的豐富依賴。
-    - **添加父層 `_common`**：僅需導入其直屬父層（`_common`）和兄弟模組（`trading_data`）的依賴。
+    - **繼承父層依賴**：透過 `from .._imports import ...` 獲取包含 `gms.core` 和所有父層私有共用模組元件的豐富依賴。
+    - **添加父層私有共用模組**：僅需導入其直屬父層的私有共用模組和兄弟模組（`trading_data`）的依賴。
 
 5. **實作檔案**（`_models.py`）：
     - **保持簡潔**。透過 `from .._imports import ...`（回到 FU Container 層級）取得所有依賴，完全不受架構變革影響。
 
-**這形成了一個更清晰、更健壯、無循環依賴的依賴管理體系**。它透過在中間層主動彙總 `_common`，換取了 FU Container 層依賴導入的極大簡潔性。
+**這形成了一個更清晰、更健壯、無循環依賴的依賴管理體系**。它透過在中間層主動彙總私有共用模組的元件，換取了 FU Container 層依賴導入的極大簡潔性。
 
 -----
 
@@ -1341,11 +1331,9 @@ DB 層使用 Repository Pattern 配合抽象介面，提供以下優勢：
 ```text
 gms/db/
 ├── _imports.py                 # 根依賴管理
-├── _common/                    # DB 層共用元件
-│   ├── orm/
-│   │   ├── base.py             # Base, BaseRepository
-│   │   └── mixins.py           # TimestampMixin
-│   └── ...
+├── _orm/                       # DB 層私有共用模組（ORM 基礎元件）
+│   ├── base.py                 # Base, BaseRepository
+│   └── mixins.py               # TimestampMixin
 └── market/                     # Domain
     └── stock/                  # Sub-domain
         └── price/              # FU Container (股價功能單元)
@@ -1590,9 +1578,8 @@ Service 層的核心特性：
 ```text
 gms/service/
 ├── _imports.py                 # 根依賴管理 (統一導入 DB 介面)
-├── _common/                    # Service 層共用元件
-│   ├── validators.py          # 業務驗證器
-│   └── calculators.py         # 業務計算器
+├── _validators.py              # 業務驗證器
+├── _calculators.py              # 業務計算器
 │
 └── market/
     └── stock/
@@ -1926,9 +1913,8 @@ ETL Pipeline 的設計精髓：
 ```text
 gms/etl/
 ├── _imports.py                 # 根依賴管理
-├── _common/                    # ETL 共用元件
-│   ├── validators.py          # 資料驗證器
-│   └── transformers.py        # 資料轉換器
+├── _validators.py              # 資料驗證器
+├── _transformers.py             # 資料轉換器
 │
 └── market/
     └── stock/
