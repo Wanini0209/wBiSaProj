@@ -24,7 +24,7 @@ Library Feature 的需求文件聚焦於「介面契約」與「行為規範」�
 
 `docs/use-cases/<library>/<toolkit>/<feature_name>/requirements.md`
 
-- `<library>`: 函式庫名稱 (e.g., `wutils`, `wsatools`, `core`, `<system>/core`)
+- `<library>`: 函式庫名稱 (e.g., `wutils`, `core`, `<system>/core`)
 - `<toolkit>`: 功能分類 (e.g., `io`, `validator`, `ds/tree`)
 - `<feature_name>`: 功能名稱 (e.g., `pickle-io`)
 

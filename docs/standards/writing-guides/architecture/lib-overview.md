@@ -2,7 +2,7 @@
 
 本規範定義 **Project-Level Library (專案級函式庫)** 的 `LIBRARY_OVERVIEW.md` 撰寫規範。目標是定義函式庫的 **邊界 (Boundaries)**、**工具集職責 (Toolkit Responsibilities)** 與 **架構限制 (Constraints)**，作為 System Analyst (LLM) 執行需求分析與架構設計時的 **Ground Truth (單一真理來源)**。
 
-> **⚠️ 適用範圍**：本規範適用於 **專案級函式庫** (如 `wutils`, `core`)。業務系統請參閱 `sys-biz-overview.md`，資料源系統請參閱 `sys-ds-overview.md`。
+> **⚠️ 適用範圍**：本規範適用於 **專案級函式庫** (如 `wutils`, `core`)。業務系統請參閱 `sys-biz-overview.md`，資料源系統請參閱 `sys-ds-overview.md`。`wsatools` 不適用本模板，應依 `docs/wsatools/architecture.md` 之專屬治理模型撰寫。
 
 *供 Generator: Prompt4LibraryOverview 使用*
 
