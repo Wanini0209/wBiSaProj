@@ -505,7 +505,7 @@ gms/db/market/stock/
 > 3. **特殊機制 (註)**：
 >
 >    - **函式庫 (Library)** 通常結構較為單純。
->    - **業務系統**則會根據其所在的層級，引入 `_imports.py` 或 `_common/` 等特定的組織模式，請參考 [Section 6.3 `_imports.py` 混合依賴管理機制](#63-_importspy-混合依賴管理機制)。
+>    - **業務系統**則會根據其所在的層級，引入 `_imports.py` 等特定的組織模式，請參考 [Section 6.3 `_imports.py` 混合依賴管理機制](#63-_importspy-混合依賴管理機制)。
 >
 > 4. **對應 (Correspondence)**：
 >
@@ -571,7 +571,7 @@ wutils/ms_office/
     └── _parser.py            # pdf-parser FU 的實作
 ```
 
-上例中，Excel 格式解析邏輯被 `excel-reader` 和 `excel-writer` 共同需要。依照試金石判斷，修改格式解析邏輯時需要追蹤所有使用者並評估影響，因此它被提升為正式 FU（`excel-utils`），歸屬於獨立的 Feature，透過 FU Container 的公開介面匯出，而非以 `_common.py` 形式藏在某個 Feature 的私有目錄內。
+上例中，Excel 格式解析邏輯被 `excel-reader` 和 `excel-writer` 共同需要。依照試金石判斷，修改格式解析邏輯時需要追蹤所有使用者並評估影響，因此它被提升為正式 FU（`excel-utils`），歸屬於獨立的 Feature，透過 FU Container 的公開介面匯出，而非以非正式的私有共用檔案形式藏在某個 Feature 的私有目錄內。
 
 #### 4.3.3 規範三：私有檔案歸屬粒度與 Feature 的關係
 
@@ -911,13 +911,6 @@ graph LR
 而模組內的 **「內部的依賴」**(子模組間的依賴)，則由各**子容器**的 `_imports.py` 檔案（例如 `<system>/service/a/_imports.py`）自行定義和管理。
 
 > **關鍵規範**：`_imports.py` 檔案只允許被建立在 FU Container (公開容器) 之中。
->
-> **特別說明：`_common` 目錄的處理**
->
-> 根據專案的設計決策（DDR 2025-11-05），`_common` 目錄被定義為模組層級的私有實作細節，用於存放該模組內部的共用元件。由於 `_common` 不是一個公開容器（FU Container），因此：
-> - `_common` 目錄本身**不應該**包含 `_imports.py` 檔案
-> - `_common` 內的元件被視為其所屬模組的私有實作，由該模組的根 `_imports.py` 統一管理其導入
-> - 例如：`<system>/db/_common/` 中的 ORM 基礎元件，由 `<system>/db/_imports.py` 負責導入和管理
 
 #### 核心檔案職責
 
@@ -1144,13 +1137,6 @@ wBiSaProj/
 │   ├── db/                    # 資料存取層 (FU Container)
 │   │   ├── __init__.py        # 暴露 db 層的公開介面 (如 Repository)
 │   │   ├── _imports.py        # 管理 db 層的內部依賴
-│   │   │
-│   │   ├── _common/           # DB 層的私有、內部、共用元件
-│   │   │   ├── __init__.py
-│   │   │   ├── constants.py   # (僅供 db 層使用的常數)
-│   │   │   └── orm/
-│   │   │       ├── base.py    # (Base, BaseRepository)
-│   │   │       └── mixins.py  # (TimestampMixin, etc.)
 │   │   │
 │   │   ├── user/              # Domain: user (FU Container)
 │   │   │   ├── __init__.py
