@@ -39,27 +39,76 @@
 | 分支名稱 | 權限 | 用途 | 規範 |
 |:---------|:-----|:-----|:-----|
 | `master` | Read-Only | 生產環境分支 | 僅接受從 `develop` 或 `hotfix` 的合併。代表當前線上穩定版本。 |
-| `develop` | Protected | 開發主線分支 | 所有 `feature` 分支的合併目標。原則上禁止直接 Commit，所有變更需透過 PR 合併。 |
+| `develop` | Protected | 開發主線分支 | 所有工作分支的合併目標。原則上禁止直接 Commit，所有變更需透過 PR 合併。 |
 
-### 2.2 開發分支 (Feature Branches)
+### 2.2 工作分支 (Working Branches)
 
-所有開發工作（包含功能實作與規範修訂）都必須在獨立的 `feature` 分支上進行。
+所有開發工作都必須在獨立的工作分支上進行，**嚴禁直接在 `develop` 上修改**。
 
-**分支命名格式**：
-`feature/<root>/<hierarchy>/<feature_name>`
+本專案定義以下 7 種工作分支類型：
 
-**命名規則**：
-對於一般功能開發分支，分支路徑必須採用**階層式命名**，且其結構應與該 Feature 在 `docs/use-cases/` 中的相對路徑完全一致（不含 `docs/use-cases/` 前綴）。這確保了 Git 分支、文件目錄與程式碼架構三者的高度對應。**但對於 Project Standards 或純文件性 propagation 修訂，若不存在對應的 `docs/use-cases/` 路徑，則可依其共同上層範圍採用更貼切的分支命名（詳見場景 B、場景 C）。**
+| Branch Type | 定位 | 適用情境 |
+|:------------|:-----|:---------|
+| `feature/*` | 新增功能、能力、正式規格落地 | 新功能開發、新模組、`wsatools` 的功能性增修 |
+| `fix/*` | 一般錯誤修正與 merge 後 follow-up 修補 | bug fix、規範合規修正、小範圍回補、merge 後遺漏修正 |
+| `hotfix/*` | 正式環境 / 穩定線緊急修補 | 已上線版本的緊急錯誤修復，需高優先級處理 |
+| `refactor/*` | 不改外部行為的結構重整 | 模組拆分 / 搬移、命名調整、架構整理、內部結構重構 |
+| `experiment/*` | 探索性、試驗性、尚未定案的工作 | 原型、spike、技術驗證、AI / workflow / toolchain 試驗 |
+| `docs/*` | 純文件工作分支 | 架構文件修訂、standards 修訂、writing guides 修訂、純文件性 propagation 更新 |
+| `chore/*` | 非功能性的專案維運與開發基礎設施調整 | invoke tasks、pre-commit hooks、dependencies、CI / lint / build config |
 
-| Feature 類型 | 命名邏輯 | 分支命名範例 |
-|:-------------|:---------|:-------------|
-| **Business Feature** | `<system>/<domain>/...` | `feature/gms/user/user-registration` |
-| **Data Pipeline Feature** | `<system>/etl/<domain>/...` | `feature/gms/etl/market/stock/daily-sync` |
-| **Data Source Feature** | `<system>/<domain>/...` | `feature/twseprice/price/daily-price` |
-| **Library Feature** | `<library>/<toolkit>/...` | `feature/core/validator/format-rules`<br>`feature/wutils/io/pickle-io` |
-| **Project Standards** | `project` | `feature/project/update-vcs-standards` |
+#### 分支類型使用要點
 
-> **說明**：即使是修訂文件，建立分支的主要目的是為了 Pull Request (Code Review)，確保規範的變更已取得團隊共識。
+**`feature/*`**：`wsatools` 雖然是開發輔助工具，但它本身也是有功能、有介面的程式碼體系，因此 `wsatools` 的功能開發屬於 `feature`，不是 `chore`。
+
+**`fix/*` vs `hotfix/*`**：`fix/*` 用於一般開發流程中的錯誤修正；`hotfix/*` 僅在需要對正式環境 / 穩定線進行緊急修補時使用。
+
+**`experiment/*`**：產出不一定會直接 merge 成正式功能。必要時可在實驗完成後，另開正式 `feature/*` 或 `docs/*` 分支落地結果。
+
+**`docs/*` 的使用邊界**：若分支交付物僅為文件，使用 `docs/*`；若分支交付物包含程式碼實作，則應使用 `feature/*`、`fix/*`、`refactor/*` 等較合適的 branch type。
+
+**`chore/*`**：非功能性的專案維運工作也必須開分支，不應直接在 `develop` 上修改。
+
+### 2.3 分支命名規則
+
+所有工作分支統一採用階層式命名格式：
+
+```text
+<branch_type>/<root>/<hierarchy>/<work_name>
+```
+
+| Branch Type | 命名邏輯 | 範例 |
+|:------------|:---------|:-----|
+| `feature/*` | 對應 Feature 在 `use-cases` 的路徑，或以受影響模組範圍命名 | `feature/gms/user/user-registration`<br>`feature/wutils/io/pickle-io`<br>`feature/wsatools/llm/prompt-quality-loop` |
+| `fix/*` | 對應受影響模組的最小共同範圍 | `fix/wsatools/init-relative-imports`<br>`fix/gms/service/user/profile-lookup` |
+| `hotfix/*` | 可偏 issue / incident 導向 | `hotfix/gms/login-session-expiry` |
+| `refactor/*` | 對應重構範圍 | `refactor/gms/service/user/profile-container` |
+| `experiment/*` | 對應探索主題 | `experiment/wsatools/llm/auto-context-packing` |
+| `docs/*` | 對應文件修訂範圍 | `docs/project/update-version-control-standards`<br>`docs/standards/testing-checklist-alignment` |
+| `chore/*` | 對應工具 / 配置 / 基礎設施範圍 | `chore/build/update-poetry-lock`<br>`chore/devtools/pre-commit-hooks` |
+
+> **說明**：建立分支的主要目的是為了 Pull Request (Code Review)，確保變更已取得團隊共識。
+
+### 2.4 Branch Type 與 Commit Type 的關係
+
+Branch type 與 commit type 是兩個不同維度的概念：
+
+- **Branch type**：描述整個分支工作的**主要目的**
+- **Commit type**：描述單一提交的**變更性質**
+
+兩者通常相關，但**不要求一一對應**。一個分支上可能包含多種 commit types。
+
+| Branch Type | 常見 Commit Types | 說明 |
+|:------------|:------------------|:-----|
+| `feature/*` | `feat`, `docs`, `test`, `refactor` | 功能開發過程可能包含文件與測試提交 |
+| `fix/*` | `fix`, `docs`, `test` | 修錯過程常伴隨測試與文件修正 |
+| `hotfix/*` | `fix`, `docs`, `chore` | 緊急修補通常以 fix 為主 |
+| `refactor/*` | `refactor`, `docs`, `test` | 重構過程常伴隨測試與文件更新 |
+| `experiment/*` | `feat`, `refactor`, `docs`, `chore`, `test` | 依實驗內容決定 |
+| `docs/*` | `docs` | 純文件工作通常以 docs 為主 |
+| `chore/*` | `chore`, `docs`, `fix` | 工具 / 配置 / 基礎設施調整 |
+
+> **注意**：`hotfix` 與 `experiment` 是 branch type，不是 commit type。`hotfix/*` 分支上的 commit 通常使用 `fix` 作為 commit type；`experiment/*` 分支上的 commit 依實際變更性質選用適當的 commit type。此外，`docs/*` 為 branch type（表示分支工作性質為純文件修訂），`docs` 為 commit type（表示單一提交的變更性質為文件更新），兩者相關但不相同。
 
 ---
 
@@ -93,6 +142,10 @@ Header 總長度不得超過 72 字元。
 
 #### 1. Type (類型)
 
+> **核心原則**：Commit type 反映的是單一提交的**主要意圖**。一個 commit 可以附帶少量其他性質的變更（例如 `fix` commit 附帶少量文件修正），但應以該次提交最核心的目的選擇 type。若提交內容同時包含多種大型變更，應優先考慮拆分 commit，而非勉強以單一 type 包裝過多不相關內容。
+
+##### 快速參照表
+
 | Type | 說明 | 觸發版本號更新 (SemVer) |
 |:-----|:-----|:------------------------|
 | `feat` | 新增功能 (Feature) | MINOR |
@@ -102,6 +155,74 @@ Header 總長度不得超過 72 字元。
 | `refactor` | 程式碼重構 (既非新增功能也非修復錯誤) | PATCH |
 | `test` | 新增或修正測試 | PATCH (通常不觸發) |
 | `chore` | 建構過程或輔助工具的變動 (如 dependencies) | PATCH (通常不觸發) |
+
+> **注意**：`hotfix` 與 `experiment` 是 **branch type**，不是 commit type。`hotfix/*` 分支上的 commit 通常使用 `fix` 作為 commit type；`experiment/*` 分支上的 commit 依實際變更性質選用適當的 commit type。
+
+##### 各 Type 的詳細使用指引
+
+**`feat` — 新增功能**
+
+- **定位**：新增功能、新能力、對外可感知的行為增量
+- **適用情境**：新功能開發、新模組能力、新 API / 新工具能力、`wsatools` 的功能性增修
+- **不適用**：單純修錯 → `fix`；單純結構重整 → `refactor`；純工具 / 配置 / 依賴維護 → `chore`
+- **專案示例**：`feat(wsatools/llm): implement prompt quality loop`
+
+**`fix` — 修復錯誤**
+
+- **定位**：錯誤修正、缺陷修補
+- **適用情境**：bug fix、合規性錯誤修正、merge 後 follow-up 小修補
+- **不適用**：新功能 → `feat`；結構重整 → `refactor`；純文件工作 → `docs`
+- **專案示例**：`fix(wsatools): use relative import for private modules in __init__.py`
+
+**`docs` — 文件變更**
+
+- **定位**：文件內容修訂（包含排版與結構調整）
+- **適用情境**：standards / architecture / use-cases / specs / guides 的文字與結構修訂
+- **不適用**：真正程式碼功能改動 → `feat` 或 `fix`
+- **注意**：`docs/*` 是 branch type（分支工作性質），`docs(...)` 是 commit type（單一提交性質），兩者相關但不相同
+- **專案示例**：`docs(project): revise branch type definitions`
+
+**`style` — 格式調整**
+
+- **定位**：不影響語義與行為的格式 / 風格調整
+- **適用情境**：排版、空白 / 換行 / 格式化、無語義變更的樣式整理
+- **不適用**：結構重整 → `refactor`；文件內容修訂 → `docs`
+- **專案示例**：`style(wutils/io): apply black formatting`
+
+**`refactor` — 程式碼重構**
+
+- **定位**：不改外部行為的程式碼結構重整
+- **適用情境**：模組拆分、命名重整、內部實作重構
+- **不適用**：修正錯誤行為 → `fix`；新增能力 → `feat`
+- **專案示例**：`refactor(core/validator): split format rules into dedicated module`
+
+**`test` — 測試變更**
+
+- **定位**：測試新增或測試修訂
+- **適用情境**：新增測試、調整測試案例、改善測試覆蓋
+- **不適用**：若同一提交的主要意圖是修錯或加功能，而只是附帶更新測試，則不必強行改用 `test`，仍以主要意圖為準
+- **專案示例**：`test(wutils/io/pickle-io): add invalid payload edge cases`
+
+**`chore` — 專案維運**
+
+- **定位**：非功能性的專案維運與開發基礎設施調整
+- **適用情境**：invoke tasks、pre-commit hooks、requirements / lockfile、tooling / CI / build / pyproject
+- **不適用**：真正功能行為增修 → `feat`；真正錯誤修正 → `fix`
+- **專案示例**：`chore(devtools): update pre-commit hooks`
+
+##### 容易混淆的 Commit Types 對照
+
+| 情境 | 正確選擇 | 原因 |
+|:-----|:---------|:-----|
+| 新增一個全新的 API 端點 | `feat` | 對外可感知的新功能 |
+| 修正現有 API 端點的計算錯誤 | `fix` | 修正既有錯誤行為 |
+| 將 service 模組拆分為更小的子模組 | `refactor` | 不改外部行為，只調整內部結構 |
+| 修正 import 路徑以符合新規範 | `fix` | 修正合規性錯誤 |
+| 更新 `pyproject.toml` 中的依賴版本 | `chore` | 工具 / 配置 / 依賴維護 |
+| 修訂架構設計文件的章節結構 | `docs` | 文件本身的修訂 |
+| 對程式碼做 Black 格式化 | `style` | 純格式調整，不影響語義 |
+| 修錯順便補了對應的測試 | `fix` | 主意圖是修錯，測試是附帶 |
+| 純粹為既有功能補充測試覆蓋 | `test` | 主意圖是補測試 |
 
 #### 2. Scope (範圍)
 
@@ -255,13 +376,13 @@ docs(project): update version control standards
 
 ### 場景 B：修訂專案規範 (Project Standards Update)
 
-當需要修改 `docs/` 根目錄或 `docs/standards/` 下的規範文件時，視同一個 Project Feature 處理：
+當需要修改 `docs/` 根目錄或 `docs/standards/` 下的規範文件時，屬於純文件工作，使用 `docs/*` 分支：
 
-1. **建立分支**：使用 `project` 作為路徑，並使用 `feature/` 作為前綴。
+1. **建立分支**：使用 `docs/project/` 作為路徑前綴。
 
    ```bash
    # 範例：更新版本控制規範
-   git checkout -b feature/project/update-vcs-rules
+   git checkout -b docs/project/update-vcs-rules
    ```
 
 2. **提交變更**：
@@ -271,7 +392,7 @@ docs(project): update version control standards
 
    ```bash
    git add docs/standards/version-control.md
-   git commit -m "docs(project): enforce feature branch for standards update"
+   git commit -m "docs(project): add complete branch type system"
    ```
 
 3. **發起 Pull Request**：
@@ -295,14 +416,14 @@ docs(project): update version control standards
 則可視為單一批次文件修訂處理：
 
 1. **建立分支**
-   依修改範圍選擇合理的分支名稱。若修訂屬於 project-level 規範的全面同步，可使用 `feature/project/...`；若修訂明確侷限於某個較小的文件範圍，也可依共同上層路徑選擇更貼切的分支名稱。
+   依修改範圍選擇合理的分支名稱。若修訂屬於 project-level 規範的全面同步，可使用 `docs/project/...`；若修訂明確侷限於某個較小的文件範圍，也可依共同上層路徑選擇更貼切的分支名稱。
 
    ```bash
    # 範例一：跨範圍的規範同步修訂
-   git checkout -b feature/project/revise-testing-standards
+   git checkout -b docs/project/revise-testing-standards
 
    # 範例二：僅限於特定 specs 範圍的 propagation
-   git checkout -b feature/wutils/align-test-specs
+   git checkout -b docs/wutils/align-test-specs
    ```
 
 2. **提交變更**
@@ -321,6 +442,28 @@ docs(project): update version control standards
 4. **合併**
 
    - 採用 Merge Commit 合併至 `develop`
+
+### 場景 D：一般錯誤修正 (Fix)
+
+當需要修正 bug、規範合規問題、或 merge 後的遺漏時：
+
+1. **建立分支**：使用 `fix/` 前綴，對應受影響模組的最小共同範圍。
+
+   ```bash
+   git checkout -b fix/wsatools/init-relative-imports
+   ```
+
+2. **提交變更**：
+
+   ```bash
+   git add wsatools/llm/__init__.py wsatools/workflow/__init__.py
+   git commit -m "fix(wsatools): use relative import for private modules in __init__.py"
+   ```
+
+3. **合併**：
+
+   - 推送並發起 PR 合併至 `develop`。
+   - 採用 Merge Commit 合併。
 
 ---
 
@@ -342,9 +485,19 @@ docs(project): update version control standards
 | 場景 | 錯誤範例 ❌ | 正確範例 ✅ |
 |:-----|:-----------|:-----------|
 | 修改版本控制規範 | `docs: update git doc`（缺少 scope） | `docs(project): update version control standards`（scope 為 project） |
-| 修改架構設計總表 | 直接 Commit 到 develop（違反流程） | 建立 `feature/project/...` 分支並發起 PR（確保共識） |
+| 修改架構設計總表 | 直接 Commit 到 develop（違反流程） | 建立 `docs/project/...` 分支並發起 PR（確保共識） |
 | Project-Level 規範修訂 | `docs(standards): update testing rules`（scope 不應使用子目錄名） | `docs(project): update testing rules`（project-level 文件統一使用 `project`） |
 | Feature Use Cases 定義 | `docs(project): add user use-case`（Scope 混淆） | `docs(use-cases/gms/user/user-reg): define registration requirements`（Scope 對應完整路徑） |
 | 純文件性 specs propagation | `docs(specs/wutils/io/json-io): align test spec wording`（若本次同時改了多份 specs，則過細） | `docs(specs/wutils): align library test specs with revised testing rules`（使用共同上層路徑） |
 | 功能實作提交 (API 層) | `feat(api): add login`（Scope 太籠統，無 Body） | `feat(gms/api/auth): add login endpoint`（Scope 精確，動詞反映 API 層新增，建議附 Body） |
 | 功能實作提交 (邏輯層) | `feat(auth): implement login`（Scope 太籠統） | `feat(gms/service/auth): implement login authentication`（Scope 精確，動詞反映邏輯落地） |
+| 一般錯誤修正 | 直接 Commit 到 develop | 建立 `fix/...` 分支，commit type 使用 `fix` |
+| 專案維運工作 | 直接在 develop 上改 `pyproject.toml` | 建立 `chore/build/...` 分支並發起 PR |
+
+---
+
+## 7. 規範生效日
+
+**本規範之 branch type 與相關流程修訂，自 2026-04-11 起生效。**
+
+在此日期前建立之歷史分支與提交紀錄，可能不完全符合現行規範；原則上不追溯重寫既有共享歷史，但自生效日起之新分支與新提交應全面遵守本規範。
