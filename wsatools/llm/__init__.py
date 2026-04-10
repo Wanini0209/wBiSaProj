@@ -4,7 +4,7 @@ Provides the base infrastructure for building editor-driven,
 human-in-the-loop LLM task workflows and quality loops.
 """
 
-from wsatools.llm._base import (
+from ._base import (
     LlmModel,
     LlmQualityLoop,
     LlmTask,
