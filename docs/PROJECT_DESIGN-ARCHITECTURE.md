@@ -865,13 +865,19 @@ graph LR
 >
 > 關於依賴反轉原則在 Python 專案中的具體實踐，包括使用 FastAPI 框架實現 Composition Root、依賴注入容器的設計，以及跨系統介面的實作範例，請參閱 [架構實作指引](GUIDE_ARCHITECTURE.md)。
 
-### 6.3 Business Backbone 的依賴管理原則
+### 6.3 統一 Import 原則：有界限的 PEP 8 (Bounded Absolute Imports)
 
-「業務/應用系統」相較於「資料源系統」或「函式庫」有更為複雜的路徑結構與依賴關係。為管理此複雜度，Business Backbone 的四大主幹模組（`api`, `service`, `db`, `etl`）遵循與全專案一致的統一 import 原則，並搭配 facade-like private modules 作為依賴整理手段。
+本專案尊崇 PEP 8 優先使用絕對 Import 的建議，但為彌補 Python 缺乏原生強制封裝的缺陷，引入**封裝邊界**概念：
+
+> **絕對 Import 僅適用於跨越公開邊界；在公開邊界之內，為保護私有實體不被外洩，一律優先採用相對 Import 與 Facade 機制進行內部凝聚。**
+
+此原則適用於所有模組類型（Library、Data Source、Business System），不因系統類型而另設機制。在此統一哲學下，`__init__.py` 作為公開邊界的定義者（參見 §4.4），Facade-like private modules 作為依賴整理的可選手段，兩者各司其職、不相混淆。
+
+> 關於各規則的具體操作情境與範例，請參閱配套文件 `docs/standards/python_import_scenarios.md`。
 
 #### 統一 Import 原則
 
-Business Backbone 遵循三條統一原則，不另設專屬機制：
+所有模組類型遵循三條統一原則，不另設專屬機制：
 
 | 情境 | 做法 | 範例 |
 |:-----|:-----|:-----|

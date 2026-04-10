@@ -145,6 +145,66 @@ from gms.db.user.profile._user_profile._repository import UserRepository  # 禁�
 from .._other_feature._helpers import some_util  # 禁止跨 Feature 導入
 ```
 
+### 2.3 Import 路徑安全規則 (Path Safety Rules) [CRITICAL]
+
+以下三條規則是全專案不可違背的底線，適用於所有系統類型。
+
+**規則一：絕對路徑防禦**
+
+絕對 Import Path **絕對不得**出現任何 `_private` 實體。
+
+```python
+# ✅ 合法
+from gms.service.market import StockService
+
+# ❌ 非法：絕對路徑穿透私有實作
+from gms.service.market._stock import StockService
+```
+
+**規則二：相對路徑深度限制**
+
+除 `__init__.py` 外，相對 Import 中 `_private` 實體**只能出現在 path 的第一層**。
+
+```python
+# ✅ 允許：第一層 private module
+from ._utils import helper
+
+# ❌ 禁止：多層 private 穿透
+from ._feature_a._nested_private import helper
+```
+
+`__init__.py` 作為邊界檔，允許為了組裝 Public API 而向內導入多層 private path（參見 §4）。
+
+**規則三：元件的絕對領域**
+
+私有元件（如 `_helper_func`, `_InternalClass`）僅限其所屬 `.py` 檔案內部使用，**嚴禁**被其他模組 import。透過 alias 包裝亦不合法。
+
+```python
+# ✅ 合法：同檔案內部使用
+result = _build_cache_key(params)
+
+# ❌ 非法：跨模組導入 private component
+from ._utils import _build_cache_key
+
+# ❌ 同樣非法：alias 不改變其 private 本質
+from ._utils import _build_cache_key as build_cache_key
+```
+
+此類轉發僅允許出現在 `__init__.py`，且目的必須是**定義正式公開介面**。
+
+### 2.4 Import 快速判斷指南
+
+撰寫 Import 語句時，依序對照以下規則：
+
+1. **同一公開邊界內部？** → 相對 Import
+2. **跨公開邊界到正式公開容器？** → 正式絕對 Import
+3. **Project-Level Library / Third-party？** → 直接絕對 Import
+4. **絕對路徑中有 `_private`？** → 禁止
+5. **依賴值得整理？** → 使用 facade-like private modules，依職責命名
+6. **在 `__init__.py` 中組裝公開介面？** → 可向內導入 private path，必須列入 `__all__`
+
+> 關於各規則的具體操作情境與範例，請參閱 `docs/standards/python_import_scenarios.md`。
+
 ---
 
 ## 3. 類型提示規範 (Type Hinting)
