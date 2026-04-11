@@ -465,6 +465,36 @@ docs(project): update version control standards
    - 推送並發起 PR 合併至 `develop`。
    - 採用 Merge Commit 合併。
 
+### 場景 E：Shared Library Propagation 與原子提交
+
+當 shared library（如 `wutils`、`core`）的公開契約先演進，下游 systems（如 `gms`、`tej`）需要後續分批適配時，應以分 commit 方式保留原子歷史，而非將上游變更與下游 propagation 混入同一個 commit。
+
+#### 原則
+
+- **Task ↔ Commit 原子性優先**：commit 不應因全域測試的粗粒度而被迫混入後續 propagation 修正。
+- **局部測試是例外機制**：開發人員在此情境下，可以 `inv test --project <project>` 驗證當次 commit 的主體品質，但這不是常態捷徑，也不是允許長期維持 broken branch 的藉口。
+- **Push 前必須全域綠燈**：所有 propagation 修正完成後，branch head 必須恢復全域測試通過，才可 push。
+
+關於主體測試的合法使用時機與完整規則，請參閱 [測試規範 §1.5](testing.md#15-提交與推送的測試責任分層)。
+
+#### 分批提交示例
+
+```text
+1. feat(wutils/...): 調整 shared library 的公開契約
+   → 提交前執行 inv test --project wutils
+2. refactor(gms/...): 適配 gms 至新契約
+   → 提交前執行 inv test --project gms
+3. refactor(tej/...): 適配 tej 至新契約
+   → 提交前執行 inv test --project tej
+4. push 前確認 inv test 全域綠燈
+```
+
+#### 邊界聲明
+
+- 此模式**僅允許短暫的中間局部綠燈**，用於保留原子歷史。
+- 不允許以此模式長期維持 broken branch 或跳過全域整合驗證。
+- 本規範不涵蓋自動依 dependency graph 推導受影響 systems 的功能。
+
 ---
 
 ## 5. 品質閘道 (Quality Gates)
