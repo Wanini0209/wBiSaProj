@@ -58,7 +58,9 @@ LLM 測試（`@pytest.mark.llm`）與一般測試採用獨立的執行入口，�
 | `inv test.llm` | 執行 LLM 測試 | `-m "llm"` |
 | `inv test.cov` | 測試覆蓋率 | `-m "not llm"` |
 
-`inv test` 與 `inv test.llm` 支援 `--path` 與 `--k` 參數以進行過濾（`--k` 參數會轉為 pytest 的 `-k` expression 傳入）。`inv test.cov` 為 coverage 專用入口，預設排除 LLM 測試，不提供 `--path` / `--k` 過濾介面。
+`inv test` 與 `inv test.llm` 支援 `--path`、`--k` 與 `--project` 參數以進行過濾（`--k` 參數會轉為 pytest 的 `-k` expression 傳入）。`inv test.cov` 為 coverage 專用入口，預設排除 LLM 測試，不提供 `--path` / `--k` / `--project` 過濾介面。
+
+`--project` 代表「以第一層 project package 為單位執行測試」，解析為 `tests/<project>/`。`--project` 與 `--path` 語意互斥，不可同時指定。關於 `--project` 的使用時機與規範，請見 §1.5。
 
 ```bash
 # 一般測試
@@ -67,11 +69,17 @@ inv test --path tests/wsatools/llm/library/l3_entry/
 inv test --k test_workflow
 inv test --path tests/wsatools/llm/library/l3_entry/ --k test_add_qa
 
+# 主體測試（以第一層 project package 為單位）
+inv test --project wutils
+inv test --project gms
+inv test --project wsatools --k workflow
+
 # LLM 測試
 inv test.llm
 inv test.llm --k test_add_qa_llm
 inv test.llm --path tests/wsatools/llm/library/l3_entry/
 inv test.llm --path tests/wsatools/llm/library/l3_entry/ --k test_add_qa_llm
+inv test.llm --project wsatools
 
 # Coverage（全域檢查，不支援過濾）
 inv test.cov
@@ -102,6 +110,75 @@ Run manually::
 
 """
 ```
+
+### 1.5 提交與推送的測試責任分層
+
+#### 1.5.1 一般原則
+
+每次提交前，開發人員原則上應先執行**全域一般測試**（`inv test`）。全域測試是預設的提交前驗證方式。
+
+LLM 測試仍維持人工觸發原則（見 §1.4.2），不併入一般自動閘道。
+
+#### 1.5.2 原子性例外：主體測試
+
+只有在以下條件**同時成立**時，才允許以 `inv test --project <project_name>` 取代當次提交前的全域測試：
+
+1. 本次 commit 刻意用來維持 **Task ↔ Commit 原子性**。
+2. 全域測試未通過，但未通過的其餘修正項目**不應納入此次提交**。這些其餘未通過項目，係屬於本 branch 後續 propagation / integration 修正，而非與本次提交主體無關的既有問題。
+3. 本次提交的主體邊界清楚，可由某個第一層 project package 表達（如 `wutils`、`core`、`wsatools`、`gms`、`tej`）。
+
+`--project` 不是日常預設，也不是為了省時間而設置的捷徑。它的唯一合法用途是在刻意維持 commit 原子性時，提供一個中粒度且語意穩定的測試入口。
+
+#### 1.5.3 後續義務
+
+使用主體測試提交後，開發人員應**立即回到全域測試**，逐步修正剩餘的 propagation / integration 問題，直到全域測試恢復綠燈。
+
+#### 1.5.4 Push 前全域綠燈要求
+
+Branch head 在 push 前**必須**恢復全域綠燈。`pre-push` hook 會強制執行全域一般測試（`inv test`），作為最後一道防線，確保 branch 不會以未整合狀態流出。
+
+`pre-push` 不是取代開發人員責任，而是防止疏漏。
+
+#### 1.5.5 典型工作流程
+
+**預設流程**：
+
+```text
+先執行全域測試 → 若通過 → 提交
+```
+
+**例外流程（維持 commit 原子性）**：
+
+```text
+先執行全域測試 → 發現尚有不應納入此次 commit 的修正
+→ 改執行主體測試（inv test --project <project>）
+→ 確認本次主體成立後先提交
+→ 提交後立即回到全域測試
+→ 逐步修正後續受影響範圍
+→ 直到全域測試恢復綠燈
+```
+
+**指令範例**：
+
+```bash
+# 預設：全域測試
+inv test
+
+# 例外：為維持 commit 原子性而執行主體測試
+inv test --project wutils
+inv test --project gms
+
+# 主體測試仍可搭配 -k
+inv test --project wsatools --k workflow
+```
+
+#### 1.5.6 系統強制驗證摘要
+
+| 階段 | 驗證內容 |
+|:-----|:---------|
+| `pre-commit` | 格式 / lint / hygiene |
+| `commit-msg` | commit message convention（commitizen） |
+| `pre-push` | 全域一般測試（`inv test`） |
 
 ---
 
