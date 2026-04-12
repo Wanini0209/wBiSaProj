@@ -3,23 +3,95 @@
 Methods
 -------
 cov:
-    Check test coverage through `pytest-cov`.
+    Check test coverage through ``pytest-cov``.
 llm:
-    Run LLM-marked test cases through `pytest`.
+    Run LLM-marked test cases through ``pytest``.
 run:
-    Run test cases through `pytest` (excludes LLM tests).
+    Run test cases through ``pytest`` (excludes LLM tests).
+
+Project-scoped testing
+----------------------
+``inv test`` and ``inv test.llm`` support ``--project`` to run tests
+scoped to a first-level project package (e.g. ``wutils``, ``gms``).
+``--project`` resolves to ``tests/<project>/`` and is mutually
+exclusive with ``--path``.
+
+``--project`` is **not** a daily shortcut.  It exists solely for
+preserving Task / Commit atomicity when shared-library contracts
+evolve ahead of downstream consumers.  See testing standards §1.5.
 
 """
 
-from invoke import Context, task
+from __future__ import annotations
+
+from pathlib import Path
+
+from invoke import Context, Exit, task
 
 from tasks._common import SOURCE_PACKAGES, USE_PTY, VENV_PREFIX
 
 PYTEST: str = f"{VENV_PREFIX} pytest"
 
 
+def _resolve_test_target(path: str, project: str) -> str:
+    """Resolve the pytest target path from *path* and *project*.
+
+    Parameters
+    ----------
+    path : str
+        Explicit pytest path supplied via ``--path``.
+    project : str
+        First-level project package name supplied via ``--project``.
+
+    Returns
+    -------
+    str
+        The resolved pytest target path, or an empty string when
+        neither *path* nor *project* is supplied (i.e. run all tests).
+
+    Raises
+    ------
+    invoke.Exit
+        If both *path* and *project* are supplied, or if the resolved
+        project test directory does not exist.
+
+    """
+    if path and project:
+        raise Exit(
+            "--project and --path are mutually exclusive. "
+            "Use --project for project-scoped testing or "
+            "--path for an explicit pytest path, but not both.",
+            code=1,
+        )
+
+    if project:
+        project_test_dir = Path("tests") / project
+        if not project_test_dir.is_dir():
+            raise Exit(
+                f"Project test directory '{project_test_dir}' does not "
+                f"exist. Available projects: "
+                f"{', '.join(_list_available_projects())}",
+                code=1,
+            )
+        return str(project_test_dir)
+
+    return path
+
+
+def _list_available_projects() -> list[str]:
+    """Return sorted names of first-level directories under ``tests/``."""
+    tests_dir = Path("tests")
+    if not tests_dir.is_dir():
+        return []
+    return sorted(
+        d.name
+        for d in tests_dir.iterdir()
+        if d.is_dir() and not d.name.startswith(("_", "."))
+    )
+
+
 @task(default=True)
-def run(ctx: Context, path: str = "", k: str = "") -> None:
+def run(ctx: Context, path: str = "", k: str = "", project: str = "") -> None:
     """Run test cases (excluding LLM tests).
 
     Parameters
@@ -28,14 +100,22 @@ def run(ctx: Context, path: str = "", k: str = "") -> None:
         The invoke context object.
     path : str, optional
         Specific test path to run. If empty, runs all tests.
+        Mutually exclusive with *project*.
     k : str, optional
         Pytest ``-k`` expression for filtering test names.
+    project : str, optional
+        First-level project package name.  Resolves to
+        ``tests/<project>/``.  Mutually exclusive with *path*.
 
     Notes
     -----
     This runs **general** test cases using pytest, automatically
     excluding tests marked with ``@pytest.mark.llm``.  Use
     ``inv test.llm`` to run LLM-specific tests instead.
+
+    ``--project`` is intended for preserving commit atomicity when
+    shared-library contracts change ahead of downstream consumers.
+    It is **not** a daily shortcut.  See testing standards §1.5.
 
     Examples
     --------
@@ -51,21 +131,26 @@ def run(ctx: Context, path: str = "", k: str = "") -> None:
 
         inv test --k test_workflow
 
-    Combine path and keyword filtering::
+    Run tests scoped to a project package::
 
-        inv test --path tests/wsatools/llm/library/l3_entry/ --k test_add_qa
+        inv test --project wutils
+
+    Combine project and keyword filtering::
+
+        inv test --project wsatools --k workflow
 
     """
+    target = _resolve_test_target(path, project)
     parts = [PYTEST, '-m "not llm"']
-    if path:
-        parts.append(path)
+    if target:
+        parts.append(target)
     if k:
         parts.append(f'-k "{k}"')
     ctx.run(" ".join(parts), pty=USE_PTY)
 
 
 @task
-def llm(ctx: Context, path: str = "", k: str = "") -> None:
+def llm(ctx: Context, path: str = "", k: str = "", project: str = "") -> None:
     """Run LLM-marked test cases.
 
     Parameters
@@ -74,8 +159,12 @@ def llm(ctx: Context, path: str = "", k: str = "") -> None:
         The invoke context object.
     path : str, optional
         Specific test path to run. If empty, runs all LLM tests.
+        Mutually exclusive with *project*.
     k : str, optional
         Pytest ``-k`` expression for filtering test names.
+    project : str, optional
+        First-level project package name.  Resolves to
+        ``tests/<project>/``.  Mutually exclusive with *path*.
 
     Notes
     -----
@@ -84,9 +173,9 @@ def llm(ctx: Context, path: str = "", k: str = "") -> None:
     access to LLM services, and are therefore excluded from
     ``inv test`` and ``inv test.cov`` by default.
 
-    Run manually::
-
-        inv test.llm
+    ``--project`` is intended for preserving commit atomicity when
+    shared-library contracts change ahead of downstream consumers.
+    It is **not** a daily shortcut.  See testing standards §1.5.
 
     Examples
     --------
@@ -102,14 +191,19 @@ def llm(ctx: Context, path: str = "", k: str = "") -> None:
 
         inv test.llm --path tests/wsatools/llm/library/l3_entry/
 
-    Combine path and keyword::
+    Run LLM tests scoped to a project package::
 
-        inv test.llm --path tests/wsatools/llm/library/l3_entry/ --k test_add_qa_llm
+        inv test.llm --project wsatools
+
+    Combine project and keyword::
+
+        inv test.llm --project wsatools --k test_add_qa_llm
 
     """
+    target = _resolve_test_target(path, project)
     parts = [PYTEST, '-m "llm"']
-    if path:
-        parts.append(path)
+    if target:
+        parts.append(target)
     if k:
         parts.append(f'-k "{k}"')
     ctx.run(" ".join(parts), pty=USE_PTY)
