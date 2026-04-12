@@ -41,6 +41,18 @@
 | `master` | Read-Only | 生產環境分支 | 僅接受從 `develop` 或 `hotfix` 的合併。代表當前線上穩定版本。 |
 | `develop` | Protected | 開發主線分支 | 所有工作分支的合併目標。原則上禁止直接 Commit，所有變更需透過 PR 合併。 |
 
+#### `develop` 本地同步定位
+
+本地 `develop` 僅作為 `origin/develop` 的同步副本，不應作為長期承載未正式整合變更的工作分支。同步 `develop` 時應採 **fast-forward only**，確保本地 `develop` 始終與遠端保持一致，不以同步行為額外產生 merge commit：
+
+```bash
+git checkout develop
+git fetch origin
+git merge --ff-only origin/develop
+```
+
+此處的 fast-forward only 與分支整合時的 Merge Commit（`--no-ff`）是不同概念：前者用於保持本地同步副本乾淨，後者用於保留分支邊界與 Task 歷史。
+
 ### 2.2 工作分支 (Working Branches)
 
 所有開發工作都必須在獨立的工作分支上進行，**嚴禁直接在 `develop` 上修改**。
@@ -494,6 +506,40 @@ docs(project): update version control standards
 - 此模式**僅允許短暫的中間局部綠燈**，用於保留原子歷史。
 - 不允許以此模式長期維持 broken branch 或跳過全域整合驗證。
 - 本規範不涵蓋自動依 dependency graph 推導受影響 systems 的功能。
+
+### 通則：Pull Request、合併策略與整合流程
+
+#### A. 正式流程
+
+所有正式變更應透過以下流程進入 `develop`：
+
+```text
+同步 develop → 建立工作 branch → 開發與 commit → push branch → 建立 PR → review → Merge Commit 合併 → 本地同步 develop
+```
+
+不得以多條未驗證 branch 先行本地整合、最後一次性 push 取代分支級品質關卡。每條 branch 都應獨立經過 push → PR → review → merge 流程。
+
+#### B. 合併策略
+
+分支合併至 `develop` 時，必須採用 **Merge Commit**（`--no-ff`），以保留分支邊界與 Task 提交歷史。
+
+禁止使用 Squash Merge（除場景 B 中明確列出的例外情形）與 Rebase Merge，因為這些策略會壓縮或重寫分支內的提交歷史，破壞「文件先行」與「原子化實作」的對應脈絡。
+
+#### C. `develop` 同步方式
+
+本地同步 `develop` 時，應採 fast-forward only（見 §2.1）。不得將「同步 `develop`」與「branch merge into `develop`」視為同一類 merge 行為。
+
+#### D. 單人維護情境下的 Review 機制
+
+若當前無其他可用 reviewer，允許採用 **Self Review + LLM-Assisted Review** 作為過渡 review 機制。在此情境下：
+
+- 仍必須建立 PR、保留 review 留痕與 Merge Commit。
+- 建議在 PR comment 中留下 self-review 或 LLM-assisted review 的審查記錄，確保決策可追溯。
+- 當團隊恢復多人協作時，應回歸正式的人工 review 流程。
+
+#### E. 操作指引
+
+上述流程的具體操作步驟、Git 指令、GitHub UI 操作與常見錯誤排除，請參閱 [Pull Request Workflow 操作說明](../guides/pull-request-workflow.md)。
 
 ---
 
