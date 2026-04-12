@@ -36,7 +36,7 @@ repos:
         args: [--fix, --exit-non-zero-on-fix]
 
   # ------------------------------------------
-  # Test suite
+  # Test suite (pre-push gate)
   # ------------------------------------------
   - repo: local
     hooks:
@@ -45,4 +45,4 @@ repos:
         language: system
         pass_filenames: false
         entry: pipenv run inv test
-        types: [python]
+        stages: [pre-push]
