@@ -539,7 +539,7 @@ docs(project): update version control standards
 
 #### E. 操作指引
 
-上述流程的具體操作步驟、Git 指令、GitHub UI 操作與常見錯誤排除，請參閱 [Pull Request Workflow 操作說明](../guides/pull-request-workflow.md)。
+上述流程的具體操作步驟、Git 指令、GitHub UI 操作與常見錯誤排除，請參閱 [Pull Request Workflow 操作說明](pull-request-workflow.md)。
 
 ---
 
