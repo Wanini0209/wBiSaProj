@@ -262,7 +262,7 @@ Internal Service Feature 專注於封裝複雜的業務運算邏輯，供多個 
 2. **更新架構**：修改原有的 `design.md`，調整 API 簽章或 FU 劃分，並同步產出 `design_changes.md*`，記錄架構設計的變更細節。
 > *(註：`*_changes.md` 為揮發性文件，僅作為開發過程或 LLM 協作時的差異追蹤輸入，絕不納入 Git 版本控制)*
 
-**Git 操作流程**：
+**Git 操作流程**（以下描述適用於 Feature 類工作的典型方法論節奏；其他工作類型之 branch 與 commit 選擇，請依 [版本控制規範](standards/version-control.md) 處理）：
 1. 基於 `develop` 分支，建立或切換至對應的 `feature` 分支。
 2. 將上述完成的 `use-cases` 更新，作為此分支的**第一個 Commit** 提交（提交類型：`docs`）。
    > 此提交確立了整個 Feature 的開發目標、邊界、以及靜態的技術架構藍圖。
@@ -292,6 +292,8 @@ Feature Branch
 ├── 1 個 docs 類型的 use-cases 提交 (定義了靜態架構與價值)
 └── N 個 feat/fix/refactor 類型的 Task 提交 (執行了動態的新建/修改 FU 任務)
 ```
+
+> 上述流程描述的是新增或修改 Feature 時的典型方法論節奏。其他工作類型（如 `fix/*`、`hotfix/*`、`docs/*`、`refactor/*`、`chore/*`、`experiment/*`）的 branch 與 commit 選擇，應依 [版本控制規範](standards/version-control.md) 處理。
 
 ---
 
@@ -506,11 +508,13 @@ Feature 開發分支的命名，應與該 Feature 在 `docs/use-cases/` 中的�
 | **Library-Type Feature**<br>(General) | `<library>/<toolkit>/<feature_name>` | **通用函式庫**:<br>`feature/wutils/io/pickle-io`<br>`feature/core/validator/format-rules` |
 | **Library-Type Feature**<br>(System Internal) | `<system>/core/<toolkit>/<feature_name>` | **系統內核心庫**:<br>`feature/gms/core/config/env-management` |
 
-> 上表僅涵蓋 `feature/*` 分支的命名邏輯。關於完整的 branch type 體系（包括 `fix/*`、`docs/*`、`refactor/*`、`chore/*` 等）、commit type 定義、scope 規則與合併策略，請參閱 [版本控制規範](standards/version-control.md)。
+> 上表僅涵蓋 `feature/*` 分支的命名邏輯。關於完整的 branch type 體系（包括 `fix/*`、`hotfix/*`、`docs/*`、`refactor/*`、`chore/*`、`experiment/*` 等）、commit type 定義、scope 規則與合併策略，請參閱 [版本控制規範](standards/version-control.md)。
 
 ### 6.2 標準範例（團隊共識）
 
 以下範例展示了不同類型的 Feature 如何實踐「1+N」開發生命週期。Commit 歷史由新到舊排列。
+
+> 這些範例僅示意 **Feature 類工作**（`feature/*` 分支）在方法論中的典型開發節奏，不涵蓋 `fix/*`、`hotfix/*`、`docs/*`、`refactor/*`、`chore/*`、`experiment/*` 等其他工作類型。完整的 branch type 體系、commit type 定義與 scope 規則，請參閱 [版本控制規範](standards/version-control.md)。
 
 #### Business Feature 範例
 
@@ -523,7 +527,7 @@ Feature 開發分支的命名，應與該 Feature 在 `docs/use-cases/` 中的�
 feat(gms/api/user): create POST /users endpoint for registration
 feat(gms/service/user): implement user creation and validation logic
 feat(gms/db/user): implement user profile model and repository
-docs(use-cases/gms/user): define user registration requirements and tasks
+docs(use-cases/gms/user/user-registration): define user registration requirements and tasks
 ```
 
 #### Data Pipeline Feature 範例
@@ -538,7 +542,7 @@ feat(gms/etl/market/stock/sync_job): create daily stock sync job
 feat(gms/etl/market/stock/sync_job): implement stock price db loader
 feat(gms/etl/market/stock/sync_job): implement stock data cleansing transformer
 feat(gms/etl/market/stock/sync_job): implement stock data source extractor
-docs(use-cases/gms/etl/market): define daily stock sync requirements
+docs(use-cases/gms/etl/market/stock/daily-stock-sync): define daily stock sync requirements
 ```
 
 #### Data Source Feature 範例
@@ -551,7 +555,7 @@ docs(use-cases/gms/etl/market): define daily stock sync requirements
 # Commit 歷史（由新到舊）：
 feat(twseprice/service/daily_price): implement repository interface
 feat(twseprice/collector/daily_price): implement html parser and request
-docs(use-cases/twseprice/daily_price): define twse scraper requirements
+docs(use-cases/twseprice/price/init-daily-price): define twse scraper requirements
 ```
 
 #### Library Feature 範例
@@ -564,7 +568,7 @@ docs(use-cases/twseprice/daily_price): define twse scraper requirements
 # Commit 歷史（由新到舊）：
 feat(core/validator/rules): add email format validation rule
 feat(core/validator/rules): implement basic data type validation rule
-docs(use-cases/core/validator/rules): define data format validator api and requirements
+docs(use-cases/core/validator/add-validator-format-rules): define data format validator API and requirements
 ```
 
 ---
