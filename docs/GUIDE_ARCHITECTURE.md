@@ -564,6 +564,8 @@ class BusinessLogicError(CoreError):
 
 ## 3. 資料源系統實作：Internal Data Source Adapter
 
+> **示例定位說明**：本章以 TEJ 系統為例展示資料源系統的適配器設計模式。本章範例中的目錄結構（如 `collector/db_client.py`、`service/provider.py`）反映的是該系統的既有實作樣貌，尚未收斂至本專案正式的 FU Container 結構模型。讀者不應將此處的扁平結構視為現行正式推薦模板；TEJ 系統的結構是否需遷移至 FU Container 模型，仍待後續正式整理。
+
 本章節展示如何建立資料源系統（如 `tej`），作為內部資料庫的適配器，將老舊資料庫 Schema 轉換為標準契約。
 
 ### 3.1 架構定位：Internal Database Adapter
@@ -2415,7 +2417,7 @@ class Settings(BaseSettings):
 
 #### 框架配置
 
-**檔案位置**：`pytest.ini`
+**檔案位置**：`pytest.ini`  *(本範例以 `pytest.ini` 為示例；實際配置位置可能依專案治理決策採用 `pyproject.toml` 等替代方案，此處不構成唯一正式政策)*
 
 ```ini
 [tool:pytest]
@@ -2455,7 +2457,6 @@ markers =
 """
 
 import pytest
-import asyncio
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
@@ -2774,6 +2775,8 @@ async def test_sync_pipeline_flow():
 
 #### 9.2.5 GMS 整合測試（Integration）
 
+> **路徑待定說明**：整合測試的目錄結構規則尚未在現行測試規範中正式定義。以下路徑僅為示意，不構成正式標準模板。
+
 驗證 DB → Service → API 的完整路徑。
 
 **測試重點**：
@@ -2851,6 +2854,8 @@ async def test_complete_market_analysis_flow(sqlite_session):
 -----
 
 ### 9.3 資料源系統測試（Data Source System Tests）
+
+> **示例定位說明**：本節測試範例對應 §3 中 TEJ 系統的既有結構。由於 TEJ 系統尚未收斂至 FU Container 模型，以下測試路徑亦反映既有結構，不應被視為現行正式測試路徑模板。
 
 驗證資料源系統（TEJ）作為獨立適配器的正確性。
 
@@ -3033,113 +3038,32 @@ def tej_test_config():
 
 -----
 
-### 9.4 測試執行與報告
+### 9.4 測試執行
 
-> **注意**：本節中的 shell script 與 Makefile 範例為早期寫法，僅供參考。本專案現行的測試執行方式以 `inv test`、`inv test.llm`、`inv test.cov` 為準，詳見 [測試規範 §1.4](standards/testing.md)。
+本專案使用 [Invoke](https://www.pyinvoke.org/) 作為測試執行的標準工具鏈。以下為日常開發中最常用的指令；完整的指令規格、參數說明與執行規範，請參閱 [測試規範 §1.4](standards/testing.md)。
 
-提供測試執行的實用工具與腳本。
-
-#### 執行腳本
-
-**檔案位置**：`scripts/run_tests.sh`
+#### 常用指令
 
 ```bash
-#!/bin/bash
-# 測試執行腳本
+# 執行一般測試（自動排除 LLM 測試）
+inv test
 
-# 執行所有測試
-run_all() {
-    echo "Running all tests..."
-    pytest
-}
+# 以 project 為單位執行測試
+inv test --project gms
+inv test --project wutils
 
-# 只執行 GMS 測試
-run_gms() {
-    echo "Running GMS tests..."
-    pytest tests/gms -v
-}
+# 指定路徑或關鍵字過濾
+inv test --path tests/gms/db/market/stock/price/
+inv test --k test_stock_price
 
-# 只執行 TEJ 測試
-run_tej() {
-    echo "Running TEJ tests..."
-    pytest tests/tej -v
-}
+# 執行 LLM 測試（需人工觸發）
+inv test.llm
 
-# 只執行單元測試
-run_unit() {
-    echo "Running unit tests..."
-    pytest -m unit --tb=short
-}
-
-# 執行整合測試
-run_integration() {
-    echo "Running integration tests..."
-    export TEJ_TEST_DB_URL="${TEJ_TEST_DB_URL:-postgresql+asyncpg://test:test@localhost/tej}"
-    pytest -m integration -v
-}
-
-# 產生覆蓋率報告
-run_coverage() {
-    echo "Generating coverage report..."
-    pytest --cov=gms --cov=tej \
-           --cov-report=html \
-           --cov-report=term-missing
-    echo "Coverage report: htmlcov/index.html"
-}
-
-# 主選單
-case "${1}" in
-    all)         run_all ;;
-    gms)         run_gms ;;
-    tej)         run_tej ;;
-    unit)        run_unit ;;
-    integration) run_integration ;;
-    coverage)    run_coverage ;;
-    *)
-        echo "Usage: $0 {all|gms|tej|unit|integration|coverage}"
-        exit 1
-        ;;
-esac
+# 測試覆蓋率報告
+inv test.cov
 ```
 
-#### Makefile 整合
-
-**檔案位置**：`Makefile`
-
-```makefile
-.PHONY: test test-gms test-tej test-unit test-integration test-coverage
-
-# 執行所有測試
-test:
-	@pytest
-
-# GMS 業務系統測試
-test-gms:
-	@pytest tests/gms -v
-
-# TEJ 資料源測試
-test-tej:
-	@pytest tests/tej -v
-
-# 單元測試
-test-unit:
-	@pytest -m unit --tb=short
-
-# 整合測試
-test-integration:
-	@pytest -m integration -v
-
-# 覆蓋率報告
-test-coverage:
-	@pytest --cov=gms --cov=tej \
-	        --cov-report=html \
-	        --cov-report=term-missing
-	@echo "Coverage report: htmlcov/index.html"
-
-# 清理測試產物
-clean-test:
-	@rm -rf .pytest_cache htmlcov .coverage
-```
+> 本專案不建議在日常開發中直接呼叫 `pytest`。`inv test` 系列指令已整合必要的 marker 過濾與執行環境設定，確保測試行為與 CI/CD 流程一致。
 
 -----
 
