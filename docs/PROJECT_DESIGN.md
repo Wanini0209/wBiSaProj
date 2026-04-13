@@ -29,6 +29,12 @@
 - [📗 方法論篇](PROJECT_DESIGN-METHODOLOGY.md)：詳述 TDD 開發生命週期、Git 規範與任務模板
 - [📙 協作篇](PROJECT_DESIGN-COLLABORATION.md)：提供人機協作的具體操作流程、工具使用與品質保證循環
 
+### 治理型核心文件 (Governance-Oriented Core Documents)
+
+以下文件同屬 root-level 核心設計文件體系，但其核心角色偏向文件導航治理與資訊架構治理，而非描述專案本體架構或開發方法論。當需要設計、維護或理解本專案的文件導航體系時，應明確參閱：
+
+- [📕 導航體系篇](PROJECT_DESIGN-NAVIGATION.md)：定義本專案的文件導航體系、overview / README 的責任分工、多層級文件入口設計規則，以及支撐團隊開發與 LLM 協作的可導航性機制
+
 ### 實作指引文件 (Implementation Guides)
 
 - [📘 架構實作指引](GUIDE_ARCHITECTURE.md)：提供架構設計的具體實作範例與最佳實踐
