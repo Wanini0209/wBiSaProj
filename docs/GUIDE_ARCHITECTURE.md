@@ -351,25 +351,21 @@ class StockPriceDTO(BaseModel):
     open_price: Decimal = Field(
         ...,
         ge=0,
-        decimal_places=2,
         description="開盤價"
     )
     high_price: Decimal = Field(
         ...,
         ge=0,
-        decimal_places=2,
         description="最高價"
     )
     low_price: Decimal = Field(
         ...,
         ge=0,
-        decimal_places=2,
         description="最低價"
     )
     close_price: Decimal = Field(
         ...,
         ge=0,
-        decimal_places=2,
         description="收盤價"
     )
 
@@ -567,6 +563,8 @@ class BusinessLogicError(CoreError):
 -----
 
 ## 3. 資料源系統實作：Internal Data Source Adapter
+
+> **示例定位說明**：本章以 TEJ 系統為例展示資料源系統的適配器設計模式。本章範例中的目錄結構（如 `collector/db_client.py`、`service/provider.py`）反映的是該系統的既有實作樣貌，尚未收斂至本專案正式的 FU Container 結構模型。讀者不應將此處的扁平結構視為現行正式推薦模板；TEJ 系統的結構是否需遷移至 FU Container 模型，仍待後續正式整理。
 
 本章節展示如何建立資料源系統（如 `tej`），作為內部資料庫的適配器，將老舊資料庫 Schema 轉換為標準契約。
 
@@ -1060,7 +1058,7 @@ class IStockPriceRepository(ABC):
 ```python
 from typing import List, Optional, Dict, Any
 from datetime import date
-from sqlalchemy import select, and_, desc
+from sqlalchemy import select, and_, desc, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
 
@@ -2155,7 +2153,7 @@ async def analyze_stock_volume(
 API 請求與回應模型
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from datetime import date
 from typing import Optional, Dict
 from decimal import Decimal
@@ -2172,11 +2170,12 @@ class StockAnalysisResponse(BaseModel):
     volume_analysis: Optional[Dict]
     technical_indicators: Optional[Dict]
 
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(
+        json_encoders={
             Decimal: lambda v: float(v),
-            date: lambda v: v.isoformat()
+            date: lambda v: v.isoformat(),
         }
+    )
 
 class ErrorResponse(BaseModel):
     """錯誤回應"""
@@ -2212,6 +2211,7 @@ Composition Root 的職責：
 from fastapi import FastAPI, Depends
 from contextlib import asynccontextmanager
 from datetime import date
+from sqlalchemy import text
 import logging
 
 # === 具體實作導入（只在這裡！）===
@@ -2346,7 +2346,7 @@ async def health_check():
     # 檢查資料庫
     try:
         async with AsyncSessionLocal() as session:
-            await session.execute("SELECT 1")
+            await session.execute(text("SELECT 1"))
             health_status["database"] = "healthy"
     except Exception as e:
         health_status["database"] = f"unhealthy: {str(e)}"
@@ -2373,45 +2373,36 @@ async def health_check():
 **檔案位置**：`gms/config.py`
 
 ```python
-from pydantic import BaseSettings, Field
-from typing import Optional
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     """
     應用程式設定
-    使用環境變數覆寫預設值
+    使用環境變數覆寫預設值（pydantic-settings 自動依欄位名稱讀取同名環境變數）
     """
 
     # === Database ===
-    DATABASE_URL: str = Field(
-        default="postgresql+asyncpg://user:pass@localhost/gms",
-        env="DATABASE_URL"
-    )
+    DATABASE_URL: str = "postgresql+asyncpg://user:pass@localhost/gms"
 
     # === TEJ Database ===
-    TEJ_DB_URL: str = Field(
-        default="postgresql+asyncpg://tej_user:pass@tej-db/tej",
-        env="TEJ_DB_URL"
-    )
+    TEJ_DB_URL: str = "postgresql+asyncpg://tej_user:pass@tej-db/tej"
 
     # === Application ===
-    DEBUG: bool = Field(default=False, env="DEBUG")
-    LOG_LEVEL: str = Field(default="INFO", env="LOG_LEVEL")
+    DEBUG: bool = False
+    LOG_LEVEL: str = "INFO"
 
     # === API ===
-    API_PREFIX: str = Field(default="/api/v1", env="API_PREFIX")
-    CORS_ORIGINS: list[str] = Field(
-        default=["http://localhost:3000"],
-        env="CORS_ORIGINS"
-    )
+    API_PREFIX: str = "/api/v1"
+    CORS_ORIGINS: list[str] = ["http://localhost:3000"]
 
     # === ETL ===
-    ETL_BATCH_SIZE: int = Field(default=1000, env="ETL_BATCH_SIZE")
-    ETL_RETRY_COUNT: int = Field(default=3, env="ETL_RETRY_COUNT")
+    ETL_BATCH_SIZE: int = 1000
+    ETL_RETRY_COUNT: int = 3
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+    )
 ```
 
 -----
@@ -2426,7 +2417,7 @@ class Settings(BaseSettings):
 
 #### 框架配置
 
-**檔案位置**：`pytest.ini`
+**檔案位置**：`pytest.ini`  *(本範例以 `pytest.ini` 為示例；實際配置位置可能依專案治理決策採用 `pyproject.toml` 等替代方案，此處不構成唯一正式政策)*
 
 ```ini
 [tool:pytest]
@@ -2439,10 +2430,20 @@ asyncio_mode = auto
 # 測試執行選項
 addopts = -v --tb=short --strict-markers
 
-# 定義測試標記（對應測試金字塔的分類）
+# 定義測試標記（須與 docs/standards/testing.md §1.3 保持一致）
 markers =
     unit: 單元測試（快速執行，無外部 I/O）
-    integration: 整合測試（需要資料庫或外部連線）
+    integration: 整合測試（元件互動、使用 In-Memory DB）
+    e2e: 端到端測試（完整流程、真實外部連線）
+    llm: LLM 測試（需要人工觸發 LLM 互動，預設排除於一般自動化執行）
+    slow: 慢速測試（執行時間 > 1秒）
+    fast: 快速測試（執行時間極短）
+    database: 資料庫測試（需要 DB Session）
+    network: 網路測試（需要外部網路連線）
+    external: 外部依賴測試（依賴外部服務）
+    io: I/O 測試（檔案讀寫、序列化操作）
+    auth: 認證測試（登入、權限驗證相關）
+    api: API 測試（針對 Router Endpoint）
 ```
 
 #### 通用 Fixtures
@@ -2456,23 +2457,12 @@ markers =
 """
 
 import pytest
-import asyncio
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
     AsyncSession,
     async_sessionmaker
 )
-
-@pytest.fixture(scope="session")
-def event_loop():
-    """
-    設定 Event Loop
-    針對 Windows/特定環境的 Async 測試穩定性
-    """
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
 
 @pytest.fixture(scope="function")
 async def sqlite_session() -> AsyncGenerator[AsyncSession, None]:
@@ -2521,7 +2511,7 @@ async def sqlite_session() -> AsyncGenerator[AsyncSession, None]:
 
 **隔離策略**：使用 In-Memory SQLite
 
-**檔案位置**：`tests/gms/db/market/stock/test_price_repository.py`
+**檔案位置**：`tests/gms/db/market/stock/price/stock_price_storage/test_stock_price_repository.py`
 
 ```python
 """
@@ -2586,7 +2576,7 @@ async def test_repository_crud_operations(sqlite_session):
 
 **隔離策略**：Mock Repository 介面
 
-**檔案位置**：`tests/gms/service/market/stock/test_analysis_service.py`
+**檔案位置**：`tests/gms/service/market/stock/analysis/stock_analysis_api/test_stock_analysis_service.py`
 
 ```python
 """
@@ -2655,7 +2645,7 @@ async def test_abnormal_volume_detection():
 
 **隔離策略**：Mock Service（透過 FastAPI dependency_overrides）
 
-**檔案位置**：`tests/gms/api/market/stock/test_router.py`
+**檔案位置**：`tests/gms/api/market/stock/stock_analysis_api/test_stock_analysis_router.py`
 
 ```python
 """
@@ -2717,7 +2707,7 @@ async def test_volume_analysis_endpoint():
 
 **隔離策略**：Mock Source 與 Target 介面
 
-**檔案位置**：`tests/gms/etl/market/stock/test_sync_pipeline.py`
+**檔案位置**：`tests/gms/etl/market/stock/sync_job/daily_sync_job/test_daily_stock_sync_pipeline.py`
 
 ```python
 """
@@ -2730,7 +2720,7 @@ from unittest.mock import AsyncMock, MagicMock
 from datetime import date
 from decimal import Decimal
 
-from gms.etl.market.stock.sync_job._pipeline import DailyStockSyncPipeline
+from gms.etl.market.stock.sync_job import DailyStockSyncPipeline
 from core.interfaces.market import IStockPriceProvider
 from gms.db.market.stock.price import IStockPriceRepository
 from core.schemas.market import StockPriceDTO, MarketType
@@ -2785,6 +2775,8 @@ async def test_sync_pipeline_flow():
 
 #### 9.2.5 GMS 整合測試（Integration）
 
+> **路徑待定說明**：整合測試的目錄結構規則尚未在現行測試規範中正式定義。以下路徑僅為示意，不構成正式標準模板。
+
 驗證 DB → Service → API 的完整路徑。
 
 **測試重點**：
@@ -2794,7 +2786,7 @@ async def test_sync_pipeline_flow():
 
 **策略**：使用 SQLite 覆蓋 DB，但不 Mock Service 與 Repository
 
-**檔案位置**：`tests/gms/integration/test_market_flow.py`
+**檔案位置**：`tests/gms/integration/test_market_flow.py`  *(整合測試路徑結構待後續正式定義)*
 
 ```python
 """
@@ -2863,6 +2855,8 @@ async def test_complete_market_analysis_flow(sqlite_session):
 
 ### 9.3 資料源系統測試（Data Source System Tests）
 
+> **示例定位說明**：本節測試範例對應 §3 中 TEJ 系統的既有結構。由於 TEJ 系統尚未收斂至 FU Container 模型，以下測試路徑亦反映既有結構，不應被視為現行正式測試路徑模板。
+
 驗證資料源系統（TEJ）作為獨立適配器的正確性。
 
 > **架構定位**：TEJ 系統獨立於業務系統開發，擁有獨立的測試策略
@@ -2886,7 +2880,7 @@ async def test_complete_market_analysis_flow(sqlite_session):
 
 **隔離策略**：Mock Collector（模擬 DB 回傳的原始字典）
 
-**檔案位置**：`tests/tej/service/test_provider.py`
+**檔案位置**：`tests/tej/service/test_provider.py`  *(TEJ 系統目前未採用 FU Container 結構，路徑待後續整理)*
 
 ```python
 """
@@ -2951,7 +2945,7 @@ async def test_tej_adapter_transformation():
 
 **策略**：連線真實測試資料庫（透過環境變數控制）
 
-**檔案位置**：`tests/tej/collector/test_db_client.py`
+**檔案位置**：`tests/tej/collector/test_db_client.py`  *(TEJ 系統目前未採用 FU Container 結構，路徑待後續整理)*
 
 ```python
 """
@@ -3044,111 +3038,32 @@ def tej_test_config():
 
 -----
 
-### 9.4 測試執行與報告
+### 9.4 測試執行
 
-提供測試執行的實用工具與腳本。
+本專案使用 [Invoke](https://www.pyinvoke.org/) 作為測試執行的標準工具鏈。以下為日常開發中最常用的指令；完整的指令規格、參數說明與執行規範，請參閱 [測試規範 §1.4](standards/testing.md)。
 
-#### 執行腳本
-
-**檔案位置**：`scripts/run_tests.sh`
+#### 常用指令
 
 ```bash
-#!/bin/bash
-# 測試執行腳本
+# 執行一般測試（自動排除 LLM 測試）
+inv test
 
-# 執行所有測試
-run_all() {
-    echo "Running all tests..."
-    pytest
-}
+# 以 project 為單位執行測試
+inv test --project gms
+inv test --project wutils
 
-# 只執行 GMS 測試
-run_gms() {
-    echo "Running GMS tests..."
-    pytest tests/gms -v
-}
+# 指定路徑或關鍵字過濾
+inv test --path tests/gms/db/market/stock/price/
+inv test --k test_stock_price
 
-# 只執行 TEJ 測試
-run_tej() {
-    echo "Running TEJ tests..."
-    pytest tests/tej -v
-}
+# 執行 LLM 測試（需人工觸發）
+inv test.llm
 
-# 只執行單元測試
-run_unit() {
-    echo "Running unit tests..."
-    pytest -m unit --tb=short
-}
-
-# 執行整合測試
-run_integration() {
-    echo "Running integration tests..."
-    export TEJ_TEST_DB_URL="${TEJ_TEST_DB_URL:-postgresql+asyncpg://test:test@localhost/tej}"
-    pytest -m integration -v
-}
-
-# 產生覆蓋率報告
-run_coverage() {
-    echo "Generating coverage report..."
-    pytest --cov=gms --cov=tej \
-           --cov-report=html \
-           --cov-report=term-missing
-    echo "Coverage report: htmlcov/index.html"
-}
-
-# 主選單
-case "${1}" in
-    all)         run_all ;;
-    gms)         run_gms ;;
-    tej)         run_tej ;;
-    unit)        run_unit ;;
-    integration) run_integration ;;
-    coverage)    run_coverage ;;
-    *)
-        echo "Usage: $0 {all|gms|tej|unit|integration|coverage}"
-        exit 1
-        ;;
-esac
+# 測試覆蓋率報告
+inv test.cov
 ```
 
-#### Makefile 整合
-
-**檔案位置**：`Makefile`
-
-```makefile
-.PHONY: test test-gms test-tej test-unit test-integration test-coverage
-
-# 執行所有測試
-test:
-	@pytest
-
-# GMS 業務系統測試
-test-gms:
-	@pytest tests/gms -v
-
-# TEJ 資料源測試
-test-tej:
-	@pytest tests/tej -v
-
-# 單元測試
-test-unit:
-	@pytest -m unit --tb=short
-
-# 整合測試
-test-integration:
-	@pytest -m integration -v
-
-# 覆蓋率報告
-test-coverage:
-	@pytest --cov=gms --cov=tej \
-	        --cov-report=html \
-	        --cov-report=term-missing
-	@echo "Coverage report: htmlcov/index.html"
-
-# 清理測試產物
-clean-test:
-	@rm -rf .pytest_cache htmlcov .coverage
-```
+> 本專案不建議在日常開發中直接呼叫 `pytest`。`inv test` 系列指令已整合必要的 marker 過濾與執行環境設定，確保測試行為與 CI/CD 流程一致。
 
 -----
 
