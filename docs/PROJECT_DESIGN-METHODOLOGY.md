@@ -229,6 +229,8 @@ Internal Service Feature 專注於封裝複雜的業務運算邏輯，供多個 
 | **Loader Task** | 將處理後資料載入目標 | ETL → 目標系統 |
 | **Job Task** | 整合上述元件為可排程作業 | 端到端協調 |
 
+> Extractor / Transformer / Loader / Job 描述的是 Data Pipeline Feature 內部的固定責任分工與標準開發模板，而非 ETL 的公開路徑層級。這些角色屬於同一個 ETL FU 內部的高凝聚構件，ETL 的公開結構仍採 `etl/<domain>/[<subdomain>]/<fu_container>/` 模型。
+
 #### Library Feature Tasks
 
 - **原則**：形式彈性，但必須遵守 **One Feature = One Technical Topic** 原則。
@@ -547,15 +549,15 @@ docs(use-cases/gms/user): define user registration requirements and tasks
 #### Data Pipeline Feature 範例
 
 ```bash
-# Feature: 每日股價同步 (屬於 Market Domain, Price Sub-domain)
-# Path: gms/etl/market/stock
+# Feature: 每日股價同步 (屬於 Market Domain, Stock Sub-domain)
+# Path: gms/etl/market/stock/sync_job
 # Branch: feature/gms/etl/market/stock/daily-stock-sync
 
 # Commit 歷史（由新到舊）：
-feat(gms/etl/jobs/market): create and schedule daily stock sync job
-feat(gms/etl/loaders/market/price): implement loader for stock price db
-feat(gms/etl/transformers/market/price): implement stock data cleansing
-feat(gms/etl/extractors/market/price): implement stock data source extractor
+feat(gms/etl/market/stock/sync_job): create daily stock sync job
+feat(gms/etl/market/stock/sync_job): implement stock price db loader
+feat(gms/etl/market/stock/sync_job): implement stock data cleansing transformer
+feat(gms/etl/market/stock/sync_job): implement stock data source extractor
 docs(use-cases/gms/etl/market): define daily stock sync requirements
 ```
 
@@ -648,6 +650,8 @@ docs(use-cases/core/validator/rules): define data format validator api and requi
 - **路徑格式**：`docs/use-cases/<system>/etl/[<domain>]/[<subdomain>]/<feature_name>/`
 - **範例**：`gms` 系統中，一個處理市場股票資料的 ETL Feature：
   - `docs/use-cases/gms/etl/mkt/stk/daily-stock-sync/`
+
+> `Extractor`、`Transformer`、`Loader`、`Job` 僅作為 Data Pipeline Feature 內部的責任分工與任務模板，不構成額外的文件路徑層級；Use Cases 路徑仍以 `etl/<domain>/[<subdomain>]/<feature_name>/` 為唯一公開結構。
 
 ### 8.3 函式庫 Feature 路徑歸屬規則 (Library Feature)
 
