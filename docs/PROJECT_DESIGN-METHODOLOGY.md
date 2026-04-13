@@ -624,8 +624,8 @@ docs(use-cases/core/validator/rules): define data format validator api and requi
 此規則適用於**多領域系統**。文件應被放置在對應的 `sub-domain` 目錄下。
 
 - **路徑格式**：`docs/use-cases/<system>/<domain>/<subdomain>/<feature_name>/`
-- **範例**：`gms` 系統中，一個歸屬於 `mkt` Domain 下 `stk` 子領域的 `stock-info-sync` Feature：
-  - `docs/use-cases/gms/mkt/stk/stock-info-sync/`
+- **範例**：`gms` 系統中，一個歸屬於 `market` Domain 下 `stock` 子領域的 `stock-info-sync` Feature：
+  - `docs/use-cases/gms/market/stock/stock-info-sync/`
 
 #### 規則二：若 Feature 歸屬於 Domain
 
@@ -633,7 +633,7 @@ docs(use-cases/core/validator/rules): define data format validator api and requi
 
 - **路徑格式**：`docs/use-cases/<system>/<domain>/<feature_name>/`
 - **範例**：`gms` 系統中，整合了多個子領域資訊的 `market-dashboard` Feature：
-  - `docs/use-cases/gms/mkt/market-dashboard/`
+  - `docs/use-cases/gms/market/market-dashboard/`
 
 #### 規則三：若系統為單一業務領域
 
@@ -649,7 +649,7 @@ docs(use-cases/core/validator/rules): define data format validator api and requi
 
 - **路徑格式**：`docs/use-cases/<system>/etl/[<domain>]/[<subdomain>]/<feature_name>/`
 - **範例**：`gms` 系統中，一個處理市場股票資料的 ETL Feature：
-  - `docs/use-cases/gms/etl/mkt/stk/daily-stock-sync/`
+  - `docs/use-cases/gms/etl/market/stock/daily-stock-sync/`
 
 > `Extractor`、`Transformer`、`Loader`、`Job` 僅作為 Data Pipeline Feature 內部的責任分工與任務模板，不構成額外的文件路徑層級；Use Cases 路徑仍以 `etl/<domain>/[<subdomain>]/<feature_name>/` 為唯一公開結構。
 

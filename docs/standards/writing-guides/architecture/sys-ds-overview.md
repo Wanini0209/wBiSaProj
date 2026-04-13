@@ -122,7 +122,7 @@
 ### 2.1 Domain: `<domain_name>`
 
 > **📝 撰寫指引**：
-> - **Abbreviation**: 標準縮寫 (3-5 碼)，用於命名。
+> - **命名**：Domain / Sub-domain 應以完整語義英文名稱表達；外部來源系統若採縮寫命名，應於資料邊界或映射層處理。
 > - **Type**:
 >   - `Independent`: 僅當此領域在可預見的未來都不會有子領域時選擇。
 >   - `Aggregate`: 有多個子領域，**或**目前僅有一個但其上層抽象概念來自已確立的外部知識體系且未來擴展預期合理（先驗式聚合, Ref: `docs/PROJECT_DESIGN-ARCHITECTURE.md` Section 3.2 路徑 B）。
@@ -147,7 +147,6 @@
 >     - **Includes**: 每日收盤後的歷史價量資料。
 >     - **Excludes**: 盤中即時報價、分時資料。
 
-- **Abbreviation (Prefix)**: `<abbr>`
 - **Type**: `<Independent | Aggregate>`
 - **Data Description**: <描述此領域提供的資料內容>
 - **Boundary Rules (邊界規則)**:
@@ -160,7 +159,6 @@
 > *僅當 Domain Type 為 `Aggregate` 時填寫。*
 > **即使只有一個 Sub-domain，也必須完整填寫此區塊。**
 
-- **Abbreviation**: `<abbr>`
 - **Data Description**: <描述子領域具體的資料內容>
 - **Boundary Rules (邊界規則)**:
     - **Includes (包含)**: <明確定義子領域包含的範圍>
@@ -171,7 +169,6 @@
 > **📝 撰寫指引**：
 > 請完整複製 2.1 的結構進行定義。
 
-- **Abbreviation (Prefix)**: `<abbr>`
 - **Type**: `<Independent | Aggregate>`
 - **Data Description**: <描述此領域提供的資料內容>
 - **Boundary Rules (邊界規則)**:
@@ -363,7 +360,6 @@
 ### A. 命名與結構合規性
 
 - [ ] **命名檢查**：System Name 是否全小寫無分隔？Domain/Sub-domain/Toolkit 是否為合法 `snake_case`？
-- [ ] **縮寫檢查**：是否為每個 Domain 和 Sub-domain 定義了 3-5 碼的標準縮寫 (Abbreviation)？
 - [ ] **類型檢查**：是否為每個 Domain 正確標註 Type (`Independent` 或 `Aggregate`)？
 
 ### B. 核心與邊界
