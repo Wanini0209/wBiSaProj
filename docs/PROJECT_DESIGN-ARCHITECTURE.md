@@ -169,6 +169,14 @@ wutils 的諸多 Toolkit 中，基礎建設類（I/O、Crypto、Network、System
 |:-----|:-----|:-----|
 | **`<system>/etl`** | 資料抽取、轉換與載入 | 透過 `core` 定義的抽象介面從資料源獲取資料<br>將處理完成的資料寫入自身的 `db` 層 |
 
+ETL 作為業務系統的主幹 layer，其公開結構與 `db`、`service`、`api` 保持一致，採用 domain-first 模型：
+
+```text
+<system>/etl/<domain>/[<subdomain>]/<fu_container>/
+```
+
+ETL 具有 Extractor、Transformer、Loader、Pipeline / Job 等固定責任角色，但這些角色屬於同一個 ETL FU 內部的標準分工，是高凝聚的內部實作構件，而非與 `api`、`service`、`db`、`etl` 同級的公開架構層級。若某些 ETL 構件具有跨 Feature 共用價值，應將其提升為共用元件或獨立 FU，而非將 ETL 的公開結構改制為以責任角色劃分的 sub-layer 模型（如 `etl/extractors/...`、`etl/loaders/...`）。
+
 #### C. 線上應用三層式架構
 
 這是提供即時服務的標準應用架構，由以下三層構成：

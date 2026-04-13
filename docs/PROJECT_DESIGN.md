@@ -123,6 +123,8 @@
 - `[system]/service`：業務邏輯層，實作核心業務規則。
 - `[system]/api`：API 介面層，對外提供 RESTful API 接口。
 
+上述主幹模組均採用一致的 domain-first 公開結構：`<layer>/<domain>/[<subdomain>]/<fu_container>/`。以 ETL 層為例，其公開路徑為 `etl/<domain>/[<subdomain>]/<fu_container>/`，與 `db`、`service`、`api` 的組織方式相同。ETL 內部的固定責任角色（如 Extractor、Transformer、Loader、Pipeline）屬於 FU 內部構件，不構成額外的公開路徑層級。
+
 #### System Core（各系統共通）
 
 各 system（不分業務系統或資料源系統）均擁有 `[system]/core` 作為 system-local shared library，封裝該系統內跨模組共用、但不屬於專案級 Library 的共用元件。業務系統與資料源系統的差異僅體現在上述主幹模組的不同，而非是否擁有 System Core。
@@ -361,6 +363,10 @@ Feature（業務價值單元）
 | Library Feature | 開發者工具與共用元件 | Library 層 | 彈性（根據 FU 特性） |
 | Data Source Feature | 提供唯讀原始數據 | 資料源系統 | Collector → Service |
 | Data Pipeline Feature | 批次資料處理 | 業務系統的 etl 層 | Extractor → Transformer → Loader → Job |
+
+> **ETL Task 模板說明**
+>
+> Data Pipeline Feature 的標準 Task 模板（Extractor → Transformer → Loader → Job）描述的是 ETL FU 內部的固定責任分工與開發順序，而非 ETL 的公開路徑層級。ETL 的公開結構與其他主幹 layer 相同，採 `etl/<domain>/[<subdomain>]/<fu_container>/` 模型；上述責任角色屬於同一個 FU Container 內部的高凝聚構件。
 
 #### 技術型特例
 
