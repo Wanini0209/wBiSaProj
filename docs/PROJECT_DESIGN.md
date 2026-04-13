@@ -327,6 +327,15 @@ wBiSaProj/
 | **`<fu_path>`** | FU Container 相對於專案根目錄的完整路徑 | `wutils/io`, `gms/db/user` |
 | **`<fu_name>`** | 具體功能單元 (FU) 的邏輯名稱 | `pickle-io`, `date-parser` |
 
+#### Domain / Sub-domain 命名政策
+
+`<domain>` 與 `<subdomain>` 是本專案跨程式碼路徑、文件路徑、branch name、commit scope、架構總覽與 LLM 協作上下文的公開架構語彙，應優先追求語義清楚與可直接理解。本專案採用以下命名政策：
+
+- **完整語義優先**：Domain / Sub-domain 應使用完整、可直接理解的英文名稱（如 `user`、`market`、`stock`、`portfolio`）。多字詞使用 `snake_case`（如 `risk_control`、`customer_profile`）。
+- **不沿用公司歷史縮寫**：公司歷史上的縮寫模組命名（如 `usr`、`mkt`、`stk`、`acct`）不作為本專案正式架構命名基準，即使在技術上可被理解，正式規範文件中的示例亦不得使用此類縮寫。
+- **業界通用縮寫不構成例外**：本政策適用於 Domain / Sub-domain 命名；如 `api`、`db`、`etl` 等業界穩定通用縮寫，屬於主幹 layer 或其他正式架構術語，不在本政策限制範圍內。
+- **外部縮寫限於邊界映射**：若外部系統、資料表或 legacy module 使用縮寫名稱，應在整合邊界進行映射處理，不得反向影響本專案內部的正式架構命名。
+
 ---
 
 ## 第三部分：開發生命週期與方法論
