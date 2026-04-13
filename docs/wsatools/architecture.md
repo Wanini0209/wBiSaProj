@@ -80,7 +80,7 @@ wsatools 是協助專案開發的工具庫。各 package 下的子路徑代表�
 | 系統 | 路徑 | 組成 |
 |:-----|:-----|:-----|
 | `biz/` | `core/`、`db/`、`service/`、`api/`、`etl/` | System Core + 四層主幹 |
-| `ds/` | `core/`、`service/`、`collect/` | System Core + 兩層主幹 |
+| `ds/` | `core/`、`service/`、`collector/` | System Core + 兩層主幹 |
 
 ### 2.2 組織單元與 scope 邊界
 
