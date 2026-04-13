@@ -20,7 +20,7 @@
 3. **Feature 分類體系**：詳述四大類型 Feature 及其標準任務模板
 4. **Feature 開發生命週期**：說明 1+N 提交結構的執行流程
 5. **Task 開發模式**：深入探討兩階段 TDD 決策模型
-6. **Git 工作流程規範**：定義分支策略與提交格式
+6. **Git 工作流程概述**：說明方法論視角下的分支與提交原則，並導引至正式版控標準
 7. **品質保證機制**：建立開發流程的品質閘道
 8. **文件組織結構**：規範 use-cases 的組織與內容標準
 
@@ -480,21 +480,23 @@ Task 類型判斷：
 
 ---
 
-## 6. Git 工作流程規範
+## 6. Git 工作流程概述
 
-### 6.1 核心規則（規範定義）
+> **角色分工說明**
+>
+> 本章從方法論與開發生命週期的角度，說明 Git 分支與提交如何對應 Feature-Task 二層結構。正式的版本控制操作規範（包括完整的 branch type 體系、commit type 定義、scope 規則、merge 策略與工作流程）以 [版本控制規範](standards/version-control.md) 為準；PR 與合併的正式操作流程以 [Pull Request Workflow](standards/pull-request-workflow.md) 為準。本章不重複定義上述正式規範，而是聚焦於方法論層面的原則與對應關係。
 
-#### 分支策略
+### 6.1 方法論原則與分支對應
 
-| 分支類型 | 用途 | 生命週期 |
-|:---------|:-----|:---------|
-| **master** | 生產分支 | 永久 |
-| **develop** | 開發主線 | 永久 |
-| **feature/<path>/<description>** | 功能開發分支 | 短期 |
+本專案的 Git 工作流程，直接體現方法論中的三項核心原則：
 
-#### 分支 Path 決策規則
+- **Feature ↔ Branch**：每個 Feature 對應一個獨立工作分支，確保功能開發在隔離環境中進行。
+- **Task ↔ Commit**：每個 Task 對應一個原子提交，確保版本歷史能精確反映開發演進。
+- **文件先行**：Feature 分支的第一個提交必須是 `docs` 類型的 use-cases 文件，確立開發目標與邊界。
 
-**規則核心**：分支名稱必須採用**階層式命名**，其路徑結構應與該 Feature 在 `docs/use-cases/` 中的相對路徑完全一致（不含 `docs/use-cases/` 前綴）。這能確保 Git 分支結構、文件目錄結構與程式碼架構三者的高度對應，並有效避免命名衝突。
+#### Feature 分支命名與路徑對應
+
+Feature 開發分支的命名，應與該 Feature 在 `docs/use-cases/` 中的路徑結構保持對應，確保 Git 分支、文件目錄與程式碼架構三者的一致性。
 
 **格式標準**：`feature/<root>/<hierarchy>/<feature_name>`
 
@@ -504,29 +506,7 @@ Task 類型判斷：
 | **Library-Type Feature**<br>(General) | `<library>/<toolkit>/<feature_name>` | **通用函式庫**:<br>`feature/wutils/io/pickle-io`<br>`feature/core/validator/format-rules` |
 | **Library-Type Feature**<br>(System Internal) | `<system>/core/<toolkit>/<feature_name>` | **系統內核心庫**:<br>`feature/gms/core/config/env-management` |
 
-#### 提交格式規範
-
-**基本格式**：`<type>(<scope>): <subject>`
-
-**Type 類型定義**：
-
-| Type | 用途 | 範例 |
-|:-----|:-----|:-----|
-| `feat` | 新增功能 | `feat(gms/api/user): add endpoint` |
-| `fix` | 修復錯誤 | `fix(gms/db/user): correct query` |
-| `refactor` | 重構（不改變功能） | `refactor(core/validator): simplify logic` |
-| `test` | 測試相關 | `test(gms/service/user): add unit tests` |
-| `docs` | 文件更新 | `docs(use-cases/gms/user): define requirements` |
-| `chore` | 建構/工具相關 | `chore(build): update dependencies` |
-
-#### Scope 格式規範（雙軌制）
-
-基於架構篇的核心開發術語定義，我們採用以下 Scope 規則：
-
-| 提交類型 | Scope 格式說明 | 範例 |
-|:---|:---|:---|
-| **`docs` 提交**<br/>(Use Cases 文件) | Scope 需對應文件的父目錄路徑，根據模組類型分為兩種格式：<br/>1. **系統**: `use-cases/<system>/[<domain>]`<br/>2. **函式庫**: `use-cases/<library>/<toolkit>` | 1. `docs(use-cases/gms/user): ...`<br/>2. `docs(use-cases/core/config): ...` |
-| **實作提交**<br/>(feat, fix, etc.) | Scope 為受影響的功能單元容器路徑 (`<fu_path>`) | `feat(gms/api/user/profile): ...` |
+> 上表僅涵蓋 `feature/*` 分支的命名邏輯。關於完整的 branch type 體系（包括 `fix/*`、`docs/*`、`refactor/*`、`chore/*` 等）、commit type 定義、scope 規則與合併策略，請參閱 [版本控制規範](standards/version-control.md)。
 
 ### 6.2 標準範例（團隊共識）
 
