@@ -351,25 +351,21 @@ class StockPriceDTO(BaseModel):
     open_price: Decimal = Field(
         ...,
         ge=0,
-        decimal_places=2,
         description="開盤價"
     )
     high_price: Decimal = Field(
         ...,
         ge=0,
-        decimal_places=2,
         description="最高價"
     )
     low_price: Decimal = Field(
         ...,
         ge=0,
-        decimal_places=2,
         description="最低價"
     )
     close_price: Decimal = Field(
         ...,
         ge=0,
-        decimal_places=2,
         description="收盤價"
     )
 
@@ -1060,7 +1056,7 @@ class IStockPriceRepository(ABC):
 ```python
 from typing import List, Optional, Dict, Any
 from datetime import date
-from sqlalchemy import select, and_, desc
+from sqlalchemy import select, and_, desc, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
 
@@ -2155,7 +2151,7 @@ async def analyze_stock_volume(
 API 請求與回應模型
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from datetime import date
 from typing import Optional, Dict
 from decimal import Decimal
@@ -2172,11 +2168,12 @@ class StockAnalysisResponse(BaseModel):
     volume_analysis: Optional[Dict]
     technical_indicators: Optional[Dict]
 
-    class Config:
-        json_encoders = {
+    model_config = ConfigDict(
+        json_encoders={
             Decimal: lambda v: float(v),
-            date: lambda v: v.isoformat()
+            date: lambda v: v.isoformat(),
         }
+    )
 
 class ErrorResponse(BaseModel):
     """錯誤回應"""
@@ -2212,6 +2209,7 @@ Composition Root 的職責：
 from fastapi import FastAPI, Depends
 from contextlib import asynccontextmanager
 from datetime import date
+from sqlalchemy import text
 import logging
 
 # === 具體實作導入（只在這裡！）===
@@ -2346,7 +2344,7 @@ async def health_check():
     # 檢查資料庫
     try:
         async with AsyncSessionLocal() as session:
-            await session.execute("SELECT 1")
+            await session.execute(text("SELECT 1"))
             health_status["database"] = "healthy"
     except Exception as e:
         health_status["database"] = f"unhealthy: {str(e)}"
@@ -2373,45 +2371,36 @@ async def health_check():
 **檔案位置**：`gms/config.py`
 
 ```python
-from pydantic import BaseSettings, Field
-from typing import Optional
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     """
     應用程式設定
-    使用環境變數覆寫預設值
+    使用環境變數覆寫預設值（pydantic-settings 自動依欄位名稱讀取同名環境變數）
     """
 
     # === Database ===
-    DATABASE_URL: str = Field(
-        default="postgresql+asyncpg://user:pass@localhost/gms",
-        env="DATABASE_URL"
-    )
+    DATABASE_URL: str = "postgresql+asyncpg://user:pass@localhost/gms"
 
     # === TEJ Database ===
-    TEJ_DB_URL: str = Field(
-        default="postgresql+asyncpg://tej_user:pass@tej-db/tej",
-        env="TEJ_DB_URL"
-    )
+    TEJ_DB_URL: str = "postgresql+asyncpg://tej_user:pass@tej-db/tej"
 
     # === Application ===
-    DEBUG: bool = Field(default=False, env="DEBUG")
-    LOG_LEVEL: str = Field(default="INFO", env="LOG_LEVEL")
+    DEBUG: bool = False
+    LOG_LEVEL: str = "INFO"
 
     # === API ===
-    API_PREFIX: str = Field(default="/api/v1", env="API_PREFIX")
-    CORS_ORIGINS: list[str] = Field(
-        default=["http://localhost:3000"],
-        env="CORS_ORIGINS"
-    )
+    API_PREFIX: str = "/api/v1"
+    CORS_ORIGINS: list[str] = ["http://localhost:3000"]
 
     # === ETL ===
-    ETL_BATCH_SIZE: int = Field(default=1000, env="ETL_BATCH_SIZE")
-    ETL_RETRY_COUNT: int = Field(default=3, env="ETL_RETRY_COUNT")
+    ETL_BATCH_SIZE: int = 1000
+    ETL_RETRY_COUNT: int = 3
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+    )
 ```
 
 -----
@@ -2439,10 +2428,20 @@ asyncio_mode = auto
 # 測試執行選項
 addopts = -v --tb=short --strict-markers
 
-# 定義測試標記（對應測試金字塔的分類）
+# 定義測試標記（須與 docs/standards/testing.md §1.3 保持一致）
 markers =
     unit: 單元測試（快速執行，無外部 I/O）
-    integration: 整合測試（需要資料庫或外部連線）
+    integration: 整合測試（元件互動、使用 In-Memory DB）
+    e2e: 端到端測試（完整流程、真實外部連線）
+    llm: LLM 測試（需要人工觸發 LLM 互動，預設排除於一般自動化執行）
+    slow: 慢速測試（執行時間 > 1秒）
+    fast: 快速測試（執行時間極短）
+    database: 資料庫測試（需要 DB Session）
+    network: 網路測試（需要外部網路連線）
+    external: 外部依賴測試（依賴外部服務）
+    io: I/O 測試（檔案讀寫、序列化操作）
+    auth: 認證測試（登入、權限驗證相關）
+    api: API 測試（針對 Router Endpoint）
 ```
 
 #### 通用 Fixtures
@@ -2463,16 +2462,6 @@ from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker
 )
-
-@pytest.fixture(scope="session")
-def event_loop():
-    """
-    設定 Event Loop
-    針對 Windows/特定環境的 Async 測試穩定性
-    """
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
 
 @pytest.fixture(scope="function")
 async def sqlite_session() -> AsyncGenerator[AsyncSession, None]:
@@ -2521,7 +2510,7 @@ async def sqlite_session() -> AsyncGenerator[AsyncSession, None]:
 
 **隔離策略**：使用 In-Memory SQLite
 
-**檔案位置**：`tests/gms/db/market/stock/test_price_repository.py`
+**檔案位置**：`tests/gms/db/market/stock/price/stock_price_storage/test_stock_price_repository.py`
 
 ```python
 """
@@ -2586,7 +2575,7 @@ async def test_repository_crud_operations(sqlite_session):
 
 **隔離策略**：Mock Repository 介面
 
-**檔案位置**：`tests/gms/service/market/stock/test_analysis_service.py`
+**檔案位置**：`tests/gms/service/market/stock/analysis/stock_analysis_api/test_stock_analysis_service.py`
 
 ```python
 """
@@ -2655,7 +2644,7 @@ async def test_abnormal_volume_detection():
 
 **隔離策略**：Mock Service（透過 FastAPI dependency_overrides）
 
-**檔案位置**：`tests/gms/api/market/stock/test_router.py`
+**檔案位置**：`tests/gms/api/market/stock/stock_analysis_api/test_stock_analysis_router.py`
 
 ```python
 """
@@ -2717,7 +2706,7 @@ async def test_volume_analysis_endpoint():
 
 **隔離策略**：Mock Source 與 Target 介面
 
-**檔案位置**：`tests/gms/etl/market/stock/test_sync_pipeline.py`
+**檔案位置**：`tests/gms/etl/market/stock/sync_job/daily_sync_job/test_daily_stock_sync_pipeline.py`
 
 ```python
 """
@@ -2730,7 +2719,7 @@ from unittest.mock import AsyncMock, MagicMock
 from datetime import date
 from decimal import Decimal
 
-from gms.etl.market.stock.sync_job._pipeline import DailyStockSyncPipeline
+from gms.etl.market.stock.sync_job import DailyStockSyncPipeline
 from core.interfaces.market import IStockPriceProvider
 from gms.db.market.stock.price import IStockPriceRepository
 from core.schemas.market import StockPriceDTO, MarketType
@@ -2794,7 +2783,7 @@ async def test_sync_pipeline_flow():
 
 **策略**：使用 SQLite 覆蓋 DB，但不 Mock Service 與 Repository
 
-**檔案位置**：`tests/gms/integration/test_market_flow.py`
+**檔案位置**：`tests/gms/integration/test_market_flow.py`  *(整合測試路徑結構待後續正式定義)*
 
 ```python
 """
@@ -2886,7 +2875,7 @@ async def test_complete_market_analysis_flow(sqlite_session):
 
 **隔離策略**：Mock Collector（模擬 DB 回傳的原始字典）
 
-**檔案位置**：`tests/tej/service/test_provider.py`
+**檔案位置**：`tests/tej/service/test_provider.py`  *(TEJ 系統目前未採用 FU Container 結構，路徑待後續整理)*
 
 ```python
 """
@@ -2951,7 +2940,7 @@ async def test_tej_adapter_transformation():
 
 **策略**：連線真實測試資料庫（透過環境變數控制）
 
-**檔案位置**：`tests/tej/collector/test_db_client.py`
+**檔案位置**：`tests/tej/collector/test_db_client.py`  *(TEJ 系統目前未採用 FU Container 結構，路徑待後續整理)*
 
 ```python
 """
@@ -3045,6 +3034,8 @@ def tej_test_config():
 -----
 
 ### 9.4 測試執行與報告
+
+> **注意**：本節中的 shell script 與 Makefile 範例為早期寫法，僅供參考。本專案現行的測試執行方式以 `inv test`、`inv test.llm`、`inv test.cov` 為準，詳見 [測試規範 §1.4](standards/testing.md)。
 
 提供測試執行的實用工具與腳本。
 
