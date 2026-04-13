@@ -105,7 +105,7 @@
 ### 2.1 Domain: `<domain_name>`
 
 > **📝 撰寫指引**：
-> - **Abbreviation**: 標準縮寫 (3-5 碼)，用於 DB/API 命名。
+> - **命名**：Domain / Sub-domain 應以完整語義英文名稱表達（如 `user`、`market`），不使用歷史縮寫；若需對接外部縮寫命名，應於邊界映射層處理。
 > - **Type**:
 >   - `Independent`: 僅當此領域在可預見的未來都不會有子領域時選擇。
 >   - `Aggregate`: 有多個子領域，**或**目前僅有一個但其上層抽象概念來自已確立的外部知識體系且未來擴展預期合理（先驗式聚合, §3.2 路徑 B）。
@@ -127,7 +127,6 @@
 > - **Sub-domain**: `stock`
 > - *理由：雖然目前只有 Stock，但 Market 本質是聚合概念，保留架構以待未來加入 Bond。*
 
-- **Abbreviation (Prefix)**: `<abbr>`
 - **Type**: `<Independent | Aggregate>`
 - **Responsibility**: <定義核心實體或聚合概念>
 - **Boundary Rules (邊界規則)**:
@@ -140,7 +139,6 @@
 > *僅當 Domain Type 為 `Aggregate` 時填寫。*
 > **即使只有一個 Sub-domain，也必須完整填寫此區塊。**
 
-- **Abbreviation**: `<abbr>`
 - **Responsibility**: <定義子領域具體職責>
 - **Boundary Rules (邊界規則)**:
     - **Includes (包含)**: <明確定義子領域包含的範圍>
@@ -156,7 +154,6 @@
 > 請完整複製 2.1 的結構進行定義。
 > 若此 Domain 為 Aggregate Type，請務必包含下方的 Sub-domain 區塊。
 
-- **Abbreviation (Prefix)**: `<abbr>`
 - **Type**: `<Independent | Aggregate>`
 - **Responsibility**: <定義核心實體或聚合概念>
 - **Boundary Rules (邊界規則)**:
@@ -167,7 +164,6 @@
 
 *(若 Domain 2.2 為 Aggregate Type，請在此處展開定義。格式同 2.1.1)*
 
-- **Abbreviation**: `<abbr>`
 - **Responsibility**: ...
 - **Boundary Rules**:
     - **Includes**: ...
@@ -341,7 +337,6 @@
 ### A. 命名與結構合規性
 
 - [ ] **命名檢查**：System Name 是否全小寫無分隔？System Full Name 是否已填寫？Domain/Sub-domain/Toolkit 是否為合法 `snake_case`？
-- [ ] **縮寫檢查**：是否為每個 Domain 和 Sub-domain 定義了 3-5 碼的標準縮寫 (Abbreviation)？
 - [ ] **類型檢查**：是否為每個 Domain 正確標註 Type (`Independent` 或 `Aggregate`)？Aggregate 類型的 Domain 是否都有展開 Sub-domain 定義？
 
 ### B. 核心與邊界
