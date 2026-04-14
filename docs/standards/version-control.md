@@ -7,6 +7,11 @@
 
 **適用對象**：所有參與開發的架構師 (SA)、開發者 (Developer) 與協作操作者 (Operator)。
 
+**與其他規範文件的關係**：
+
+- [Pull Request Workflow 操作說明](pull-request-workflow.md) 為本規範的操作型補充文件，指導 PR 建立、review 與合併流程。
+- [GitHub Issue 治理規範](github-issue-governance.md) 定義 issue 結構、撰寫要求、PR linkage 規則與 auto-close 前提。本文件不重複展開完整的 issue governance 規則。
+
 ---
 
 ## 1. 核心哲學
@@ -298,6 +303,7 @@ Scope 必須精準反映變更的影響範圍。本專案依提交情境區分�
 - **Footer**：
   - 用於參照 Issue（如 `Closes #123`）。
   - Breaking Changes 必須在此標註，以 `BREAKING CHANGE:` 開頭。
+  - 關於 `Closes` / `Related to` 的完整使用規則與 PR description 中的 issue linkage 模板，請參閱 [GitHub Issue 治理規範](github-issue-governance.md)。
 
 ### 3.4 完整範例集 (Comprehensive Examples)
 
@@ -540,6 +546,10 @@ docs(project): update version control standards
 #### E. 操作指引
 
 上述流程的具體操作步驟、Git 指令、GitHub UI 操作與常見錯誤排除，請參閱 [Pull Request Workflow 操作說明](pull-request-workflow.md)。
+
+#### F. Issue 對應
+
+當工作涉及 GitHub issue 時，branch 與 PR 應與對應 issue 建立明確的對應關係。Issue 的建立方式、結構定義、PR linkage 寫法與 auto-close 前提，請參閱 [GitHub Issue 治理規範](github-issue-governance.md)。
 
 ---
 
