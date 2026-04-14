@@ -1,6 +1,6 @@
 # Business System Architecture Overview - Documentation Guide
 
-本規範定義 **Business System (業務系統)** 的 `SYSTEM_OVERVIEW.md` 撰寫規範。目標是定義系統的 **邊界 (Boundaries)**、**領域職責 (Domain Responsibilities)**、**核心基礎設施 (System Core)** 與 **架構限制 (Constraints)**，作為 System Analyst (LLM) 執行需求分析與架構設計時的 **Ground Truth (單一真理來源)**。
+本規範定義 **Business System (業務系統)** 的 `SYSTEM_OVERVIEW.md` 撰寫規範。目標是定義系統的 **邊界 (Boundaries)**、**領域職責 (Domain Responsibilities)**、**核心基礎設施 (System Core)** 與 **架構限制 (Constraints)**，作為 System Analyst (LLM) 執行需求分析與架構設計時，在該系統範圍內的正式依據。
 
 > **⚠️ 適用範圍**：本規範僅適用於 **Business System** (如 `gms`, `sqs`)。資料源系統 (Data Source System) 請另參閱 `sys-ds-overview.md`。
 
@@ -12,11 +12,11 @@
 
 ### 1.1 文件定位
 
-本文件是業務系統的「憲法」。它不描述具體功能的實作細節，而是定義「什麼該做」、「什麼不該做」、「各領域的職責劃分」以及「共用的技術地基」。
+本文件是業務系統的邊界與職責定義文件。它不描述具體功能的實作細節，而是定義「什麼該做」、「什麼不該做」、「各領域的職責劃分」以及「共用的技術地基」。
 
 ### 1.2 關鍵特性
 
-- **單一真理來源 (SSOT)**：所有 Feature 的領域歸屬 (Domain Ownership) 與技術選型 (Tech Stack) 均以此文件為最高指導原則。
+- **正式依據**：在該系統範圍內，所有 Feature 的領域歸屬 (Domain Ownership) 與技術選型 (Tech Stack) 均以此文件為正式依據。
 - **邊界優先 (Boundary First)**：必須明確定義「非目標範圍 (Out of Scope)」與「排除規則 (Excludes)」，以防止架構腐化。
 - **類型導向 (Type Driven)**：依據資料特性（如結構化、時序性）選擇合適的儲存類型 (RDBMS/NoSQL/FS)。
 - **基礎設施顯性化 (Explicit Infrastructure)**：明確定義 `<system>/core` 中的共享工具集，避免重複造輪子。
@@ -95,7 +95,7 @@
 ## 2. Domain Model & Boundaries (領域模型與邊界)
 
 > **📝 總體撰寫指引**（請勿保留本指引文字）：
-> 本節定義了系統的領域邊界與職責。這是 **System Analyst (LLM)** 執行 **「領域歸屬判定 (Domain Ownership Check)」** 時的 **唯一真理來源 (SSOT)**。
+> 本節定義了系統的領域邊界與職責。這是 **System Analyst (LLM)** 執行 **「領域歸屬判定 (Domain Ownership Check)」** 時，在該系統範圍內的**正式依據**。
 >
 > **⚠️ 架構規則 (Ref: `docs/PROJECT_DESIGN-ARCHITECTURE.md` Section 3.2 & 3.3)**：
 > 1. **獨立型 (Independent)**：本質上不可分割的單一業務領域。

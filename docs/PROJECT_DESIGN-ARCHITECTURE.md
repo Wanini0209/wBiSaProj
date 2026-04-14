@@ -738,7 +738,7 @@ Feature → _<feature_snake_name>/ → impl_file (私有實作)      ✅
 **1. 技術規格 (Specification)**
 
 - **路徑**：`docs/specs/<fu_path>/<fu_name>/...`
-- **角色**：規格文件是**真理的唯一來源 (Single Source of Truth)**。它不僅定義了功能，**還必須明確記載其對應的測試與功能實作的實際路徑**，作為開發導航的地圖。
+- **角色**：規格文件是該 FU 的技術規格**唯一正式依據 (Single Source of Truth)**。它不僅定義了功能，**還必須明確記載其對應的測試與功能實作的實際路徑**，作為開發導航的地圖。
 
 **2. 測試程式 (Tests)**
 
