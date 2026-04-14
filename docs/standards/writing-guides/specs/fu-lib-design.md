@@ -1,6 +1,6 @@
 # Library Functional Unit (FU) Specs - Design Guide
 
-本規範定義 Library 型 **Functional Unit (FU)** 在 `specs` 層級的 `design.md` 撰寫規範。目標是將需求轉化為可實作的介面設計，作為 TDD 流程中實作與測試的單一真理來源。
+本規範定義 Library 型 **Functional Unit (FU)** 在 `specs` 層級的 `design.md` 撰寫規範。目標是將需求轉化為可實作的介面設計，作為該 FU 的 TDD 流程中實作與測試的正式依據。
 
 *供 Generator: Prompt4NewLibFuDesignSpec 使用*
 
@@ -14,7 +14,7 @@
 
 ### 1.2 TDD 導向的契約設計
 
-- **介面即契約**：設計文件必須將 Function/Method Signature 與其「行為規則 (Rules)」綁定，作為實作與測試的單一真理來源 (SSOT)。
+- **介面即契約**：設計文件必須將 Function/Method Signature 與其「行為規則 (Rules)」綁定，作為該 FU 範圍內實作與測試的正式依據。
 - **實作黑箱化**：**嚴禁**包含函數本體程式碼，僅保留介面定義。實作細節應使用 `...` 或 `pass` 帶過。
 
 ### 1.3 高度結構化

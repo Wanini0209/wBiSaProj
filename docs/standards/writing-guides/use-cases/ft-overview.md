@@ -1,6 +1,6 @@
 # Feature Overview - Documentation Guide
 
-本規範定義 **Feature Overview (功能總覽)** 文件的撰寫規範。適用於所有 `docs/use-cases/.../overview.md` 路徑下的總覽文件。目標是提供**價值清單 (Feature Catalog)** 與 **決策指引 (Decision Guide)**，作為 System Analyst (LLM) 執行「Feature 歸屬判定」與「新增 vs 修改決策」時的 **Ground Truth (單一真理來源)**。
+本規範定義 **Feature Overview (功能總覽)** 文件的撰寫規範。適用於所有 `docs/use-cases/.../overview.md` 路徑下的總覽文件。目標是提供**價值清單 (Feature Catalog)** 與 **決策指引 (Decision Guide)**，作為 System Analyst (LLM) 執行「Feature 歸屬判定」與「新增 vs 修改決策」時，在該層級範圍內的正式依據。
 
 > **⚠️ 適用範圍**：本規範為**通用規範**，適用於以下所有類型：
 > - **業務系統 (Business System)**：System (單一領域) / Domain / Sub-domain 層級

@@ -1,6 +1,6 @@
 # FU Overview (Specs) - Documentation Guide
 
-本規範定義 **FU Overview (功能單元總覽)** 文件的撰寫規範。適用於所有 `docs/specs/.../overview.md` 路徑下的總覽文件。目標是提供**技術資產庫存 (FU Inventory)** 與 **可復用性指引**，作為開發者執行「資產盤點」與「技術決策」時的 **Ground Truth (單一真理來源)**。
+本規範定義 **FU Overview (功能單元總覽)** 文件的撰寫規範。適用於所有 `docs/specs/.../overview.md` 路徑下的總覽文件。目標是提供**技術資產庫存 (FU Inventory)** 與 **可復用性指引**，作為開發者執行「資產盤點」與「技術決策」時，在該層級範圍內的正式依據。
 
 > **⚠️ 適用範圍**：本規範為**通用規範**，適用於以下所有類型與層級：
 > - **業務系統 (Business System)**：`core`, `db`, `service`, `api`, `etl` 各層
@@ -65,7 +65,7 @@ FU Container: gms/db/market/stock
 |:-----|:-----|
 | **完整性** | 必須列出 `__all__` 中的每一個公開元件，不得省略 |
 | **同步性** | 新增或移除 Component 時，必須同步更新本 Overview 文件 |
-| **用途** | 此清單作為自動化工具判定「Component → FU 歸屬」的 **Ground Truth** |
+| **用途** | 此清單作為自動化工具判定「Component → FU 歸屬」的正式依據 |
 
 ### 1.4 與其他層級的關係
 
@@ -254,7 +254,7 @@ FU 對外暴露的 Components（透過 `__init__.py` 匯出）應遵循 Python �
 > **⚠️ 重要概念提醒**：
 > - 此處的組織粒度是 **FU (功能單元)**，每個 FU 以 `###` 標題呈現
 > - 每個 FU 必須**完整列出**其所有公開 Components（對應 `__init__.py` 的 `__all__`）
-> - Components 以子列表形式逐一列出，作為自動化工具判定歸屬的 Ground Truth
+> - Components 以子列表形式逐一列出，作為自動化工具判定歸屬的正式依據
 >
 > **⚠️ 收錄範圍提醒**：
 > 若本 Overview 所屬的 Domain/Toolkit 已存在 Sub-domain/Sub-toolkit，本清單**僅收錄歸屬於本層級自身**的聚合型或共用型 FU。屬於特定 Sub-domain/Sub-toolkit 的 FU 應登錄在對應的子層級 overview.md 中，請勿列入本文件。

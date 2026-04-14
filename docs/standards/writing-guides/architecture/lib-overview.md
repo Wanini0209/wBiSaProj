@@ -1,6 +1,6 @@
 # Project-Level Library Architecture Overview - Documentation Guide
 
-本規範定義 **Project-Level Library (專案級函式庫)** 的 `LIBRARY_OVERVIEW.md` 撰寫規範。目標是定義函式庫的 **邊界 (Boundaries)**、**工具集職責 (Toolkit Responsibilities)** 與 **架構限制 (Constraints)**，作為 System Analyst (LLM) 執行需求分析與架構設計時的 **Ground Truth (單一真理來源)**。
+本規範定義 **Project-Level Library (專案級函式庫)** 的 `LIBRARY_OVERVIEW.md` 撰寫規範。目標是定義函式庫的 **邊界 (Boundaries)**、**工具集職責 (Toolkit Responsibilities)** 與 **架構限制 (Constraints)**，作為 System Analyst (LLM) 執行需求分析與架構設計時，在該函式庫範圍內的正式依據。
 
 > **⚠️ 適用範圍**：本規範適用於 **專案級函式庫** (如 `wutils`, `core`)。業務系統請參閱 `sys-biz-overview.md`，資料源系統請參閱 `sys-ds-overview.md`。`wsatools` 不適用本模板，應依 `docs/wsatools/architecture.md` 之專屬治理模型撰寫。
 
@@ -12,11 +12,11 @@
 
 ### 1.1 文件定位
 
-本文件是專案級函式庫的「憲法」。它不描述具體功能的實作細節，而是定義「提供什麼能力」、「不提供什麼」、以及「各工具集的職責劃分」。
+本文件是專案級函式庫的邊界與職責定義文件。它不描述具體功能的實作細節，而是定義「提供什麼能力」、「不提供什麼」、以及「各工具集的職責劃分」。
 
 ### 1.2 關鍵特性
 
-- **單一真理來源 (SSOT)**：所有 Toolkit 的歸屬判定與技術選型均以此文件為最高指導原則。
+- **正式依據**：在該函式庫範圍內，所有 Toolkit 的歸屬判定與技術選型均以此文件為正式依據。
 - **邊界優先 (Boundary First)**：必須明確定義「非目標範圍 (Out of Scope)」與「排除規則 (Excludes)」，以防止架構腐化。
 - **能力導向 (Capability Oriented)**：以「提供什麼能力」而非「如何實作」來組織 Toolkit。
 
@@ -109,7 +109,7 @@
 ## 2. Toolkit Structure (工具集結構)
 
 > **📝 總體撰寫指引**（請勿保留本指引文字）：
-> 本節定義了函式庫的工具集邊界與職責。這是 **System Analyst (LLM)** 執行 **「工具集歸屬判定 (Toolkit Ownership Check)」** 時的 **唯一真理來源 (SSOT)**。
+> 本節定義了函式庫的工具集邊界與職責。這是 **System Analyst (LLM)** 執行 **「工具集歸屬判定 (Toolkit Ownership Check)」** 時，在該函式庫範圍內的**正式依據**。
 >
 > **⚠️ 結構層級處理原則**：
 >
