@@ -6,7 +6,7 @@
 
 **適用情境**：一般多人開發，以及暫時單人維護的情境。
 
-**與規範文件的關係**：本文件是操作手冊，正式制度以 [版本控制規範](version-control.md) 為準。測試閘道規則以 [測試規範](testing.md) 為準。
+**與規範文件的關係**：本文件是操作手冊，正式制度以 [版本控制規範](version-control.md) 為準。測試閘道規則以 [測試規範](testing.md) 為準。Issue 結構、撰寫規範與 PR linkage 規則以 [GitHub Issue 治理規範](github-issue-governance.md) 為準。
 
 ---
 
@@ -156,6 +156,7 @@ push 時會自動觸發 `pre-push` hook，執行全域一般測試。若測試�
 5. 填寫 PR 資訊：
    - **Title**：簡明描述本次交付的整體目的。
    - **Description**：列出各 commit 摘要、關鍵決策、與審查重點。
+   - **Issue linkage**：若本次 PR 對應 GitHub issue，應在 description 最後加入 `Issue linkage` 區塊。基本使用脈絡為：`Closes`（PR merge 後完整完成 issue 時使用）、`Related to`（僅推進 issue、尚未完整完成時使用）、`Parent issue`（當 PR 對應子 issue，且需保留與主 issue 的父子脈絡時使用）。完整的 linkage 模板與使用規則，請參閱 [GitHub Issue 治理規範](github-issue-governance.md)。
 6. 點選 **Create pull request**。
 
 ---
