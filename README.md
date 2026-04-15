@@ -26,4 +26,13 @@ python -m pip install wBiSaProj
 ```
 
 ## Contributing
-Please see the [Contributing](contributing.md) for further details.
+
+This project follows formal governance standards for version control, pull requests, and issue management.
+
+For the contributor entry workflow, please see [Contributing](contributing.md).
+
+For complete rules, please refer to the formal standards:
+
+- [Version Control Standards](docs/standards/version-control.md)
+- [Pull Request Workflow](docs/standards/pull-request-workflow.md)
+- [GitHub Issue Governance](docs/standards/github-issue-governance.md)

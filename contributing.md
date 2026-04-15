@@ -1,28 +1,41 @@
 ## Contributing
 
-### Step 1. Fork this repository to your GitHub
+This project follows formal governance standards for version control, pull requests, and issue management. This document provides a contributor entry point and minimum necessary guidance. For complete rules, please refer to the formal standards listed at the end of this document.
 
-### Step 2. Clone the repository from your GitHub
-
-```sh
-git clone [https://github.com/](https://github.com/)[YOUR GITHUB ACCOUNT]/wBiSaProj.git
-```
-
-### Step 3. Add this repository to the remote in your local repository
+### Step 1. Clone the Repository
 
 ```sh
-git remote add upstream "https://github.com/Wanini0209/wBiSaProj"
+git clone https://github.com/Wanini0209/wBiSaProj.git
+cd wBiSaProj
 ```
 
-You can pull the latest code in master branch through `git pull upstream master` afterward.
+### Step 2. Sync the Latest `develop`
 
-### Step 4. Check out a branch for your new feature
+This project uses `develop` as the integration trunk. Before starting any work, sync your local `develop` to the latest state:
 
 ```sh
-git checkout -b [YOUR FEATURE]
+git checkout develop
+git fetch origin
+git merge --ff-only origin/develop
 ```
 
-### Step 5. Install Prerequisites
+### Step 3. Create a Working Branch
+
+Create a branch from the latest `develop`. Do not work directly on `develop`.
+
+```sh
+git checkout -b <branch_type>/<root>/<hierarchy>/<work_name>
+```
+
+Branch naming follows hierarchical conventions defined in the version control standards. For example:
+
+```sh
+git checkout -b feature/gms/user/user-registration
+git checkout -b docs/project/update-testing-standards
+git checkout -b fix/wsatools/init-relative-imports
+```
+
+### Step 4. Install Prerequisites
 
 ```sh
 python -m pip install pipx
@@ -30,84 +43,82 @@ python -m pipx install pipenv invoke
 python -m pipx ensurepath
 ```
 
-### Step 6. Create Your Own Python Virtual Environment and Install Dependencies
+### Step 5. Create Your Python Virtual Environment and Install Dependencies
 
 ```sh
 inv env.init-dev
 ```
 
-### Step 7. Work on your new feature
+### Step 6. Install Git Hooks
 
-### [Optional] Step 8. Install project for local test
-
-If you want to develop it, please run:
+This project uses `pre-commit` to manage Git hooks (pre-commit, commit-msg, and pre-push). Install them before your first commit:
 
 ```sh
-inv build.develop
+pipenv run pre-commit install --hook-type pre-commit --hook-type pre-push --hook-type commit-msg
 ```
 
-### Step 9. Run test cases
+### Step 7. Develop and Commit
 
-Make sure all test cases pass.
+Write your changes and commit using the Conventional Commits format required by this project:
+
+```sh
+git add <files>
+git commit
+```
+
+Use `git commit` (without `-m`) to open your editor for writing a properly formatted multi-line commit message.
+
+### Step 8. Run Tests
+
+Make sure all test cases pass before pushing:
 
 ```sh
 inv test
 ```
 
-### Step 10. Run test coverage
-
-Check the test coverage and see where you can add test cases.
+When working on changes that affect a specific project and you need to preserve commit atomicity, you may run project-scoped tests during intermediate commits:
 
 ```sh
-inv test.cov
+inv test --project <project_name>
 ```
 
-### Step 11. Format source code
+However, the full test suite must pass before pushing. For LLM-related changes, also run:
 
-Format your code using `black` and fix linting issues with `ruff`.
+```sh
+inv test.llm
+```
+
+### Step 9. Format and Lint
+
+Format your code and check for style issues:
 
 ```sh
 inv style.format
-```
-
-### Step 12. Run style check
-
-Make sure your coding style passes all enforced linters.
-
-```sh
 inv style.check
 ```
 
-### [Optional] Step 13. Run security check
-
-Check for common security vulnerabilities using Ruff's built-in bandit rules:
+### [Optional] Step 10. Run Security Check
 
 ```sh
 inv secure.security-report
 ```
 
-### [Optional] Develop on Conda Environment
+### Step 11. Push, Open a Pull Request, and Review
 
-Update local Conda information:
-
-```sh
-inv conda.update
-```
-
-Create Conda develop environment
+Push your branch to the remote:
 
 ```sh
-inv conda.create
+git push -u origin <branch-name>
 ```
 
-Remove Conda develop environment
+Then open a Pull Request on GitHub with `develop` as the base branch. The standard flow is: push branch → open PR → review → Merge Commit. PRs must be reviewed and retain review trace before merge. The merge strategy is **Merge Commit** (`--no-ff`); squash merge and rebase merge are not permitted under normal circumstances.
 
-```sh
-inv conda.remove
-```
+If your work corresponds to a GitHub issue, include the appropriate issue linkage in the PR description. For details on linkage format, see the GitHub issue governance standard.
 
-Activate Conda develop environment
+### Formal Standards
 
-```sh
-inv conda.activate
-```
+For complete rules on branching, commit conventions, PR workflow, and issue governance, please refer to:
+
+- [Version Control Standards](docs/standards/version-control.md)
+- [Pull Request Workflow](docs/standards/pull-request-workflow.md)
+- [GitHub Issue Governance](docs/standards/github-issue-governance.md)
