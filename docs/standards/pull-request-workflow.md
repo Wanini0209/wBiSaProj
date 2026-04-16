@@ -23,8 +23,8 @@
 6.  在 GitHub 建立 PR
 7.  review / self-review
 8.  使用 Merge Commit 合併
-9.  本地同步 develop
-10. 刪除已完成 branch
+9.  本地同步 develop 與遠端 branch 狀態
+10. 清理本地已完成 branch
 ```
 
 以下各節依此順序逐步說明。
@@ -208,22 +208,41 @@ Merge Commit 的目的是保留分支邊界與 Task 提交歷史，這與本地�
 
 ---
 
-## 11. 合併後同步本地 `develop`
+## 11. 合併後收尾
 
-PR 合併完成後，回到本機同步 `develop`：
+PR 合併後的收尾工作分為三個步驟：遠端 branch cleanup、本地同步、本地 branch cleanup。
+
+### 11.1 遠端 branch cleanup
+
+遠端 branch 應由 GitHub 在 PR merge 時自動刪除，不需要開發者手動執行 `git push origin --delete`。
+
+**前提**：repository 須啟用 **Automatically delete head branches** 設定（Settings → General → Pull Requests）。
+
+若 repository 尚未啟用此設定，開發者可在 PR merge 後，透過 GitHub PR 頁面上出現的 **Delete branch** 按鈕手動刪除遠端 branch；或在本地執行 `git push origin --delete <branch-name>`。無論採用哪種方式，都應確保遠端 branch 在 merge 後不長期殘留。
+
+### 11.2 本地同步
+
+遠端 branch 已刪除後，回到本機同步 `develop` 並清理已失效的遠端追蹤參照：
 
 ```bash
 git checkout develop
-git fetch origin
+git fetch --prune origin
 git merge --ff-only origin/develop
 ```
 
-確認同步成功後，刪除已完成的本地與遠端 branch：
+**`git fetch --prune origin` 的作用**：在 fetch 的同時，自動移除本地端已不存在於遠端的 remote-tracking branch（例如 `origin/<branch-name>`）。這使本地的遠端參照與 GitHub 端保持一致，不需要另行手動清理。
+
+`git merge --ff-only origin/develop` 的用途與 §3 相同：確保本地 `develop` 始終為 `origin/develop` 的乾淨 fast-forward 副本。
+
+### 11.3 本地 branch cleanup
+
+本地的工作 branch 不會被 `fetch --prune` 自動移除，需要開發者手動刪除：
 
 ```bash
 git branch -d <branch-name>
-git push origin --delete <branch-name>
 ```
+
+此步驟建議在確認本地同步成功後執行。`-d`（小寫）會檢查該 branch 是否已被合併，若尚未合併則拒絕刪除，提供一道安全防護。
 
 ---
 
