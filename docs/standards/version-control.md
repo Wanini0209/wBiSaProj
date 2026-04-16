@@ -155,7 +155,17 @@ Branch type 與 commit type 是兩個不同維度的概念：
 
 ### 3.2 Header 規範 (Line 1)
 
-Header 總長度不得超過 72 字元。
+Header 總長度原則上不超過 72 字元。
+
+撰寫者應優先維持 header 精簡，使其在 `git log --oneline`、GitHub commit 列表等常見介面中保持良好的可讀性與辨識性。
+
+若為保留必要的核心語意，header 可在有節制的前提下超出 72 字元，但應同時滿足以下條件：
+
+- 已嘗試精簡措辭，確認無法在不損失核心語意的情況下進一步縮短
+- 超出部分僅為保留必要的 scope 路徑、專有名詞或關鍵動詞，而非塞入額外細節
+- 補充說明、背景資訊與變更清單等內容，應移至 body 而非擠進 header
+
+此彈性不得常態化使用。若多數 commit 的 header 都超出 72 字元，應重新檢視 scope 設計或 subject 寫法是否過於冗長，而非以例外機制作為迴避精簡的依據。
 
 #### 1. Type (類型)
 
@@ -296,7 +306,7 @@ Scope 必須精準反映變更的影響範圍。本專案依提交情境區分�
 
 - **Body**：
   - 必須與 Header 隔開一行。
-  - 每行長度建議限制在 72 字元內（自動換行）。
+  - 每行長度建議限制在 72 字元內（自動換行）。由於 body 可自由換行，此處不適用 header 的有條件放寬邏輯；撰寫者應以適當換行維持可讀性。
   - 說明變更的動機 (Motivation) 以及與之前行為的差異。
   - 支援 Markdown 列表格式（使用 `-` 或 `*`）。
 
@@ -348,7 +358,7 @@ All implementation classes must be updated.
 ```text
 docs(project): update version control standards
 
-- Enforce 72-character limit for commit headers
+- Refine commit header length rule with principled limit and restrained exceptions
 - Add detailed examples for multi-line commit messages
 - Clarify branch naming rules for project standards
 ```
@@ -560,7 +570,7 @@ docs(project): update version control standards
 1. **Scope 正確性**：修改 `docs/` 根目錄或 `docs/standards/` 下的文件時，Scope 是否為 `project`？純文件性 `use-cases/specs` 修訂時，Scope 是否使用了共同上層路徑？
 2. **流程合規**：是否已建立獨立分支？
 3. **格式檢查**：
-   - Header 是否 < 72 字元？
+   - Header 是否維持精簡？若超出 72 字元，是否屬於必要且有節制的例外？
    - （若為複雜變更）是否有撰寫 Body 描述？
    - 是否符合 `<type>(<scope>): <subject>` 格式？
 
